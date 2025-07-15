@@ -1,7 +1,7 @@
 import { integer, text, sqliteTable } from 'drizzle-orm/sqlite-core';
 
 export const hiracEntries = sqliteTable('hirac_entries', {
-  id: integer('id').primaryKey(),
+  id: integer('id').primaryKey({ autoIncrement: true }),
   task: text('task').notNull(),
   hazard: text('hazard').notNull(),
   cause: text('cause').notNull(),
