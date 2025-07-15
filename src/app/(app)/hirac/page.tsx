@@ -190,9 +190,12 @@ const RiskCell = ({ likelihood, severity }: {likelihood: number, severity: numbe
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger>
-                    <Badge variant={riskDetails.variant} className={cn("cursor-pointer", riskDetails.color)}>
-                        {riskLevel}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                       <span className="font-mono text-xs">L:{likelihood} S:{severity}</span>
+                        <Badge variant={riskDetails.variant} className={cn("cursor-pointer", riskDetails.color)}>
+                            {riskLevel}
+                        </Badge>
+                    </div>
                 </TooltipTrigger>
                 <TooltipContent>
                     <p>Likelihood: {likelihood} ({likelihoodLabel})</p>
@@ -246,10 +249,10 @@ export default function HiracPage() {
                   <TableHead className="min-w-[150px]">Hazard</TableHead>
                   <TableHead className="min-w-[200px]">Cause</TableHead>
                   <TableHead className="min-w-[150px]">Effect</TableHead>
-                  <TableHead>Initial Risk</TableHead>
+                  <TableHead>Initial Risk (L,S | RL)</TableHead>
                   <TableHead className="min-w-[250px]">Control Measures</TableHead>
                   <TableHead className="min-w-[150px]">Responsible</TableHead>
-                  <TableHead>Residual Risk</TableHead>
+                  <TableHead>Residual Risk (L,S | RL)</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
