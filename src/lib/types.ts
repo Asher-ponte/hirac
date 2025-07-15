@@ -27,7 +27,9 @@ export type HiracEntry = {
   effect: string;
   initialLikelihood: number;
   initialSeverity: number;
-  controlMeasures: string;
+  engineeringControls: string;
+  administrativeControls: string;
+  ppe: string;
   responsiblePerson: string;
   residualLikelihood: number;
   residualSeverity: number;

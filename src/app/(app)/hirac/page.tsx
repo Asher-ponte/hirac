@@ -58,7 +58,9 @@ const hiracFormSchema = z.object({
     effect: z.string().min(1, "Effect is required."),
     initialLikelihood: z.coerce.number().min(1, "Likelihood is required."),
     initialSeverity: z.coerce.number().min(1, "Severity is required."),
-    controlMeasures: z.string().min(1, "Control measures are required."),
+    engineeringControls: z.string().min(1, "Engineering controls are required."),
+    administrativeControls: z.string().min(1, "Administrative controls are required."),
+    ppe: z.string().min(1, "PPE is required."),
     responsiblePerson: z.string().min(1, "Responsible person is required."),
     status: z.enum(['Ongoing', 'Implemented', 'Not Implemented']),
     // The database expects these fields, but they are not in the form.
@@ -113,7 +115,9 @@ function HiracForm({ setOpen }: { setOpen: (open: boolean) => void }) {
             hazard: '',
             cause: '',
             effect: '',
-            controlMeasures: '',
+            engineeringControls: '',
+            administrativeControls: '',
+            ppe: '',
             responsiblePerson: '',
             status: 'Ongoing',
         }
@@ -212,9 +216,17 @@ function HiracForm({ setOpen }: { setOpen: (open: boolean) => void }) {
                         <CardDescription>Define the control measures and assign responsibility.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                         <FormField control={form.control} name="controlMeasures" render={({ field }) => (
-                            <FormItem><FormLabel>Control Measures</FormLabel><FormControl><Textarea placeholder="Describe existing or additional controls..." rows={4} {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
+                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                             <FormField control={form.control} name="engineeringControls" render={({ field }) => (
+                                <FormItem><FormLabel>Engineering Controls</FormLabel><FormControl><Textarea placeholder="e.g., Isolation, guarding..." rows={4} {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                             <FormField control={form.control} name="administrativeControls" render={({ field }) => (
+                                <FormItem><FormLabel>Administrative Controls</FormLabel><FormControl><Textarea placeholder="e.g., Procedures, training..." rows={4} {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                             <FormField control={form.control} name="ppe" render={({ field }) => (
+                                <FormItem><FormLabel>PPE</FormLabel><FormControl><Textarea placeholder="e.g., Hard hats, gloves..." rows={4} {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                         </div>
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                              <FormField control={form.control} name="responsiblePerson" render={({ field }) => (
                                 <FormItem><FormLabel>Responsible / Target</FormLabel><FormControl><Input placeholder="e.g., A. Exparas, HR" {...field} /></FormControl><FormMessage /></FormItem>
@@ -310,7 +322,7 @@ export default function HiracPage() {
                     <TableHead className="min-w-[200px] align-bottom" rowSpan={2}>Cause</TableHead>
                     <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Effect</TableHead>
                     <TableHead colSpan={2} className="text-center border-b">Initial Risk Assessment</TableHead>
-                    <TableHead className="min-w-[250px] align-bottom" rowSpan={2}>Control Measures</TableHead>
+                    <TableHead colSpan={3} className="text-center border-b">Control Measures</TableHead>
                     <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Responsible</TableHead>
                     <TableHead colSpan={2} className="text-center border-b">Risk Re-assessment</TableHead>
                     <TableHead className="align-bottom" rowSpan={2}>Status</TableHead>
@@ -318,6 +330,9 @@ export default function HiracPage() {
                     <TableRow>
                         <TableHead className="text-center">L,S</TableHead>
                         <TableHead className="text-center">RL</TableHead>
+                        <TableHead className="min-w-[200px] text-center">Engineering</TableHead>
+                        <TableHead className="min-w-[200px] text-center">Administrative</TableHead>
+                        <TableHead className="min-w-[200px] text-center">PPE</TableHead>
                         <TableHead className="text-center">L,S</TableHead>
                         <TableHead className="text-center">RL</TableHead>
                     </TableRow>
@@ -352,7 +367,9 @@ export default function HiracPage() {
                                 </Tooltip>
                             </TooltipProvider>
                         </TableCell>
-                        <TableCell className="max-w-xs align-top whitespace-pre-wrap">{item.controlMeasures}</TableCell>
+                        <TableCell className="max-w-xs align-top whitespace-pre-wrap">{item.engineeringControls}</TableCell>
+                        <TableCell className="max-w-xs align-top whitespace-pre-wrap">{item.administrativeControls}</TableCell>
+                        <TableCell className="max-w-xs align-top whitespace-pre-wrap">{item.ppe}</TableCell>
                         <TableCell className="align-top">{item.responsiblePerson}</TableCell>
                         <TableCell className="text-center align-top font-mono text-xs">
                             L:{item.residualLikelihood}, S:{item.residualSeverity}
