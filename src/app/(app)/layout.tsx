@@ -22,7 +22,7 @@ import { Menu } from "lucide-react";
 import NavLink from "./nav-link";
 
 const navItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/inspections", icon: ClipboardList, label: "Inspections" },
   { href: "/hirac", icon: ListChecks, label: "HIRAC" },
   { href: "/admin", icon: Users, label: "Admin Panel" },
@@ -34,7 +34,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
         <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
           <Link
-            href="/dashboard"
+            href="/"
             className="flex items-center gap-2 text-lg font-semibold md:text-base"
           >
             <ShieldCheck className="h-6 w-6 text-primary" />
@@ -60,7 +60,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <SheetContent side="left">
             <nav className="grid gap-6 text-lg font-medium">
               <Link
-                href="/dashboard"
+                href="/"
                 className="flex items-center gap-2 text-lg font-semibold"
               >
                 <ShieldCheck className="h-6 w-6 text-primary" />

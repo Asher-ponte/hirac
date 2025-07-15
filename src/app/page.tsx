@@ -1,73 +1,155 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ShieldCheck } from "lucide-react";
 
-export default function LoginPage() {
+'use client';
+
+import * as React from 'react';
+import { Sigma, ShieldAlert, ShieldCheck, Flame } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Pie, PieChart, Cell } from 'recharts';
+import { ChartContainer, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
+import { getDashboardData } from './(app)/dashboard/actions';
+import AppLayout from './(app)/layout';
+import { Skeleton } from '@/components/ui/skeleton';
+
+type KpiData = {
+    title: string;
+    value: string;
+    description: string;
+};
+
+type ChartData = {
+    status?: string;
+    risk?: string;
+    count?: number;
+    value?: number;
+    fill: string;
+};
+
+const statusChartConfig = {
+    count: { label: 'Count' },
+    open: { label: 'Open', color: 'hsl(var(--chart-4))' },
+    "in-progress": { label: 'In Progress', color: 'hsl(var(--chart-1))' },
+    resolved: { label: 'Resolved', color: 'hsl(var(--chart-2))' },
+}
+
+const riskChartConfig = {
+    value: { label: 'Hazards' },
+    low: { label: 'Low', color: 'hsl(var(--chart-2))' },
+    medium: { label: 'Medium', color: 'hsl(var(--chart-3))' },
+    high: { label: 'High', color: 'hsl(var(--chart-1))' },
+    critical: { label: 'Critical', color: 'hsl(var(--destructive))' },
+};
+
+const kpiIcons = {
+    'Total Hazards': Sigma,
+    'Open Issues': ShieldAlert,
+    'Resolved': ShieldCheck,
+    'High-Risk Hazards': Flame,
+} as const;
+
+export default function DashboardPage() {
+  const [loading, setLoading] = React.useState(true);
+  const [kpiData, setKpiData] = React.useState<KpiData[]>([]);
+  const [statusChartData, setStatusChartData] = React.useState<ChartData[]>([]);
+  const [riskChartData, setRiskChartData] = React.useState<ChartData[]>([]);
+  
+  React.useEffect(() => {
+    async function loadData() {
+        setLoading(true);
+        const data = await getDashboardData();
+        setKpiData(data.kpiData);
+        setStatusChartData(data.statusChartData);
+        setRiskChartData(data.riskChartData);
+        setLoading(false);
+    }
+    loadData();
+  }, []);
+
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <ShieldCheck className="mx-auto h-12 w-12 text-primary" />
-          <h1 className="mt-6 text-3xl font-bold tracking-tight text-foreground">
-            SafetySight
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            Your workplace safety partner.
-          </p>
+    <AppLayout>
+        <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {loading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                    <Card key={i}>
+                        <CardHeader>
+                            <Skeleton className="h-4 w-24" />
+                        </CardHeader>
+                        <CardContent>
+                            <Skeleton className="h-8 w-16 mb-2" />
+                            <Skeleton className="h-3 w-32" />
+                        </CardContent>
+                    </Card>
+                ))
+            ) : (
+                kpiData.map((kpi) => (
+                    <Card key={kpi.title}>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
+                            {kpi.title in kpiIcons && React.createElement(kpiIcons[kpi.title as keyof typeof kpiIcons], { className: "h-4 w-4 text-muted-foreground" })}
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{kpi.value}</div>
+                            <p className="text-xs text-muted-foreground">{kpi.description}</p>
+                        </CardContent>
+                    </Card>
+                ))
+            )}
         </div>
-        <Card className="shadow-2xl">
-          <CardHeader>
-            <CardTitle>Sign In</CardTitle>
-            <CardDescription>
-              Enter your credentials to access your dashboard.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="john.doe@example.com"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link
-                  href="#"
-                  className="text-sm font-medium text-primary hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-              <Input id="password" type="password" required />
-            </div>
-            <Button asChild className="w-full">
-              <Link href="/dashboard">Sign In</Link>
-            </Button>
-          </CardContent>
-        </Card>
-        <div className="text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
-          <Link
-            href="#"
-            className="font-medium text-primary hover:underline"
-          >
-            Register
-          </Link>
+
+        <div className="grid gap-6 md:grid-cols-5">
+            <Card className="md:col-span-3">
+            <CardHeader>
+                <CardTitle>Status Distribution</CardTitle>
+                <CardDescription>Breakdown of HIRAC entry statuses.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {loading ? <Skeleton className="h-[250px] w-full" /> : (
+                    <ChartContainer config={statusChartConfig} className="h-[250px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={statusChartData} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="status" tickLine={false} axisLine={false} />
+                                <YAxis tickLine={false} axisLine={false} />
+                                <Tooltip
+                                    cursor={{ fill: 'hsl(var(--muted))' }}
+                                    content={<ChartTooltipContent />}
+                                />
+                                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </ChartContainer>
+                )}
+            </CardContent>
+            </Card>
+
+            <Card className="md:col-span-2">
+            <CardHeader>
+                <CardTitle>Hazards by Initial Risk Level</CardTitle>
+                <CardDescription>Overall distribution of hazards.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-center justify-center pt-4">
+                 {loading ? <Skeleton className="h-[250px] w-full" /> : (
+                    <ChartContainer config={riskChartConfig} className="h-[250px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Tooltip content={<ChartTooltipContent nameKey="risk" hideLabel />} />
+                                <Pie data={riskChartData} dataKey="value" nameKey="risk" innerRadius={60} labelLine={false} label>
+                                    {riskChartData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                                    ))}
+                                </Pie>
+                                <ChartLegend
+                                    content={<ChartLegendContent nameKey="risk" />}
+                                    className="-translate-y-[20px]"
+                                />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </ChartContainer>
+                 )}
+            </CardContent>
+            </Card>
         </div>
-      </div>
-    </div>
+        </div>
+    </AppLayout>
   );
 }
