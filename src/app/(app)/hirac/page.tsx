@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -279,11 +280,11 @@ export default function HiracPage() {
                       <TableCell className="text-center align-top font-mono text-xs">
                          L:{item.initialLikelihood}, S:{item.initialSeverity}
                       </TableCell>
-                       <TableCell className="text-center align-top">
+                       <TableCell className="text-center align-top p-2">
                         <TooltipProvider>
                             <Tooltip>
-                                <TooltipTrigger>
-                                     <Badge variant={initialRiskDetails.variant} className={cn("cursor-pointer", initialRiskDetails.color)}>
+                                <TooltipTrigger className="w-full">
+                                     <Badge variant={initialRiskDetails.variant} className={cn("cursor-pointer w-full justify-center p-2 text-base", initialRiskDetails.color)}>
                                         {initialRiskLevel}
                                     </Badge>
                                 </TooltipTrigger>
@@ -298,11 +299,11 @@ export default function HiracPage() {
                        <TableCell className="text-center align-top font-mono text-xs">
                          L:{item.residualLikelihood}, S:{item.residualSeverity}
                       </TableCell>
-                      <TableCell className="text-center align-top">
+                      <TableCell className="text-center align-top p-2">
                          <TooltipProvider>
                             <Tooltip>
-                                <TooltipTrigger>
-                                     <Badge variant={residualRiskDetails.variant} className={cn("cursor-pointer", residualRiskDetails.color)}>
+                                <TooltipTrigger className="w-full">
+                                     <Badge variant={residualRiskDetails.variant} className={cn("cursor-pointer w-full justify-center p-2 text-base", residualRiskDetails.color)}>
                                         {residualRiskLevel}
                                     </Badge>
                                 </TooltipTrigger>
