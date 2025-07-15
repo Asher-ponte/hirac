@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import type { HiracEntry } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, AlertTriangle, ShieldCheck, ChevronsRight } from 'lucide-react';
+import { FilePlus2, AlertTriangle, ShieldCheck, ChevronsRight, ArrowLeft, ArrowRight } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -22,126 +22,209 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const likelihoodOptions = [
-  { value: 5, label: "It may happen every day / week" },
-  { value: 4, label: "It may happen every month" },
-  { value: 3, label: "It may happen every three months" },
-  { value: 2, label: "It may happen every six months" },
-  { value: 1, label: "It may happen every year" },
+  { value: 5, label: "5 - It may happen every day / week" },
+  { value: 4, label: "4 - It may happen every month" },
+  { value: 3, label: "3 - It may happen every three months" },
+  { value: 2, label: "2 - It may happen every six months" },
+  { value: 1, label: "1 - It may happen every year" },
 ];
 
 const severityOptions = [
-  { value: 5, label: "Catastrophic: May result to death or loss of facility" },
-  { value: 4, label: "Major: May cause lost time injury, severe occupational illness or massive property damage" },
-  { value: 3, label: "Significant: May cause injury or occupational illness that may require medical treatment and may cause major property damage" },
-  { value: 2, label: "Minor: May cause minor injury or first aid case or minor damage to property" },
-  { value: 1, label: "Insignificant: No harm or impact to people" },
+  { value: 5, label: "5 - Catastrophic: May result to death or loss of facility" },
+  { value: 4, label: "4 - Major: May cause lost time injury, severe occupational illness or massive property damage" },
+  { value: 3, label: "3 - Significant: May cause injury or occupational illness that may require medical treatment and may cause major property damage" },
+  { value: 2, label: "2 - Minor: May cause minor injury or first aid case or minor damage to property" },
+  { value: 1, label: "1 - Insignificant: No harm or impact to people" },
 ];
 
+const statusOptions = ['Ongoing', 'Implemented', 'Not Implemented'];
+
 const hiracData: HiracEntry[] = [
-  { id: 'HIRAC-001', task: 'Manual Handling', hazard: 'Lifting heavy objects', likelihood: 3, severity: 3, riskLevel: 9, controlMeasures: 'Provide mechanical aids (trolleys), training on proper lifting techniques', residualRisk: 3 },
-  { id: 'HIRAC-002', task: 'Working at Height', hazard: 'Using ladders', likelihood: 2, severity: 5, riskLevel: 10, controlMeasures: 'Use of scaffolding or EWP, implement fall arrest systems, ladder inspections', residualRisk: 5 },
-  { id: 'HIRAC-003', task: 'Chemical Handling', hazard: 'Handling cleaning solvents', likelihood: 3, severity: 2, riskLevel: 6, controlMeasures: 'Provide PPE (gloves, masks), ensure good ventilation, use less hazardous chemicals', residualRisk: 2 },
-  { id: 'HIRAC-004', task: 'Electrical Work', hazard: 'Faulty equipment wiring', likelihood: 2, severity: 5, riskLevel: 10, controlMeasures: 'Regular inspection and testing of equipment, use of RCDs, remove faulty equipment from service', residualRisk: 2 },
-  { id: 'HIRAC-005', task: 'Machine Operation', hazard: 'Operating noisy machinery', likelihood: 4, severity: 4, riskLevel: 16, controlMeasures: 'Use of ear protection, job rotation, acoustic enclosures for machinery', residualRisk: 8 },
+  { id: 'HIRAC-001', task: 'Transportation Services', hazard: 'Riding on the Shuttle Service', cause: 'No Maintenance of shuttle service', effect: 'Car Accident, Death', initialLikelihood: 3, initialSeverity: 3, controlMeasures: 'Conduct daily maintenance of Shuttle service', responsiblePerson: 'A. Exparas (HR), V. Cortez (FMM)', residualLikelihood: 1, residualSeverity: 3, status: 'Implemented' },
+  { id: 'HIRAC-002', task: 'Transportation Services', hazard: 'Riding on the Shuttle Service', cause: 'No checking of health condition of drivers', effect: 'Car Accident, Death', initialLikelihood: 3, initialSeverity: 3, controlMeasures: 'Conduct APE to all shuttle drivers', responsiblePerson: 'A. Exparas (HR)', residualLikelihood: 1, residualSeverity: 1, status: 'Ongoing' },
+  { id: 'HIRAC-003', task: 'Working at Height', hazard: 'Using ladders', cause: 'Unstable ladder, over-reaching', effect: 'Fall from height, serious injury', initialLikelihood: 2, initialSeverity: 5, controlMeasures: 'Use of scaffolding or EWP, fall arrest systems', responsiblePerson: 'Site Supervisor', residualLikelihood: 1, residualSeverity: 4, status: 'Ongoing' },
+  { id: 'HIRAC-004', task: 'Machine Operation', hazard: 'Operating noisy machinery', cause: 'Prolonged exposure to high decibels', effect: 'Hearing loss', initialLikelihood: 4, initialSeverity: 4, controlMeasures: 'Use of ear protection, job rotation, acoustic enclosures', responsiblePerson: 'Floor Manager', residualLikelihood: 2, residualSeverity: 2, status: 'Implemented' },
 ];
 
 const getRiskLevelDetails = (level: number) => {
-  if (level <= 6) return { label: 'Low Risk', variant: 'secondary', color: 'bg-green-500' } as const;
-  if (level <= 12) return { label: 'Medium Risk', variant: 'default', color: 'bg-yellow-500' } as const;
-  return { label: 'High Risk', variant: 'destructive', color: 'bg-red-500' } as const;
+  if (level <= 6) return { label: 'Low Risk', variant: 'secondary', color: 'bg-green-500 text-green-50' } as const;
+  if (level <= 12) return { label: 'Medium Risk', variant: 'default', color: 'bg-yellow-500 text-yellow-50' } as const;
+  return { label: 'High Risk', variant: 'destructive', color: 'bg-red-500 text-red-50' } as const;
 };
 
-function HiracForm() {
-    const [likelihood, setLikelihood] = React.useState<number | undefined>();
-    const [severity, setSeverity] = React.useState<number | undefined>();
-    const [riskLevel, setRiskLevel] = React.useState<number | undefined>();
-
-    React.useEffect(() => {
-        if(likelihood && severity) {
-            setRiskLevel(likelihood * severity);
-        } else {
-            setRiskLevel(undefined);
-        }
-    }, [likelihood, severity])
-    
+const RiskDisplay = ({ likelihood, severity }: { likelihood?: number, severity?: number }) => {
+    const riskLevel = (likelihood && severity) ? likelihood * severity : undefined;
     const riskDetails = riskLevel !== undefined ? getRiskLevelDetails(riskLevel) : null;
 
     return (
+        <div className="flex flex-col items-center justify-center space-y-4 p-4 bg-muted rounded-lg h-full min-h-[180px]">
+            {riskDetails ? (
+                <>
+                    <div className={cn("p-4 rounded-full", riskDetails.color)}>
+                        <AlertTriangle className="h-8 w-8" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">Calculated Risk Level</p>
+                    <h3 className="text-3xl font-bold">{riskLevel}</h3>
+                    <Badge variant={riskDetails.variant}>{riskDetails.label}</Badge>
+                </>
+            ) : (
+                <div className="text-center text-muted-foreground">
+                    <p>Risk Level will be calculated here.</p>
+                </div>
+            )}
+        </div>
+    )
+};
+
+
+function HiracForm() {
+    const [step, setStep] = React.useState(1);
+    
+    // Form state
+    const [initialLikelihood, setInitialLikelihood] = React.useState<number | undefined>();
+    const [initialSeverity, setInitialSeverity] = React.useState<number | undefined>();
+    const [residualLikelihood, setResidualLikelihood] = React.useState<number | undefined>();
+    const [residualSeverity, setResidualSeverity] = React.useState<number | undefined>();
+
+    return (
       <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-                <Label htmlFor="task">Task/Job/Activity</Label>
-                <Input id="task" placeholder="e.g., Manual Handling" />
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="hazard">Hazard</Label>
-                <Input id="hazard" placeholder="e.g., Lifting heavy objects" />
-            </div>
-        </div>
-
-        <Card>
-            <CardHeader>
-                <CardTitle>Risk Assessment</CardTitle>
-                <CardDescription>Determine the risk level by selecting the likelihood and severity.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                 <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="likelihood">Likelihood of Occurrence</Label>
-                        <Select onValueChange={(val) => setLikelihood(Number(val))}>
-                            <SelectTrigger id="likelihood">
-                                <SelectValue placeholder="Select likelihood..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {likelihoodOptions.map(opt => (
-                                    <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="severity">Severity of Hazard</Label>
-                        <Select onValueChange={(val) => setSeverity(Number(val))}>
-                            <SelectTrigger id="severity">
-                                <SelectValue placeholder="Select severity..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {severityOptions.map(opt => (
-                                    <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-
-                <div className="flex flex-col items-center justify-center space-y-4 p-4 bg-muted rounded-lg h-full">
-                    {riskDetails ? (
-                        <>
-                            <div className={`p-4 rounded-full ${riskDetails.color}`}>
-                                <AlertTriangle className="h-8 w-8 text-white" />
-                            </div>
-                            <p className="text-sm text-muted-foreground">Calculated Risk Level</p>
-                            <h3 className="text-3xl font-bold">{riskLevel}</h3>
-                            <Badge variant={riskDetails.variant}>{riskDetails.label}</Badge>
-                        </>
-                    ) : (
-                        <div className="text-center text-muted-foreground">
-                            <p>Risk Level will be calculated here.</p>
+        {step === 1 && (
+            <Card>
+                <CardHeader><CardTitle>Step 1: Hazard Identification</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div className="space-y-2">
+                            <Label htmlFor="task">Task/Job</Label>
+                            <Input id="task" placeholder="e.g., Transportation Services" />
                         </div>
-                    )}
-                </div>
-            </CardContent>
-        </Card>
-        
-        <div className="space-y-2">
-            <Label htmlFor="control-measures">Control Measures</Label>
-            <Textarea id="control-measures" placeholder="Describe the control measures to be implemented..." rows={4} />
-        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="hazard">Hazard</Label>
+                            <Input id="hazard" placeholder="e.g., Riding on the Shuttle" />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="cause">Cause</Label>
+                        <Textarea id="cause" placeholder="e.g., No Maintenance of shuttle service" rows={2}/>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="effect">Effect</Label>
+                        <Textarea id="effect" placeholder="e.g., Car Accident, Death" rows={2}/>
+                    </div>
+                </CardContent>
+            </Card>
+        )}
+
+        {step === 2 && (
+             <Card>
+                <CardHeader><CardTitle>Step 2: Initial Risk Assessment</CardTitle></CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="likelihood">Likelihood of Occurrence (L)</Label>
+                            <Select onValueChange={(val) => setInitialLikelihood(Number(val))}>
+                                <SelectTrigger id="likelihood"><SelectValue placeholder="Select likelihood..." /></SelectTrigger>
+                                <SelectContent>{likelihoodOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="severity">Severity of Hazard (S)</Label>
+                            <Select onValueChange={(val) => setInitialSeverity(Number(val))}>
+                                <SelectTrigger id="severity"><SelectValue placeholder="Select severity..." /></SelectTrigger>
+                                <SelectContent>{severityOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <RiskDisplay likelihood={initialLikelihood} severity={initialSeverity} />
+                </CardContent>
+            </Card>
+        )}
+
+        {step === 3 && (
+            <Card>
+                <CardHeader><CardTitle>Step 3: Control & Re-assessment</CardTitle></CardHeader>
+                <CardContent className="space-y-6">
+                     <div className="space-y-2">
+                        <Label htmlFor="control-measures">Control Measures</Label>
+                        <Textarea id="control-measures" placeholder="Describe existing or additional controls..." rows={3} />
+                    </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="responsible">Responsible / Target</Label>
+                            <Input id="responsible" placeholder="e.g., A. Exparas, HR" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="status">Status</Label>
+                            <Select>
+                                <SelectTrigger id="status"><SelectValue placeholder="Select status..." /></SelectTrigger>
+                                <SelectContent>{statusOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="res-likelihood">Residual Likelihood (L)</Label>
+                                <Select onValueChange={(val) => setResidualLikelihood(Number(val))}>
+                                    <SelectTrigger id="res-likelihood"><SelectValue placeholder="Select likelihood..." /></SelectTrigger>
+                                    <SelectContent>{likelihoodOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="res-severity">Residual Severity (S)</Label>
+                                <Select onValueChange={(val) => setResidualSeverity(Number(val))}>
+                                    <SelectTrigger id="res-severity"><SelectValue placeholder="Select severity..." /></SelectTrigger>
+                                    <SelectContent>{severityOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <RiskDisplay likelihood={residualLikelihood} severity={residualSeverity} />
+                    </div>
+                </CardContent>
+            </Card>
+        )}
+
+        <DialogFooter className="justify-between pt-4">
+            <div>
+                {step > 1 && <Button variant="outline" onClick={() => setStep(step - 1)}><ArrowLeft className="mr-2" /> Previous</Button>}
+            </div>
+            <div className="flex gap-2">
+                <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
+                 {step < 3 && <Button onClick={() => setStep(step + 1)}>Next <ArrowRight className="ml-2" /></Button>}
+                {step === 3 && <Button type="submit">Save Entry</Button>}
+            </div>
+        </DialogFooter>
       </div>
     );
 }
+
+const RiskCell = ({ likelihood, severity }: {likelihood: number, severity: number}) => {
+    const riskLevel = likelihood * severity;
+    const riskDetails = getRiskLevelDetails(riskLevel);
+    const likelihoodLabel = likelihoodOptions.find(o => o.value === likelihood)?.label;
+    const severityLabel = severityOptions.find(o => o.value === severity)?.label;
+    
+    return (
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger>
+                    <Badge variant={riskDetails.variant} className={cn("cursor-pointer", riskDetails.color)}>
+                        {riskLevel}
+                    </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Likelihood: {likelihood} ({likelihoodLabel})</p>
+                    <p>Severity: {severity} ({severityLabel})</p>
+                    <p className="font-bold">Risk Level: {riskLevel} ({riskDetails.label})</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    );
+};
+
 
 export default function HiracPage() {
   return (
@@ -158,20 +241,14 @@ export default function HiracPage() {
                     New HIRAC Entry
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-3xl">
+            <DialogContent className="max-w-4xl">
                 <DialogHeader>
                     <DialogTitle>New HIRAC Entry</DialogTitle>
                     <DialogDescription>
-                        Complete the form to add a new hazard identification and risk assessment.
+                        Follow the steps to add a new hazard identification and risk assessment.
                     </DialogDescription>
                 </DialogHeader>
                 <HiracForm />
-                <DialogFooter>
-                    <DialogClose asChild>
-                      <Button type="button" variant="secondary">Cancel</Button>
-                    </DialogClose>
-                    <Button type="submit">Save Entry</Button>
-                </DialogFooter>
             </DialogContent>
         </Dialog>
       </div>
@@ -187,40 +264,38 @@ export default function HiracPage() {
               <TableRow>
                 <TableHead>Task/Job</TableHead>
                 <TableHead>Hazard</TableHead>
+                <TableHead>Cause</TableHead>
+                <TableHead>Effect</TableHead>
                 <TableHead>Initial Risk</TableHead>
-                <TableHead className="text-center">Control Measures</TableHead>
+                <TableHead>Control Measures</TableHead>
+                <TableHead>Responsible</TableHead>
                 <TableHead>Residual Risk</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {hiracData.map((item) => {
-                const initialRiskDetails = getRiskLevelDetails(item.riskLevel);
-                const residualRiskDetails = getRiskLevelDetails(item.residualRisk);
-                const likelihoodLabel = likelihoodOptions.find(o => o.value === item.likelihood)?.label;
-                const severityLabel = severityOptions.find(o => o.value === item.severity)?.label;
+                const initialRiskLevel = item.initialLikelihood * item.initialSeverity;
+                const residualRiskLevel = item.residualLikelihood * item.residualSeverity;
+                const initialRiskDetails = getRiskLevelDetails(initialRiskLevel);
+                const residualRiskDetails = getRiskLevelDetails(residualRiskLevel);
 
                 return (
                   <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.task}</TableCell>
-                    <TableCell>{item.hazard}</TableCell>
-                    <TableCell>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Badge variant={initialRiskDetails.variant} className="cursor-pointer">
-                                        {item.riskLevel} - {initialRiskDetails.label}
-                                    </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Likelihood: {item.likelihood} ({likelihoodLabel})</p>
-                                    <p>Severity: {item.severity} ({severityLabel})</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
+                    <TableCell className="font-medium align-top">{item.task}</TableCell>
+                    <TableCell className="align-top">{item.hazard}</TableCell>
+                    <TableCell className="max-w-xs align-top">{item.cause}</TableCell>
+                    <TableCell className="align-top">{item.effect}</TableCell>
+                    <TableCell className="text-center align-top">
+                        <RiskCell likelihood={item.initialLikelihood} severity={item.initialSeverity} />
                     </TableCell>
-                    <TableCell className="max-w-xs">{item.controlMeasures}</TableCell>
-                    <TableCell>
-                        <Badge variant={residualRiskDetails.variant}>{item.residualRisk} - {residualRiskDetails.label}</Badge>
+                    <TableCell className="max-w-xs align-top">{item.controlMeasures}</TableCell>
+                    <TableCell className="align-top">{item.responsiblePerson}</TableCell>
+                    <TableCell className="text-center align-top">
+                        <RiskCell likelihood={item.residualLikelihood} severity={item.residualSeverity} />
+                    </TableCell>
+                    <TableCell className="align-top">
+                      <Badge variant={item.status === 'Implemented' ? 'secondary' : 'default'}>{item.status}</Badge>
                     </TableCell>
                   </TableRow>
                 );
@@ -233,10 +308,4 @@ export default function HiracPage() {
   );
 }
 
-// Minimal Tooltip components for use in this page
-// This avoids needing to pass props down from a page-level provider
-const TooltipProvider = React.lazy(() => import('@/components/ui/tooltip').then(m => ({ default: m.TooltipProvider })));
-const Tooltip = React.lazy(() => import('@/components/ui/tooltip').then(m => ({ default: m.Tooltip })));
-const TooltipTrigger = React.lazy(() => import('@/components/ui/tooltip').then(m => ({ default: m.TooltipTrigger })));
-const TooltipContent = React.lazy(() => import('@/components/ui/tooltip').then(m => ({ default: m.TooltipContent })));
-
+    

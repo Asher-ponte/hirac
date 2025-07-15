@@ -1,3 +1,4 @@
+
 export type Inspection = {
   id: string;
   hazard_description: string;
@@ -21,9 +22,15 @@ export type HiracEntry = {
   id: string;
   task: string;
   hazard: string;
-  likelihood: number;
-  severity: number;
-  riskLevel: number;
+  cause: string;
+  effect: string;
+  initialLikelihood: number;
+  initialSeverity: number;
   controlMeasures: string;
-  residualRisk: number;
+  responsiblePerson: string;
+  residualLikelihood: number;
+  residualSeverity: number;
+  status: 'Ongoing' | 'Implemented' | 'Not Implemented';
 };
+
+    
