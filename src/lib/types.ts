@@ -16,3 +16,13 @@ export type User = {
     role: 'Admin' | 'Safety Officer' | 'Viewer';
     last_login: string;
 };
+
+export type Hirac = {
+  id: string;
+  hazard: string;
+  consequence: string;
+  likelihood: 'Rare' | 'Unlikely' | 'Possible' | 'Likely' | 'Almost Certain';
+  risk_level: 'Low' | 'Medium' | 'High' | 'Critical';
+  control_measures: string;
+  residual_risk: 'Low' | 'Medium' | 'High' | 'Critical';
+};

@@ -22,6 +22,7 @@ import {
   Users,
   LogOut,
   Settings,
+  ListChecks,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ import { Button } from "@/components/ui/button";
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/inspections", icon: ClipboardList, label: "Inspections" },
+  { href: "/hirac", icon: ListChecks, label: "HIRAC" },
   { href: "/admin", icon: Users, label: "Admin Panel" },
 ];
 
