@@ -87,41 +87,36 @@ function HiracForm() {
     // Form state
     const [initialLikelihood, setInitialLikelihood] = React.useState<number | undefined>();
     const [initialSeverity, setInitialSeverity] = React.useState<number | undefined>();
-    const [residualLikelihood, setResidualLikelihood] = React.useState<number | undefined>();
-    const [residualSeverity, setResidualSeverity] = React.useState<number | undefined>();
 
     return (
       <div className="space-y-4">
         {step === 1 && (
             <Card>
-                <CardHeader><CardTitle>Step 1: Hazard Identification</CardTitle></CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                         <div className="space-y-2">
-                            <Label htmlFor="task">Task/Job</Label>
-                            <Input id="task" placeholder="e.g., Transportation Services" />
+                <CardHeader>
+                    <CardTitle>Step 1: Hazard Identification &amp; Initial Risk Assessment</CardTitle>
+                    <CardDescription>Identify the task, hazard, cause, and effect, then assess the initial risk.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="task">Task/Job</Label>
+                                <Input id="task" placeholder="e.g., Transportation Services" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="hazard">Hazard</Label>
+                                <Input id="hazard" placeholder="e.g., Riding on the Shuttle" />
+                            </div>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="hazard">Hazard</Label>
-                            <Input id="hazard" placeholder="e.g., Riding on the Shuttle" />
+                            <Label htmlFor="cause">Cause</Label>
+                            <Textarea id="cause" placeholder="e.g., No Maintenance of shuttle service" rows={2}/>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="effect">Effect</Label>
+                            <Textarea id="effect" placeholder="e.g., Car Accident, Death" rows={2}/>
                         </div>
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="cause">Cause</Label>
-                        <Textarea id="cause" placeholder="e.g., No Maintenance of shuttle service" rows={2}/>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="effect">Effect</Label>
-                        <Textarea id="effect" placeholder="e.g., Car Accident, Death" rows={2}/>
-                    </div>
-                </CardContent>
-            </Card>
-        )}
-
-        {step === 2 && (
-             <Card>
-                <CardHeader><CardTitle>Step 2: Initial Risk Assessment</CardTitle></CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                     <div className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="likelihood">Likelihood of Occurrence (L)</Label>
@@ -137,19 +132,22 @@ function HiracForm() {
                                 <SelectContent>{severityOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
                             </Select>
                         </div>
+                        <RiskDisplay likelihood={initialLikelihood} severity={initialSeverity} />
                     </div>
-                    <RiskDisplay likelihood={initialLikelihood} severity={initialSeverity} />
                 </CardContent>
             </Card>
         )}
 
-        {step === 3 && (
-            <Card>
-                <CardHeader><CardTitle>Step 3: Control & Re-assessment</CardTitle></CardHeader>
+        {step === 2 && (
+             <Card>
+                <CardHeader>
+                    <CardTitle>Step 2: Control Measures &amp; Details</CardTitle>
+                    <CardDescription>Define the control measures and assign responsibility.</CardDescription>
+                </CardHeader>
                 <CardContent className="space-y-6">
                      <div className="space-y-2">
                         <Label htmlFor="control-measures">Control Measures</Label>
-                        <Textarea id="control-measures" placeholder="Describe existing or additional controls..." rows={3} />
+                        <Textarea id="control-measures" placeholder="Describe existing or additional controls..." rows={4} />
                     </div>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -164,37 +162,18 @@ function HiracForm() {
                             </Select>
                         </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="res-likelihood">Residual Likelihood (L)</Label>
-                                <Select onValueChange={(val) => setResidualLikelihood(Number(val))}>
-                                    <SelectTrigger id="res-likelihood"><SelectValue placeholder="Select likelihood..." /></SelectTrigger>
-                                    <SelectContent>{likelihoodOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="res-severity">Residual Severity (S)</Label>
-                                <Select onValueChange={(val) => setResidualSeverity(Number(val))}>
-                                    <SelectTrigger id="res-severity"><SelectValue placeholder="Select severity..." /></SelectTrigger>
-                                    <SelectContent>{severityOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <RiskDisplay likelihood={residualLikelihood} severity={residualSeverity} />
-                    </div>
                 </CardContent>
             </Card>
         )}
 
         <DialogFooter className="justify-between pt-4">
             <div>
-                {step > 1 && <Button variant="outline" onClick={() => setStep(step - 1)}><ArrowLeft className="mr-2" /> Previous</Button>}
+                {step > 1 && <Button variant="outline" onClick={() => setStep(step - 1)}><ArrowLeft className="mr-2 h-4 w-4" /> Previous</Button>}
             </div>
             <div className="flex gap-2">
                 <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
-                 {step < 3 && <Button onClick={() => setStep(step + 1)}>Next <ArrowRight className="ml-2" /></Button>}
-                {step === 3 && <Button type="submit">Save Entry</Button>}
+                 {step < 2 && <Button onClick={() => setStep(step + 1)}>Next <ArrowRight className="ml-2 h-4 w-4" /></Button>}
+                {step === 2 && <Button type="submit">Save Entry</Button>}
             </div>
         </DialogFooter>
       </div>
@@ -259,53 +238,48 @@ export default function HiracPage() {
           <CardDescription>A register of all identified hazards, their risks, and control measures.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Task/Job</TableHead>
-                <TableHead>Hazard</TableHead>
-                <TableHead>Cause</TableHead>
-                <TableHead>Effect</TableHead>
-                <TableHead>Initial Risk</TableHead>
-                <TableHead>Control Measures</TableHead>
-                <TableHead>Responsible</TableHead>
-                <TableHead>Residual Risk</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {hiracData.map((item) => {
-                const initialRiskLevel = item.initialLikelihood * item.initialSeverity;
-                const residualRiskLevel = item.residualLikelihood * item.residualSeverity;
-                const initialRiskDetails = getRiskLevelDetails(initialRiskLevel);
-                const residualRiskDetails = getRiskLevelDetails(residualRiskLevel);
-
-                return (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium align-top">{item.task}</TableCell>
-                    <TableCell className="align-top">{item.hazard}</TableCell>
-                    <TableCell className="max-w-xs align-top">{item.cause}</TableCell>
-                    <TableCell className="align-top">{item.effect}</TableCell>
-                    <TableCell className="text-center align-top">
-                        <RiskCell likelihood={item.initialLikelihood} severity={item.initialSeverity} />
-                    </TableCell>
-                    <TableCell className="max-w-xs align-top">{item.controlMeasures}</TableCell>
-                    <TableCell className="align-top">{item.responsiblePerson}</TableCell>
-                    <TableCell className="text-center align-top">
-                        <RiskCell likelihood={item.residualLikelihood} severity={item.residualSeverity} />
-                    </TableCell>
-                    <TableCell className="align-top">
-                      <Badge variant={item.status === 'Implemented' ? 'secondary' : 'default'}>{item.status}</Badge>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-[150px]">Task/Job</TableHead>
+                  <TableHead className="min-w-[150px]">Hazard</TableHead>
+                  <TableHead className="min-w-[200px]">Cause</TableHead>
+                  <TableHead className="min-w-[150px]">Effect</TableHead>
+                  <TableHead>Initial Risk</TableHead>
+                  <TableHead className="min-w-[250px]">Control Measures</TableHead>
+                  <TableHead className="min-w-[150px]">Responsible</TableHead>
+                  <TableHead>Residual Risk</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {hiracData.map((item) => {
+                  return (
+                    <TableRow key={item.id}>
+                      <TableCell className="font-medium align-top">{item.task}</TableCell>
+                      <TableCell className="align-top">{item.hazard}</TableCell>
+                      <TableCell className="max-w-xs align-top">{item.cause}</TableCell>
+                      <TableCell className="align-top">{item.effect}</TableCell>
+                      <TableCell className="text-center align-top">
+                          <RiskCell likelihood={item.initialLikelihood} severity={item.initialSeverity} />
+                      </TableCell>
+                      <TableCell className="max-w-xs align-top">{item.controlMeasures}</TableCell>
+                      <TableCell className="align-top">{item.responsiblePerson}</TableCell>
+                      <TableCell className="text-center align-top">
+                          <RiskCell likelihood={item.residualLikelihood} severity={item.residualSeverity} />
+                      </TableCell>
+                      <TableCell className="align-top">
+                        <Badge variant={item.status === 'Implemented' ? 'secondary' : 'default'}>{item.status}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
   );
 }
-
-    
