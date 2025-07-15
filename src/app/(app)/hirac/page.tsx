@@ -33,6 +33,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry } from './actions';
 import { useToast } from '@/hooks/use-toast';
+import { Separator } from '@/components/ui/separator';
 
 
 const likelihoodOptions = [
@@ -65,8 +66,8 @@ const hiracFormSchema = z.object({
     ppe: z.string().min(1, "PPE is required."),
     responsiblePerson: z.string().min(1, "Responsible person is required."),
     status: z.enum(['Ongoing', 'Implemented', 'Not Implemented']),
-    residualLikelihood: z.coerce.number().optional(),
-    residualSeverity: z.coerce.number().optional(),
+    residualLikelihood: z.coerce.number().min(1, "Residual likelihood is required."),
+    residualSeverity: z.coerce.number().min(1, "Residual severity is required."),
 });
 
 type HiracFormValues = z.infer<typeof hiracFormSchema>;
@@ -77,7 +78,7 @@ const getRiskLevelDetails = (level: number) => {
   return { label: 'High Risk', variant: 'destructive', color: 'bg-red-500 text-red-50' } as const;
 };
 
-const RiskDisplay = ({ likelihood, severity }: { likelihood?: number, severity?: number }) => {
+const RiskDisplay = ({ likelihood, severity, title = "Calculated Risk Level" }: { likelihood?: number, severity?: number, title?: string }) => {
     const riskLevel = (likelihood && severity) ? likelihood * severity : undefined;
     const riskDetails = riskLevel !== undefined ? getRiskLevelDetails(riskLevel) : null;
 
@@ -88,7 +89,7 @@ const RiskDisplay = ({ likelihood, severity }: { likelihood?: number, severity?:
                     <div className={cn("p-4 rounded-full", riskDetails.color)}>
                         <AlertTriangle className="h-8 w-8" />
                     </div>
-                    <p className="text-sm text-muted-foreground">Calculated Risk Level</p>
+                    <p className="text-sm text-muted-foreground">{title}</p>
                     <h3 className="text-3xl font-bold">{riskLevel}</h3>
                     <Badge variant={riskDetails.variant}>{riskDetails.label}</Badge>
                 </>
@@ -114,8 +115,6 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
         resolver: zodResolver(hiracFormSchema),
         defaultValues: entryToEdit ? {
             ...entryToEdit,
-            initialLikelihood: entryToEdit.initialLikelihood,
-            initialSeverity: entryToEdit.initialSeverity,
         } : {
             task: '',
             hazard: '',
@@ -133,8 +132,6 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
         if (entryToEdit) {
             form.reset({
                 ...entryToEdit,
-                initialLikelihood: entryToEdit.initialLikelihood,
-                initialSeverity: entryToEdit.initialSeverity,
             });
         } else {
             form.reset({
@@ -153,24 +150,20 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
 
     const initialLikelihood = form.watch('initialLikelihood');
     const initialSeverity = form.watch('initialSeverity');
+    const residualLikelihood = form.watch('residualLikelihood');
+    const residualSeverity = form.watch('residualSeverity');
 
     async function onSubmit(data: HiracFormValues) {
         setIsSubmitting(true);
         try {
-            const submissionData = {
-                ...data,
-                residualLikelihood: data.initialLikelihood,
-                residualSeverity: data.initialSeverity,
-            };
-
             if (numericId !== null) {
-                await updateHiracEntry(numericId, submissionData);
+                await updateHiracEntry(numericId, data);
                 toast({
                     title: "Success",
                     description: "HIRAC entry updated successfully.",
                 });
             } else {
-                await createHiracEntry(submissionData);
+                await createHiracEntry(data);
                 toast({
                     title: "Success",
                     description: "New HIRAC entry created successfully.",
@@ -194,6 +187,13 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
     const triggerStep2Validation = async () => {
         const isValid = await form.trigger(['task', 'hazard', 'cause', 'effect', 'initialLikelihood', 'initialSeverity']);
         if (isValid) {
+            // When moving to step 2, if residual values are not set, copy initial values
+            if (!form.getValues('residualLikelihood')) {
+                form.setValue('residualLikelihood', form.getValues('initialLikelihood'));
+            }
+            if (!form.getValues('residualSeverity')) {
+                form.setValue('residualSeverity', form.getValues('initialSeverity'));
+            }
             setStep(2);
         }
     }
@@ -241,7 +241,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
                                     </Select>
                                 <FormMessage /></FormItem>
                             )} />
-                            <RiskDisplay likelihood={initialLikelihood} severity={initialSeverity} />
+                            <RiskDisplay likelihood={initialLikelihood} severity={initialSeverity} title="Initial Risk Level" />
                         </div>
                     </CardContent>
                 </Card>
@@ -250,8 +250,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
             {step === 2 && (
                  <Card className="border-none shadow-none">
                     <CardHeader>
-                        <CardTitle>Step 2: Control Measures &amp; Details</CardTitle>
-                        <CardDescription>Define the control measures and assign responsibility.</CardDescription>
+                        <CardTitle>Step 2: Control Measures &amp; Risk Re-assessment</CardTitle>
+                        <CardDescription>Define control measures, assign responsibility, and re-assess the risk.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -278,6 +278,32 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
                                 <FormMessage /></FormItem>
                             )} />
                         </div>
+                        <Separator />
+                        <div>
+                            <h3 className="text-lg font-medium mb-4">Risk Re-assessment</h3>
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                                <div className="space-y-4">
+                                    <FormField control={form.control} name="residualLikelihood" render={({ field }) => (
+                                        <FormItem><FormLabel>Residual Likelihood (L)</FormLabel>
+                                            <Select onValueChange={(value) => field.onChange(parseInt(value))} value={String(field.value)}>
+                                                <FormControl><SelectTrigger><SelectValue placeholder="Select likelihood..." /></SelectTrigger></FormControl>
+                                                <SelectContent>{likelihoodOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
+                                            </Select>
+                                        <FormMessage /></FormItem>
+                                    )} />
+                                <FormField control={form.control} name="residualSeverity" render={({ field }) => (
+                                        <FormItem><FormLabel>Residual Severity (S)</FormLabel>
+                                            <Select onValueChange={(value) => field.onChange(parseInt(value))} value={String(field.value)}>
+                                                <FormControl><SelectTrigger><SelectValue placeholder="Select severity..." /></SelectTrigger></FormControl>
+                                                <SelectContent>{severityOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
+                                            </Select>
+                                        <FormMessage /></FormItem>
+                                    )} />
+                                </div>
+                                <RiskDisplay likelihood={residualLikelihood} severity={residualSeverity} title="Residual Risk Level" />
+                             </div>
+                        </div>
+
                     </CardContent>
                 </Card>
             )}
