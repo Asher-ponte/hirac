@@ -2,11 +2,8 @@
 
 import { FileText, ShieldAlert, ShieldCheck, Sigma } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Pie, PieChart, Cell } from 'recharts';
 import { ChartContainer, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
-import type { Inspection } from '@/lib/types';
-import { Badge } from '@/components/ui/badge';
 
 const kpiData = [
   { title: 'Total Hazards', value: '1,254', icon: Sigma, description: '+20.1% from last month' },
@@ -40,20 +37,6 @@ const riskChartConfig = {
     medium: { label: 'Medium', color: 'hsl(var(--chart-3))' },
     high: { label: 'High', color: 'hsl(var(--chart-1))' },
     critical: { label: 'Critical', color: 'hsl(var(--destructive))' },
-};
-
-const recentInspections: Inspection[] = [
-  { id: 'INS-001', hazard_description: 'Slippery floor near entrance', location: 'Warehouse A', risk_level: 'Medium', status: 'In Progress', inspection_date: '2023-10-26', assigned_user: 'John Doe' },
-  { id: 'INS-002', hazard_description: 'Exposed wiring in office area', location: 'Office Wing B', risk_level: 'High', status: 'Open', inspection_date: '2023-10-25', assigned_user: 'Jane Smith' },
-  { id: 'INS-003', hazard_description: 'Blocked fire exit', location: 'Factory Floor', risk_level: 'Critical', status: 'Resolved', inspection_date: '2023-10-24', assigned_user: 'John Doe' },
-  { id: 'INS-004', hazard_description: 'Lack of safety signage', location: 'Loading Bay', risk_level: 'Low', status: 'Resolved', inspection_date: '2023-10-23', assigned_user: 'Emily White' },
-];
-
-const riskVariantMap: { [key in Inspection['risk_level']]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
-  Low: 'secondary',
-  Medium: 'default',
-  High: 'outline',
-  Critical: 'destructive',
 };
 
 export default function DashboardPage() {
@@ -123,43 +106,6 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Inspections</CardTitle>
-          <CardDescription>A list of the most recent inspections.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Hazard</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Risk</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentInspections.map((inspection) => (
-                <TableRow key={inspection.id}>
-                  <TableCell className="font-medium">{inspection.id}</TableCell>
-                  <TableCell>{inspection.hazard_description}</TableCell>
-                  <TableCell>{inspection.location}</TableCell>
-                  <TableCell>
-                    <Badge variant={riskVariantMap[inspection.risk_level]}>{inspection.risk_level}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={inspection.status === 'Resolved' ? 'secondary' : 'default'}>{inspection.status}</Badge>
-                  </TableCell>
-                  <TableCell>{inspection.inspection_date}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
     </div>
   );
 }
