@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import type { HiracEntry } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, AlertTriangle, ChevronsRight, ArrowLeft, ArrowRight, BrainCircuit, Loader2, MoreHorizontal, FilePenLine, Trash2 } from 'lucide-react';
+import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, BrainCircuit, Loader2, MoreHorizontal, FilePenLine, Trash2, ClipboardCheck } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -31,7 +31,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry } from './actions';
+import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry, reassessHiracEntry } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 
@@ -71,6 +71,14 @@ const hiracFormSchema = z.object({
 });
 
 type HiracFormValues = z.infer<typeof hiracFormSchema>;
+
+const reassessmentFormSchema = z.object({
+    status: z.enum(['Ongoing', 'Implemented', 'Not Implemented']),
+    residualLikelihood: z.coerce.number().min(1, "Residual likelihood is required."),
+    residualSeverity: z.coerce.number().min(1, "Residual severity is required."),
+});
+type ReassessmentFormValues = z.infer<typeof reassessmentFormSchema>;
+
 
 const getRiskLevelDetails = (level: number) => {
   if (level <= 6) return { label: 'Low Risk', variant: 'secondary', color: 'bg-green-500 text-green-50' } as const;
@@ -133,6 +141,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
             form.reset({
                 ...entryToEdit,
             });
+            setStep(1);
         } else {
             form.reset({
                 task: '',
@@ -145,6 +154,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
                 responsiblePerson: '',
                 status: 'Ongoing',
             });
+            setStep(1);
         }
     }, [entryToEdit, form]);
 
@@ -187,7 +197,6 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
     const triggerStep2Validation = async () => {
         const isValid = await form.trigger(['task', 'hazard', 'cause', 'effect', 'initialLikelihood', 'initialSeverity']);
         if (isValid) {
-            // When moving to step 2, if residual values are not set, copy initial values
             if (!form.getValues('residualLikelihood')) {
                 form.setValue('residualLikelihood', form.getValues('initialLikelihood'));
             }
@@ -326,9 +335,86 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
     );
 }
 
+function ReassessmentForm({ setOpen, entry, onFormSubmit }: { setOpen: (open: boolean) => void, entry: HiracEntry, onFormSubmit: () => void }) {
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const numericId = parseInt(entry.id.replace('HIRAC-', ''), 10);
+
+    const form = useForm<ReassessmentFormValues>({
+        resolver: zodResolver(reassessmentFormSchema),
+        defaultValues: {
+            residualLikelihood: entry.residualLikelihood,
+            residualSeverity: entry.residualSeverity,
+            status: entry.status,
+        },
+    });
+
+    const residualLikelihood = form.watch('residualLikelihood');
+    const residualSeverity = form.watch('residualSeverity');
+
+    async function onSubmit(data: ReassessmentFormValues) {
+        setIsSubmitting(true);
+        try {
+            await reassessHiracEntry(numericId, data);
+            toast({ title: "Success", description: "HIRAC entry re-assessed successfully." });
+            setOpen(false);
+            onFormSubmit();
+        } catch (error) {
+            toast({ variant: 'destructive', title: "Error", description: "Failed to re-assess HIRAC entry." });
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
+    return (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    <div className="space-y-4">
+                        <FormField control={form.control} name="residualLikelihood" render={({ field }) => (
+                            <FormItem><FormLabel>Residual Likelihood (L)</FormLabel>
+                                <Select onValueChange={(value) => field.onChange(parseInt(value))} value={String(field.value)}>
+                                    <FormControl><SelectTrigger><SelectValue placeholder="Select likelihood..." /></SelectTrigger></FormControl>
+                                    <SelectContent>{likelihoodOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
+                                </Select>
+                            <FormMessage /></FormItem>
+                        )} />
+                        <FormField control={form.control} name="residualSeverity" render={({ field }) => (
+                            <FormItem><FormLabel>Residual Severity (S)</FormLabel>
+                                <Select onValueChange={(value) => field.onChange(parseInt(value))} value={String(field.value)}>
+                                    <FormControl><SelectTrigger><SelectValue placeholder="Select severity..." /></SelectTrigger></FormControl>
+                                    <SelectContent>{severityOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
+                                </Select>
+                            <FormMessage /></FormItem>
+                        )} />
+                         <FormField control={form.control} name="status" render={({ field }) => (
+                            <FormItem><FormLabel>Status</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl><SelectTrigger><SelectValue placeholder="Select status..." /></SelectTrigger></FormControl>
+                                    <SelectContent>{statusOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                </Select>
+                            <FormMessage /></FormItem>
+                        )} />
+                    </div>
+                    <RiskDisplay likelihood={residualLikelihood} severity={residualSeverity} title="Residual Risk Level" />
+                </div>
+                 <DialogFooter>
+                    <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
+                    <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Save Re-assessment
+                    </Button>
+                </DialogFooter>
+            </form>
+        </Form>
+    );
+}
+
 export default function HiracPage() {
   const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [reassessmentDialogOpen, setReassessmentDialogOpen] = React.useState(false);
   const [entryToEdit, setEntryToEdit] = React.useState<HiracEntry | null>(null);
+  const [entryToReassess, setEntryToReassess] = React.useState<HiracEntry | null>(null);
   const [hiracData, setHiracData] = React.useState<HiracEntry[]>([]);
   const [loading, setLoading] = React.useState(true);
   const { toast } = useToast();
@@ -358,6 +444,11 @@ export default function HiracPage() {
     setDialogOpen(true);
   }
   
+  const handleReassessEntry = (entry: HiracEntry) => {
+    setEntryToReassess(entry);
+    setReassessmentDialogOpen(true);
+  }
+
   const handleDeleteEntry = async (id: string) => {
     const numericId = parseInt(id.replace('HIRAC-', ''), 10);
     try {
@@ -391,6 +482,18 @@ export default function HiracPage() {
                 </DialogHeader>
                 <HiracForm setOpen={setDialogOpen} entryToEdit={entryToEdit} onFormSubmit={handleFormSubmit} />
             </DialogContent>
+        </Dialog>
+
+        <Dialog open={reassessmentDialogOpen} onOpenChange={setReassessmentDialogOpen}>
+            {entryToReassess && (
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Re-assess Risk for HIRAC-{entryToReassess.id.replace('HIRAC-', '')}</DialogTitle>
+                         <DialogDescription>Update the residual risk level and status after implementing control measures.</DialogDescription>
+                    </DialogHeader>
+                    <ReassessmentForm setOpen={setReassessmentDialogOpen} entry={entryToReassess} onFormSubmit={handleFormSubmit} />
+                </DialogContent>
+            )}
         </Dialog>
       </div>
 
@@ -494,6 +597,9 @@ export default function HiracPage() {
                                     <DropdownMenuContent align="end">
                                     <DropdownMenuItem onClick={() => handleEditEntry(item)}>
                                         <FilePenLine className="mr-2 h-4 w-4" /> Edit
+                                    </DropdownMenuItem>
+                                     <DropdownMenuItem onClick={() => handleReassessEntry(item)}>
+                                        <ClipboardCheck className="mr-2 h-4 w-4" /> Re-assess Risk
                                     </DropdownMenuItem>
                                     <AlertDialogTrigger asChild>
                                         <DropdownMenuItem className="text-destructive focus:text-destructive-foreground focus:bg-destructive">

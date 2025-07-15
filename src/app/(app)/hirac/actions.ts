@@ -12,17 +12,12 @@ export async function getHiracEntries(): Promise<HiracEntry[]> {
     const data = await db.query.hiracEntries.findMany({
         orderBy: (hiracEntries, { desc }) => [desc(hiracEntries.id)],
     });
-    // The database returns id as a number, but our type expects a string.
-    // This is a quick fix to map the data to the expected type.
     return data.map(entry => ({
       ...entry,
       id: `HIRAC-${entry.id.toString().padStart(3, '0')}`,
     }));
   } catch (error) {
     console.error("Failed to fetch HIRAC entries:", error);
-    // If the table doesn't exist, Drizzle throws an error.
-    // We'll return an empty array in that case so the app can still render.
-    // The db:push command will create the table on the next run.
     return [];
   }
 }
@@ -41,6 +36,16 @@ export async function updateHiracEntry(id: number, formData: Omit<HiracEntry, 'i
 
 export async function deleteHiracEntry(id: number) {
     await db.delete(hiracEntries).where(eq(hiracEntries.id, id));
+    revalidatePath('/hirac');
+    revalidatePath('/dashboard');
+}
+
+export async function reassessHiracEntry(id: number, data: { residualLikelihood: number; residualSeverity: number; status: 'Ongoing' | 'Implemented' | 'Not Implemented' }) {
+    await db.update(hiracEntries).set({
+        residualLikelihood: data.residualLikelihood,
+        residualSeverity: data.residualSeverity,
+        status: data.status,
+    }).where(eq(hiracEntries.id, id));
     revalidatePath('/hirac');
     revalidatePath('/dashboard');
 }
