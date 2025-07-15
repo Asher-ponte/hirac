@@ -17,12 +17,13 @@ export type User = {
     last_login: string;
 };
 
-export type Hirac = {
+export type HiracEntry = {
   id: string;
+  task: string;
   hazard: string;
-  consequence: string;
-  likelihood: 'Rare' | 'Unlikely' | 'Possible' | 'Likely' | 'Almost Certain';
-  risk_level: 'Low' | 'Medium' | 'High' | 'Critical';
-  control_measures: string;
-  residual_risk: 'Low' | 'Medium' | 'High' | 'Critical';
+  likelihood: number;
+  severity: number;
+  riskLevel: number;
+  controlMeasures: string;
+  residualRisk: number;
 };
