@@ -4,7 +4,6 @@ export default defineConfig({
   schema: './src/lib/db/schema.ts',
   out: './drizzle',
   dialect: 'sqlite',
-  driver: 'libsql',
   dbCredentials: {
     url: 'file:./local.db',
   },
