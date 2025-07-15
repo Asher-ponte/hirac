@@ -1,35 +1,15 @@
-"use client"
-
-import { FileText, ShieldAlert, ShieldCheck, Sigma } from 'lucide-react';
+import { FileText, Sigma, ShieldAlert, ShieldCheck, Flame } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Pie, PieChart, Cell } from 'recharts';
 import { ChartContainer, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
+import { getDashboardData } from './actions';
 
-const kpiData = [
-  { title: 'Total Hazards', value: '1,254', icon: Sigma, description: '+20.1% from last month' },
-  { title: 'Open Issues', value: '87', icon: ShieldAlert, description: '-12 since last week' },
-  { title: 'Resolved', value: '1,167', icon: ShieldCheck, description: '+180 this month' },
-  { title: 'Inspections', value: '312', icon: FileText, description: '+35 this month' },
-];
-
-const statusChartData = [
-  { status: 'Open', count: 87, fill: 'var(--color-open)'},
-  { status: 'In Progress', count: 45, fill: 'var(--color-in-progress)' },
-  { status: 'Resolved', count: 210, fill: 'var(--color-resolved)' },
-];
 const statusChartConfig = {
     count: { label: 'Count' },
     open: { label: 'Open', color: 'hsl(var(--chart-4))' },
     "in-progress": { label: 'In Progress', color: 'hsl(var(--chart-1))' },
     resolved: { label: 'Resolved', color: 'hsl(var(--chart-2))' },
 }
-
-const riskChartData = [
-    { risk: 'Low', value: 400, fill: 'var(--color-low)' },
-    { risk: 'Medium', value: 300, fill: 'var(--color-medium)' },
-    { risk: 'High', value: 300, fill: 'var(--color-high)' },
-    { risk: 'Critical', value: 200, fill: 'var(--color-critical)' },
-];
 
 const riskChartConfig = {
     value: { label: 'Hazards' },
@@ -39,7 +19,16 @@ const riskChartConfig = {
     critical: { label: 'Critical', color: 'hsl(var(--destructive))' },
 };
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const { kpiData, statusChartData, riskChartData } = await getDashboardData();
+  
+  const kpiIcons = {
+    'Total Hazards': Sigma,
+    'Open Issues': ShieldAlert,
+    'Resolved': ShieldCheck,
+    'High-Risk Hazards': Flame,
+  } as const;
+
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -47,7 +36,7 @@ export default function DashboardPage() {
           <Card key={kpi.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
-              <kpi.icon className="h-4 w-4 text-muted-foreground" />
+              {kpi.title in kpiIcons && React.createElement(kpiIcons[kpi.title as keyof typeof kpiIcons], { className: "h-4 w-4 text-muted-foreground" })}
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{kpi.value}</div>
@@ -61,7 +50,7 @@ export default function DashboardPage() {
         <Card className="md:col-span-3">
           <CardHeader>
             <CardTitle>Status Distribution</CardTitle>
-            <CardDescription>Breakdown of inspection statuses for the current month.</CardDescription>
+            <CardDescription>Breakdown of HIRAC entry statuses for the current month.</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={statusChartConfig} className="h-[250px] w-full">
@@ -83,7 +72,7 @@ export default function DashboardPage() {
 
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>Hazards by Risk Level</CardTitle>
+            <CardTitle>Hazards by Initial Risk Level</CardTitle>
             <CardDescription>Overall distribution of hazards.</CardDescription>
           </CardHeader>
           <CardContent className="flex items-center justify-center pt-4">
