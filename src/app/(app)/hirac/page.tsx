@@ -61,6 +61,10 @@ const hiracFormSchema = z.object({
     controlMeasures: z.string().min(1, "Control measures are required."),
     responsiblePerson: z.string().min(1, "Responsible person is required."),
     status: z.enum(['Ongoing', 'Implemented', 'Not Implemented']),
+    // The database expects these fields, but they are not in the form.
+    // We will provide default values before submitting.
+    residualLikelihood: z.coerce.number().optional(),
+    residualSeverity: z.coerce.number().optional(),
 });
 
 type HiracFormValues = z.infer<typeof hiracFormSchema>;
@@ -121,7 +125,13 @@ function HiracForm({ setOpen }: { setOpen: (open: boolean) => void }) {
     async function onSubmit(data: HiracFormValues) {
         setIsSubmitting(true);
         try {
-            await createHiracEntry(data);
+            // Since residual values are not in the form, we set them to the initial values by default.
+            const submissionData = {
+                ...data,
+                residualLikelihood: data.initialLikelihood,
+                residualSeverity: data.initialSeverity,
+            };
+            await createHiracEntry(submissionData);
             toast({
                 title: "Success",
                 description: "New HIRAC entry created successfully.",
@@ -132,7 +142,7 @@ function HiracForm({ setOpen }: { setOpen: (open: boolean) => void }) {
              toast({
                 variant: 'destructive',
                 title: "Error",
-                description: "Failed to create HIRAC entry.",
+                description: "Failed to create HIRAC entry. Please try again.",
             });
         } finally {
             setIsSubmitting(false);

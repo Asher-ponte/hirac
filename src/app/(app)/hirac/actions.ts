@@ -31,4 +31,5 @@ export async function createHiracEntry(formData: Omit<HiracEntry, 'id'>) {
         residualSeverity: formData.initialSeverity,
     });
     revalidatePath('/hirac');
+    revalidatePath('/dashboard');
 }
