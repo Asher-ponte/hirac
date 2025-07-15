@@ -23,7 +23,21 @@ export async function getHiracEntries(): Promise<HiracEntry[]> {
 }
 
 export async function createHiracEntry(formData: Omit<HiracEntry, 'id'>) {
-    await db.insert(hiracEntries).values(formData);
+    await db.insert(hiracEntries).values({
+        task: formData.task,
+        hazard: formData.hazard,
+        cause: formData.cause,
+        effect: formData.effect,
+        initialLikelihood: formData.initialLikelihood,
+        initialSeverity: formData.initialSeverity,
+        engineeringControls: formData.engineeringControls,
+        administrativeControls: formData.administrativeControls,
+        ppe: formData.ppe,
+        responsiblePerson: formData.responsiblePerson,
+        residualLikelihood: formData.residualLikelihood,
+        residualSeverity: formData.residualSeverity,
+        status: formData.status,
+    });
     revalidatePath('/hirac');
     revalidatePath('/dashboard');
 }
