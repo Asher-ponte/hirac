@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import type { HiracEntry } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, AlertTriangle, ShieldCheck, ChevronsRight, ArrowLeft, ArrowRight } from 'lucide-react';
+import { FilePlus2, AlertTriangle, ChevronsRight, ArrowLeft, ArrowRight, BrainCircuit } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -73,6 +73,7 @@ const RiskDisplay = ({ likelihood, severity }: { likelihood?: number, severity?:
                 </>
             ) : (
                 <div className="text-center text-muted-foreground">
+                     <BrainCircuit className="h-10 w-10 mx-auto mb-2 text-muted-foreground/50"/>
                     <p>Risk Level will be calculated here.</p>
                 </div>
             )}
@@ -190,17 +191,17 @@ const RiskCell = ({ likelihood, severity }: {likelihood: number, severity: numbe
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger>
-                    <div className="flex items-center gap-2">
-                       <span className="font-mono text-xs">L:{likelihood} S:{severity}</span>
+                    <div className="flex items-center justify-center gap-2">
+                       <span className="font-mono text-xs text-muted-foreground">L:{likelihood} S:{severity}</span>
                         <Badge variant={riskDetails.variant} className={cn("cursor-pointer", riskDetails.color)}>
                             {riskLevel}
                         </Badge>
                     </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                    <p>Likelihood: {likelihood} ({likelihoodLabel})</p>
-                    <p>Severity: {severity} ({severityLabel})</p>
-                    <p className="font-bold">Risk Level: {riskLevel} ({riskDetails.label})</p>
+                    <p className="text-xs">Likelihood: {likelihoodLabel}</p>
+                    <p className="text-xs">Severity: {severityLabel}</p>
+                    <p className="font-bold mt-1">Risk Level: {riskLevel} ({riskDetails.label})</p>
                 </TooltipContent>
             </Tooltip>
         </TooltipProvider>
@@ -241,36 +242,75 @@ export default function HiracPage() {
           <CardDescription>A register of all identified hazards, their risks, and control measures.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          <div className="relative max-h-[600px] overflow-x-auto">
             <Table>
-              <TableHeader>
+              <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
-                  <TableHead className="min-w-[150px]">Task/Job</TableHead>
-                  <TableHead className="min-w-[150px]">Hazard</TableHead>
-                  <TableHead className="min-w-[200px]">Cause</TableHead>
-                  <TableHead className="min-w-[150px]">Effect</TableHead>
-                  <TableHead>Initial Risk (L,S | RL)</TableHead>
-                  <TableHead className="min-w-[250px]">Control Measures</TableHead>
-                  <TableHead className="min-w-[150px]">Responsible</TableHead>
-                  <TableHead>Residual Risk (L,S | RL)</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Task/Job</TableHead>
+                  <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Hazard</TableHead>
+                  <TableHead className="min-w-[200px] align-bottom" rowSpan={2}>Cause</TableHead>
+                  <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Effect</TableHead>
+                  <TableHead colSpan={2} className="text-center border-b">Initial Risk Assessment</TableHead>
+                  <TableHead className="min-w-[250px] align-bottom" rowSpan={2}>Control Measures</TableHead>
+                  <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Responsible</TableHead>
+                  <TableHead colSpan={2} className="text-center border-b">Residual Risk Assessment</TableHead>
+                  <TableHead className="align-bottom" rowSpan={2}>Status</TableHead>
+                </TableRow>
+                <TableRow>
+                    <TableHead className="text-center">L,S</TableHead>
+                    <TableHead className="text-center">RL</TableHead>
+                    <TableHead className="text-center">L,S</TableHead>
+                    <TableHead className="text-center">RL</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {hiracData.map((item) => {
+                {hiracData.map((item, index) => {
+                  const initialRiskLevel = item.initialLikelihood * item.initialSeverity;
+                  const initialRiskDetails = getRiskLevelDetails(initialRiskLevel);
+                  const residualRiskLevel = item.residualLikelihood * item.residualSeverity;
+                  const residualRiskDetails = getRiskLevelDetails(residualRiskLevel);
+
                   return (
-                    <TableRow key={item.id}>
+                    <TableRow key={item.id} className={cn(index % 2 === 0 ? "bg-muted/30" : "")}>
                       <TableCell className="font-medium align-top">{item.task}</TableCell>
                       <TableCell className="align-top">{item.hazard}</TableCell>
-                      <TableCell className="max-w-xs align-top">{item.cause}</TableCell>
+                      <TableCell className="max-w-xs align-top whitespace-pre-wrap">{item.cause}</TableCell>
                       <TableCell className="align-top">{item.effect}</TableCell>
-                      <TableCell className="text-center align-top">
-                          <RiskCell likelihood={item.initialLikelihood} severity={item.initialSeverity} />
+                      <TableCell className="text-center align-top font-mono text-xs">
+                         L:{item.initialLikelihood}, S:{item.initialSeverity}
                       </TableCell>
-                      <TableCell className="max-w-xs align-top">{item.controlMeasures}</TableCell>
+                       <TableCell className="text-center align-top">
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                     <Badge variant={initialRiskDetails.variant} className={cn("cursor-pointer", initialRiskDetails.color)}>
+                                        {initialRiskLevel}
+                                    </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                      </TableCell>
+                      <TableCell className="max-w-xs align-top whitespace-pre-wrap">{item.controlMeasures}</TableCell>
                       <TableCell className="align-top">{item.responsiblePerson}</TableCell>
+                       <TableCell className="text-center align-top font-mono text-xs">
+                         L:{item.residualLikelihood}, S:{item.residualSeverity}
+                      </TableCell>
                       <TableCell className="text-center align-top">
-                          <RiskCell likelihood={item.residualLikelihood} severity={item.residualSeverity} />
+                         <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                     <Badge variant={residualRiskDetails.variant} className={cn("cursor-pointer", residualRiskDetails.color)}>
+                                        {residualRiskLevel}
+                                    </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p className="font-bold">Risk Level: {residualRiskLevel} ({residualRiskDetails.label})</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                       </TableCell>
                       <TableCell className="align-top">
                         <Badge variant={item.status === 'Implemented' ? 'secondary' : 'default'}>{item.status}</Badge>
