@@ -1,4 +1,5 @@
 
+
 export type Inspection = {
   id: string;
   hazard_description: string;
@@ -32,5 +33,3 @@ export type HiracEntry = {
   residualSeverity: number;
   status: 'Ongoing' | 'Implemented' | 'Not Implemented';
 };
-
-    

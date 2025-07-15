@@ -1,14 +1,17 @@
 
-
 "use client";
 
 import * as React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import type { HiracEntry } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, AlertTriangle, ChevronsRight, ArrowLeft, ArrowRight, BrainCircuit } from 'lucide-react';
+import { FilePlus2, AlertTriangle, ChevronsRight, ArrowLeft, ArrowRight, BrainCircuit, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -25,6 +28,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { createHiracEntry, getHiracEntries } from './actions';
+import { useToast } from '@/hooks/use-toast';
+
 
 const likelihoodOptions = [
   { value: 5, label: "5 - It may happen every day / week" },
@@ -44,12 +51,19 @@ const severityOptions = [
 
 const statusOptions = ['Ongoing', 'Implemented', 'Not Implemented'];
 
-const hiracData: HiracEntry[] = [
-  { id: 'HIRAC-001', task: 'Transportation Services', hazard: 'Riding on the Shuttle Service', cause: 'No Maintenance of shuttle service', effect: 'Car Accident, Death', initialLikelihood: 3, initialSeverity: 3, controlMeasures: 'Conduct daily maintenance of Shuttle service', responsiblePerson: 'A. Exparas (HR), V. Cortez (FMM)', residualLikelihood: 1, residualSeverity: 3, status: 'Implemented' },
-  { id: 'HIRAC-002', task: 'Transportation Services', hazard: 'Riding on the Shuttle Service', cause: 'No checking of health condition of drivers', effect: 'Car Accident, Death', initialLikelihood: 3, initialSeverity: 3, controlMeasures: 'Conduct APE to all shuttle drivers', responsiblePerson: 'A. Exparas (HR)', residualLikelihood: 1, residualSeverity: 1, status: 'Ongoing' },
-  { id: 'HIRAC-003', task: 'Working at Height', hazard: 'Using ladders', cause: 'Unstable ladder, over-reaching', effect: 'Fall from height, serious injury', initialLikelihood: 2, initialSeverity: 5, controlMeasures: 'Use of scaffolding or EWP, fall arrest systems', responsiblePerson: 'Site Supervisor', residualLikelihood: 1, residualSeverity: 4, status: 'Ongoing' },
-  { id: 'HIRAC-004', task: 'Machine Operation', hazard: 'Operating noisy machinery', cause: 'Prolonged exposure to high decibels', effect: 'Hearing loss', initialLikelihood: 4, initialSeverity: 4, controlMeasures: 'Use of ear protection, job rotation, acoustic enclosures', responsiblePerson: 'Floor Manager', residualLikelihood: 2, residualSeverity: 2, status: 'Implemented' },
-];
+const hiracFormSchema = z.object({
+    task: z.string().min(1, "Task is required."),
+    hazard: z.string().min(1, "Hazard is required."),
+    cause: z.string().min(1, "Cause is required."),
+    effect: z.string().min(1, "Effect is required."),
+    initialLikelihood: z.coerce.number().min(1, "Likelihood is required."),
+    initialSeverity: z.coerce.number().min(1, "Severity is required."),
+    controlMeasures: z.string().min(1, "Control measures are required."),
+    responsiblePerson: z.string().min(1, "Responsible person is required."),
+    status: z.enum(['Ongoing', 'Implemented', 'Not Implemented']),
+});
+
+type HiracFormValues = z.infer<typeof hiracFormSchema>;
 
 const getRiskLevelDetails = (level: number) => {
   if (level <= 6) return { label: 'Low Risk', variant: 'secondary', color: 'bg-green-500 text-green-50' } as const;
@@ -83,134 +97,165 @@ const RiskDisplay = ({ likelihood, severity }: { likelihood?: number, severity?:
 };
 
 
-function HiracForm() {
+function HiracForm({ setOpen }: { setOpen: (open: boolean) => void }) {
     const [step, setStep] = React.useState(1);
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+    const form = useForm<HiracFormValues>({
+        resolver: zodResolver(hiracFormSchema),
+        defaultValues: {
+            task: '',
+            hazard: '',
+            cause: '',
+            effect: '',
+            controlMeasures: '',
+            responsiblePerson: '',
+            status: 'Ongoing',
+        }
+    });
+
+    const initialLikelihood = form.watch('initialLikelihood');
+    const initialSeverity = form.watch('initialSeverity');
+
+    async function onSubmit(data: HiracFormValues) {
+        setIsSubmitting(true);
+        try {
+            await createHiracEntry(data);
+            toast({
+                title: "Success",
+                description: "New HIRAC entry created successfully.",
+            });
+            form.reset();
+            setOpen(false);
+        } catch (error) {
+             toast({
+                variant: 'destructive',
+                title: "Error",
+                description: "Failed to create HIRAC entry.",
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
     
-    // Form state
-    const [initialLikelihood, setInitialLikelihood] = React.useState<number | undefined>();
-    const [initialSeverity, setInitialSeverity] = React.useState<number | undefined>();
+    const triggerStep2Validation = async () => {
+        const isValid = await form.trigger(['task', 'hazard', 'cause', 'effect', 'initialLikelihood', 'initialSeverity']);
+        if (isValid) {
+            setStep(2);
+        }
+    }
 
     return (
-      <div className="space-y-4">
-        {step === 1 && (
-            <Card>
-                <CardHeader>
-                    <CardTitle>Step 1: Hazard Identification &amp; Initial Risk Assessment</CardTitle>
-                    <CardDescription>Identify the task, hazard, cause, and effect, then assess the initial risk.</CardDescription>
-                </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="task">Task/Job</Label>
-                                <Input id="task" placeholder="e.g., Transportation Services" />
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {step === 1 && (
+                <Card className="border-none shadow-none">
+                    <CardHeader>
+                        <CardTitle>Step 1: Hazard Identification &amp; Initial Risk Assessment</CardTitle>
+                        <CardDescription>Identify the task, hazard, cause, and effect, then assess the initial risk.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField control={form.control} name="task" render={({ field }) => (
+                                    <FormItem><FormLabel>Task/Job</FormLabel><FormControl><Input placeholder="e.g., Transportation Services" {...field} /></FormControl><FormMessage /></FormItem>
+                                )} />
+                                <FormField control={form.control} name="hazard" render={({ field }) => (
+                                    <FormItem><FormLabel>Hazard</FormLabel><FormControl><Input placeholder="e.g., Riding on the Shuttle" {...field} /></FormControl><FormMessage /></FormItem>
+                                )} />
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="hazard">Hazard</Label>
-                                <Input id="hazard" placeholder="e.g., Riding on the Shuttle" />
-                            </div>
+                             <FormField control={form.control} name="cause" render={({ field }) => (
+                                <FormItem><FormLabel>Cause</FormLabel><FormControl><Textarea placeholder="e.g., No Maintenance of shuttle service" rows={2} {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <FormField control={form.control} name="effect" render={({ field }) => (
+                                <FormItem><FormLabel>Effect</FormLabel><FormControl><Textarea placeholder="e.g., Car Accident, Death" rows={2} {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="cause">Cause</Label>
-                            <Textarea id="cause" placeholder="e.g., No Maintenance of shuttle service" rows={2}/>
+                        <div className="space-y-4">
+                             <FormField control={form.control} name="initialLikelihood" render={({ field }) => (
+                                <FormItem><FormLabel>Likelihood of Occurrence (L)</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Select likelihood..." /></SelectTrigger></FormControl>
+                                        <SelectContent>{likelihoodOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                <FormMessage /></FormItem>
+                            )} />
+                           <FormField control={form.control} name="initialSeverity" render={({ field }) => (
+                                <FormItem><FormLabel>Severity of Hazard (S)</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Select severity..." /></SelectTrigger></FormControl>
+                                        <SelectContent>{severityOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                <FormMessage /></FormItem>
+                            )} />
+                            <RiskDisplay likelihood={initialLikelihood} severity={initialSeverity} />
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="effect">Effect</Label>
-                            <Textarea id="effect" placeholder="e.g., Car Accident, Death" rows={2}/>
-                        </div>
-                    </div>
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="likelihood">Likelihood of Occurrence (L)</Label>
-                            <Select onValueChange={(val) => setInitialLikelihood(Number(val))}>
-                                <SelectTrigger id="likelihood"><SelectValue placeholder="Select likelihood..." /></SelectTrigger>
-                                <SelectContent>{likelihoodOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="severity">Severity of Hazard (S)</Label>
-                            <Select onValueChange={(val) => setInitialSeverity(Number(val))}>
-                                <SelectTrigger id="severity"><SelectValue placeholder="Select severity..." /></SelectTrigger>
-                                <SelectContent>{severityOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
-                            </Select>
-                        </div>
-                        <RiskDisplay likelihood={initialLikelihood} severity={initialSeverity} />
-                    </div>
-                </CardContent>
-            </Card>
-        )}
+                    </CardContent>
+                </Card>
+            )}
 
-        {step === 2 && (
-             <Card>
-                <CardHeader>
-                    <CardTitle>Step 2: Control Measures &amp; Details</CardTitle>
-                    <CardDescription>Define the control measures and assign responsibility.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                     <div className="space-y-2">
-                        <Label htmlFor="control-measures">Control Measures</Label>
-                        <Textarea id="control-measures" placeholder="Describe existing or additional controls..." rows={4} />
-                    </div>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="responsible">Responsible / Target</Label>
-                            <Input id="responsible" placeholder="e.g., A. Exparas, HR" />
+            {step === 2 && (
+                 <Card className="border-none shadow-none">
+                    <CardHeader>
+                        <CardTitle>Step 2: Control Measures &amp; Details</CardTitle>
+                        <CardDescription>Define the control measures and assign responsibility.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                         <FormField control={form.control} name="controlMeasures" render={({ field }) => (
+                            <FormItem><FormLabel>Control Measures</FormLabel><FormControl><Textarea placeholder="Describe existing or additional controls..." rows={4} {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <FormField control={form.control} name="responsiblePerson" render={({ field }) => (
+                                <FormItem><FormLabel>Responsible / Target</FormLabel><FormControl><Input placeholder="e.g., A. Exparas, HR" {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                           <FormField control={form.control} name="status" render={({ field }) => (
+                                <FormItem><FormLabel>Status</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Select status..." /></SelectTrigger></FormControl>
+                                        <SelectContent>{statusOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                <FormMessage /></FormItem>
+                            )} />
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="status">Status</Label>
-                            <Select>
-                                <SelectTrigger id="status"><SelectValue placeholder="Select status..." /></SelectTrigger>
-                                <SelectContent>{statusOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-        )}
+                    </CardContent>
+                </Card>
+            )}
 
-        <DialogFooter className="justify-between pt-4">
-            <div>
-                {step > 1 && <Button variant="outline" onClick={() => setStep(step - 1)}><ArrowLeft className="mr-2 h-4 w-4" /> Previous</Button>}
-            </div>
-            <div className="flex gap-2">
-                <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
-                 {step < 2 && <Button onClick={() => setStep(step + 1)}>Next <ArrowRight className="ml-2 h-4 w-4" /></Button>}
-                {step === 2 && <Button type="submit">Save Entry</Button>}
-            </div>
-        </DialogFooter>
-      </div>
+            <DialogFooter className="justify-between pt-4">
+                <div>
+                    {step > 1 && <Button variant="outline" type="button" onClick={() => setStep(step - 1)}><ArrowLeft className="mr-2 h-4 w-4" /> Previous</Button>}
+                </div>
+                <div className="flex gap-2">
+                    <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
+                     {step < 2 && <Button type="button" onClick={triggerStep2Validation}>Next <ArrowRight className="ml-2 h-4 w-4" /></Button>}
+                    {step === 2 && <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Save Entry
+                    </Button>}
+                </div>
+            </DialogFooter>
+        </form>
+      </Form>
     );
 }
 
-const RiskCell = ({ likelihood, severity }: {likelihood: number, severity: number}) => {
-    const riskLevel = likelihood * severity;
-    const riskDetails = getRiskLevelDetails(riskLevel);
-    const likelihoodLabel = likelihoodOptions.find(o => o.value === likelihood)?.label;
-    const severityLabel = severityOptions.find(o => o.value === severity)?.label;
-    
-    return (
-        <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger>
-                    <div className="flex items-center justify-center gap-2">
-                       <span className="font-mono text-xs text-muted-foreground">L:{likelihood} S:{severity}</span>
-                        <Badge variant={riskDetails.variant} className={cn("cursor-pointer", riskDetails.color)}>
-                            {riskLevel}
-                        </Badge>
-                    </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p className="text-xs">Likelihood: {likelihoodLabel}</p>
-                    <p className="text-xs">Severity: {severityLabel}</p>
-                    <p className="font-bold mt-1">Risk Level: {riskLevel} ({riskDetails.label})</p>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
-    );
-};
-
-
 export default function HiracPage() {
+  const [open, setOpen] = React.useState(false);
+  const [hiracData, setHiracData] = React.useState<HiracEntry[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function loadData() {
+        setLoading(true);
+        const data = await getHiracEntries();
+        setHiracData(data);
+        setLoading(false);
+    }
+    loadData();
+  }, [open]);
+
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -218,7 +263,7 @@ export default function HiracPage() {
             <h1 className="text-2xl font-bold tracking-tight">HIRAC Register</h1>
             <p className="text-muted-foreground">Hazard Identification, Risk Assessment, and Control</p>
         </div>
-        <Dialog>
+        <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button>
                     <FilePlus2 className="mr-2 h-4 w-4" />
@@ -232,7 +277,7 @@ export default function HiracPage() {
                         Follow the steps to add a new hazard identification and risk assessment.
                     </DialogDescription>
                 </DialogHeader>
-                <HiracForm />
+                <HiracForm setOpen={setOpen} />
             </DialogContent>
         </Dialog>
       </div>
@@ -244,83 +289,87 @@ export default function HiracPage() {
         </CardHeader>
         <CardContent>
           <div className="relative max-h-[600px] overflow-x-auto">
-            <Table>
-              <TableHeader className="sticky top-0 bg-background z-10">
-                <TableRow>
-                  <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Task/Job</TableHead>
-                  <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Hazard</TableHead>
-                  <TableHead className="min-w-[200px] align-bottom" rowSpan={2}>Cause</TableHead>
-                  <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Effect</TableHead>
-                  <TableHead colSpan={2} className="text-center border-b">Initial Risk Assessment</TableHead>
-                  <TableHead className="min-w-[250px] align-bottom" rowSpan={2}>Control Measures</TableHead>
-                  <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Responsible</TableHead>
-                  <TableHead colSpan={2} className="text-center border-b">Risk Re-assessment</TableHead>
-                  <TableHead className="align-bottom" rowSpan={2}>Status</TableHead>
-                </TableRow>
-                <TableRow>
-                    <TableHead className="text-center">L,S</TableHead>
-                    <TableHead className="text-center">RL</TableHead>
-                    <TableHead className="text-center">L,S</TableHead>
-                    <TableHead className="text-center">RL</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {hiracData.map((item, index) => {
-                  const initialRiskLevel = item.initialLikelihood * item.initialSeverity;
-                  const initialRiskDetails = getRiskLevelDetails(initialRiskLevel);
-                  const residualRiskLevel = item.residualLikelihood * item.residualSeverity;
-                  const residualRiskDetails = getRiskLevelDetails(residualRiskLevel);
-
-                  return (
-                    <TableRow key={item.id} className={cn(index % 2 === 0 ? "bg-muted/30" : "")}>
-                      <TableCell className="font-medium align-top">{item.task}</TableCell>
-                      <TableCell className="align-top">{item.hazard}</TableCell>
-                      <TableCell className="max-w-xs align-top whitespace-pre-wrap">{item.cause}</TableCell>
-                      <TableCell className="align-top">{item.effect}</TableCell>
-                      <TableCell className="text-center align-top font-mono text-xs">
-                         L:{item.initialLikelihood}, S:{item.initialSeverity}
-                      </TableCell>
-                       <TableCell className="text-center align-top p-2">
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger className="w-full">
-                                     <Badge variant={initialRiskDetails.variant} className={cn("cursor-pointer w-full justify-center p-2 text-base", initialRiskDetails.color)}>
-                                        {initialRiskLevel}
-                                    </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                      </TableCell>
-                      <TableCell className="max-w-xs align-top whitespace-pre-wrap">{item.controlMeasures}</TableCell>
-                      <TableCell className="align-top">{item.responsiblePerson}</TableCell>
-                       <TableCell className="text-center align-top font-mono text-xs">
-                         L:{item.residualLikelihood}, S:{item.residualSeverity}
-                      </TableCell>
-                      <TableCell className="text-center align-top p-2">
-                         <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger className="w-full">
-                                     <Badge variant={residualRiskDetails.variant} className={cn("cursor-pointer w-full justify-center p-2 text-base", residualRiskDetails.color)}>
-                                        {residualRiskLevel}
-                                    </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p className="font-bold">Risk Level: {residualRiskLevel} ({residualRiskDetails.label})</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                      </TableCell>
-                      <TableCell className="align-top">
-                        <Badge variant={item.status === 'Implemented' ? 'secondary' : 'default'}>{item.status}</Badge>
-                      </TableCell>
+             {loading && <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>}
+             {!loading && hiracData.length === 0 && <div className="flex justify-center items-center h-48"><p className="text-muted-foreground">No HIRAC entries found.</p></div>}
+             {!loading && hiracData.length > 0 && (
+                <Table>
+                <TableHeader className="sticky top-0 bg-background z-10">
+                    <TableRow>
+                    <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Task/Job</TableHead>
+                    <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Hazard</TableHead>
+                    <TableHead className="min-w-[200px] align-bottom" rowSpan={2}>Cause</TableHead>
+                    <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Effect</TableHead>
+                    <TableHead colSpan={2} className="text-center border-b">Initial Risk Assessment</TableHead>
+                    <TableHead className="min-w-[250px] align-bottom" rowSpan={2}>Control Measures</TableHead>
+                    <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Responsible</TableHead>
+                    <TableHead colSpan={2} className="text-center border-b">Risk Re-assessment</TableHead>
+                    <TableHead className="align-bottom" rowSpan={2}>Status</TableHead>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                    <TableRow>
+                        <TableHead className="text-center">L,S</TableHead>
+                        <TableHead className="text-center">RL</TableHead>
+                        <TableHead className="text-center">L,S</TableHead>
+                        <TableHead className="text-center">RL</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {hiracData.map((item, index) => {
+                    const initialRiskLevel = item.initialLikelihood * item.initialSeverity;
+                    const initialRiskDetails = getRiskLevelDetails(initialRiskLevel);
+                    const residualRiskLevel = item.residualLikelihood * item.residualSeverity;
+                    const residualRiskDetails = getRiskLevelDetails(residualRiskLevel);
+
+                    return (
+                        <TableRow key={item.id} className={cn(index % 2 === 0 ? "bg-muted/30" : "")}>
+                        <TableCell className="font-medium align-top">{item.task}</TableCell>
+                        <TableCell className="align-top">{item.hazard}</TableCell>
+                        <TableCell className="max-w-xs align-top whitespace-pre-wrap">{item.cause}</TableCell>
+                        <TableCell className="align-top">{item.effect}</TableCell>
+                        <TableCell className="text-center align-top font-mono text-xs">
+                            L:{item.initialLikelihood}, S:{item.initialSeverity}
+                        </TableCell>
+                        <TableCell className="text-center align-top p-2">
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger className="w-full">
+                                        <Badge variant={initialRiskDetails.variant} className={cn("cursor-pointer w-full justify-center p-2 text-base", initialRiskDetails.color)}>
+                                            {initialRiskLevel}
+                                        </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </TableCell>
+                        <TableCell className="max-w-xs align-top whitespace-pre-wrap">{item.controlMeasures}</TableCell>
+                        <TableCell className="align-top">{item.responsiblePerson}</TableCell>
+                        <TableCell className="text-center align-top font-mono text-xs">
+                            L:{item.residualLikelihood}, S:{item.residualSeverity}
+                        </TableCell>
+                        <TableCell className="text-center align-top p-2">
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger className="w-full">
+                                        <Badge variant={residualRiskDetails.variant} className={cn("cursor-pointer w-full justify-center p-2 text-base", residualRiskDetails.color)}>
+                                            {residualRiskLevel}
+                                        </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p className="font-bold">Risk Level: {residualRiskLevel} ({residualRiskDetails.label})</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </TableCell>
+                        <TableCell className="align-top">
+                            <Badge variant={item.status === 'Implemented' ? 'secondary' : 'default'}>{item.status}</Badge>
+                        </TableCell>
+                        </TableRow>
+                    );
+                    })}
+                </TableBody>
+                </Table>
+             )}
           </div>
         </CardContent>
       </Card>
