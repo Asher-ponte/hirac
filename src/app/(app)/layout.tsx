@@ -1,31 +1,25 @@
-"use client";
-
-import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarFooter,
-  SidebarTrigger,
-  SidebarInset,
-} from "@/components/ui/sidebar";
 import {
   ShieldCheck,
   LayoutDashboard,
   ClipboardList,
   Users,
-  LogOut,
-  Settings,
   ListChecks,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Menu } from "lucide-react";
+import NavLink from "./nav-link";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -35,79 +29,85 @@ const navItems = [
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <ShieldCheck className="size-8 text-primary" />
-            <h1 className="text-xl font-semibold">SafetySight</h1>
+    <div className="flex min-h-screen w-full flex-col">
+      <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+        <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-2 text-lg font-semibold md:text-base"
+          >
+            <ShieldCheck className="h-6 w-6 text-primary" />
+            <span className="sr-only">SafetySight</span>
           </Link>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            {navItems.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname.startsWith(item.href)}
-                  tooltip={{ children: item.label, side: "right" }}
-                >
-                  <Link href={item.href}>
-                    <item.icon />
-                    <span>{item.label}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarContent>
-        <SidebarFooter>
-          <div className="border-t border-sidebar-border p-2">
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip={{ children: "Settings", side: "right" }}>
-                  <Settings />
-                  <span>Settings</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip={{ children: "Log Out", side: "right" }}>
-                  <Link href="/">
-                    <LogOut />
-                    <span>Log Out</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
+          {navItems.map((item) => (
+            <NavLink key={item.href} href={item.href}>
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="shrink-0 md:hidden"
+            >
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle navigation menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left">
+            <nav className="grid gap-6 text-lg font-medium">
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 text-lg font-semibold"
+              >
+                <ShieldCheck className="h-6 w-6 text-primary" />
+                <span className="">SafetySight</span>
+              </Link>
+              {navItems.map((item) => (
+                <NavLink key={item.href} href={item.href} mobile>
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
+          </SheetContent>
+        </Sheet>
+        <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
+          <div className="ml-auto flex-1 sm:flex-initial">
+             <Button>New Inspection</Button>
           </div>
-          <div className="flex items-center gap-3 p-2">
-            <Avatar className="size-9">
-              <AvatarImage
-                src="https://placehold.co/40x40.png"
-                alt="Safety Officer"
-                data-ai-hint="profile avatar"
-              />
-              <AvatarFallback>SO</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold">Safety Officer</span>
-              <span className="text-xs text-muted-foreground">
-                officer@example.com
-              </span>
-            </div>
-          </div>
-        </SidebarFooter>
-      </Sidebar>
-      <SidebarInset>
-        <header className="flex h-14 items-center justify-between border-b bg-background px-4 md:justify-end">
-          <SidebarTrigger className="md:hidden" />
-          <Button>New Inspection</Button>
-        </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
-      </SidebarInset>
-    </SidebarProvider>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" size="icon" className="rounded-full">
+                <Avatar className="size-8">
+                  <AvatarImage
+                    src="https://placehold.co/40x40.png"
+                    alt="Safety Officer"
+                    data-ai-hint="profile avatar"
+                  />
+                  <AvatarFallback>SO</AvatarFallback>
+                </Avatar>
+                <span className="sr-only">Toggle user menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem>Support</DropdownMenuItem>
+              <DropdownMenuSeparator />
+               <DropdownMenuItem asChild>
+                  <Link href="/">Log Out</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </header>
+      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+        {children}
+      </main>
+    </div>
   );
 }
