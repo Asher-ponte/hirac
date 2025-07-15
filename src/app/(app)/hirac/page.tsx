@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -66,8 +67,6 @@ const hiracFormSchema = z.object({
     ppe: z.string().min(1, "PPE is required."),
     responsiblePerson: z.string().min(1, "Responsible person is required."),
     status: z.enum(['Ongoing', 'Implemented', 'Not Implemented']),
-    residualLikelihood: z.coerce.number().min(1, "Residual likelihood is required."),
-    residualSeverity: z.coerce.number().min(1, "Residual severity is required."),
 });
 
 type HiracFormValues = z.infer<typeof hiracFormSchema>;
@@ -160,20 +159,28 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
 
     const initialLikelihood = form.watch('initialLikelihood');
     const initialSeverity = form.watch('initialSeverity');
-    const residualLikelihood = form.watch('residualLikelihood');
-    const residualSeverity = form.watch('residualSeverity');
 
     async function onSubmit(data: HiracFormValues) {
         setIsSubmitting(true);
         try {
-            if (numericId !== null) {
-                await updateHiracEntry(numericId, data);
+            if (numericId !== null && entryToEdit) {
+                const updateData = {
+                    ...data,
+                    residualLikelihood: entryToEdit.residualLikelihood,
+                    residualSeverity: entryToEdit.residualSeverity,
+                };
+                await updateHiracEntry(numericId, updateData);
                 toast({
                     title: "Success",
                     description: "HIRAC entry updated successfully.",
                 });
             } else {
-                await createHiracEntry(data);
+                 const createData = {
+                    ...data,
+                    residualLikelihood: data.initialLikelihood,
+                    residualSeverity: data.initialSeverity,
+                };
+                await createHiracEntry(createData);
                 toast({
                     title: "Success",
                     description: "New HIRAC entry created successfully.",
@@ -197,12 +204,6 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
     const triggerStep2Validation = async () => {
         const isValid = await form.trigger(['task', 'hazard', 'cause', 'effect', 'initialLikelihood', 'initialSeverity']);
         if (isValid) {
-            if (!form.getValues('residualLikelihood')) {
-                form.setValue('residualLikelihood', form.getValues('initialLikelihood'));
-            }
-            if (!form.getValues('residualSeverity')) {
-                form.setValue('residualSeverity', form.getValues('initialSeverity'));
-            }
             setStep(2);
         }
     }
@@ -259,8 +260,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
             {step === 2 && (
                  <Card className="border-none shadow-none">
                     <CardHeader>
-                        <CardTitle>Step 2: Control Measures &amp; Risk Re-assessment</CardTitle>
-                        <CardDescription>Define control measures, assign responsibility, and re-assess the risk.</CardDescription>
+                        <CardTitle>Step 2: Control Measures</CardTitle>
+                        <CardDescription>Define control measures and assign responsibility.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -287,32 +288,6 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
                                 <FormMessage /></FormItem>
                             )} />
                         </div>
-                        <Separator />
-                        <div>
-                            <h3 className="text-lg font-medium mb-4">Risk Re-assessment</h3>
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                                <div className="space-y-4">
-                                    <FormField control={form.control} name="residualLikelihood" render={({ field }) => (
-                                        <FormItem><FormLabel>Residual Likelihood (L)</FormLabel>
-                                            <Select onValueChange={(value) => field.onChange(parseInt(value))} value={String(field.value)}>
-                                                <FormControl><SelectTrigger><SelectValue placeholder="Select likelihood..." /></SelectTrigger></FormControl>
-                                                <SelectContent>{likelihoodOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
-                                            </Select>
-                                        <FormMessage /></FormItem>
-                                    )} />
-                                <FormField control={form.control} name="residualSeverity" render={({ field }) => (
-                                        <FormItem><FormLabel>Residual Severity (S)</FormLabel>
-                                            <Select onValueChange={(value) => field.onChange(parseInt(value))} value={String(field.value)}>
-                                                <FormControl><SelectTrigger><SelectValue placeholder="Select severity..." /></SelectTrigger></FormControl>
-                                                <SelectContent>{severityOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
-                                            </Select>
-                                        <FormMessage /></FormItem>
-                                    )} />
-                                </div>
-                                <RiskDisplay likelihood={residualLikelihood} severity={residualSeverity} title="Residual Risk Level" />
-                             </div>
-                        </div>
-
                     </CardContent>
                 </Card>
             )}
@@ -634,3 +609,4 @@ export default function HiracPage() {
     </div>
   );
 }
+
