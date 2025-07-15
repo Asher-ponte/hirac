@@ -253,7 +253,7 @@ export default function HiracPage() {
                   <TableHead colSpan={2} className="text-center border-b">Initial Risk Assessment</TableHead>
                   <TableHead className="min-w-[250px] align-bottom" rowSpan={2}>Control Measures</TableHead>
                   <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Responsible</TableHead>
-                  <TableHead colSpan={2} className="text-center border-b">Residual Risk Assessment</TableHead>
+                  <TableHead colSpan={2} className="text-center border-b">Risk Re-assessment</TableHead>
                   <TableHead className="align-bottom" rowSpan={2}>Status</TableHead>
                 </TableRow>
                 <TableRow>
