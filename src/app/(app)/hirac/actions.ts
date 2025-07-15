@@ -4,10 +4,13 @@ import { db } from '@/lib/db';
 import { hiracEntries } from '@/lib/db/schema';
 import type { HiracEntry } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
+import { eq } from 'drizzle-orm';
 
 export async function getHiracEntries(): Promise<HiracEntry[]> {
   try {
-    const data = await db.query.hiracEntries.findMany();
+    const data = await db.query.hiracEntries.findMany({
+        orderBy: (hiracEntries, { desc }) => [desc(hiracEntries.id)],
+    });
     // The database returns id as a number, but our type expects a string.
     // This is a quick fix to map the data to the expected type.
     return data.map(entry => ({
@@ -30,6 +33,22 @@ export async function createHiracEntry(formData: Omit<HiracEntry, 'id'>) {
         residualLikelihood: formData.initialLikelihood,
         residualSeverity: formData.initialSeverity,
     });
+    revalidatePath('/hirac');
+    revalidatePath('/dashboard');
+}
+
+export async function updateHiracEntry(id: number, formData: Omit<HiracEntry, 'id'>) {
+    await db.update(hiracEntries).set({
+        ...formData,
+        residualLikelihood: formData.initialLikelihood,
+        residualSeverity: formData.initialSeverity,
+    }).where(eq(hiracEntries.id, id));
+    revalidatePath('/hirac');
+    revalidatePath('/dashboard');
+}
+
+export async function deleteHiracEntry(id: number) {
+    await db.delete(hiracEntries).where(eq(hiracEntries.id, id));
     revalidatePath('/hirac');
     revalidatePath('/dashboard');
 }

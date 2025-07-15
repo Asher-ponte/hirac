@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import type { HiracEntry } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, AlertTriangle, ChevronsRight, ArrowLeft, ArrowRight, BrainCircuit, Loader2 } from 'lucide-react';
+import { FilePlus2, AlertTriangle, ChevronsRight, ArrowLeft, ArrowRight, BrainCircuit, Loader2, MoreHorizontal, FilePenLine, Trash2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,8 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -29,7 +31,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { createHiracEntry, getHiracEntries } from './actions';
+import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry } from './actions';
 import { useToast } from '@/hooks/use-toast';
 
 
@@ -103,14 +105,20 @@ const RiskDisplay = ({ likelihood, severity }: { likelihood?: number, severity?:
 };
 
 
-function HiracForm({ setOpen }: { setOpen: (open: boolean) => void }) {
+function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boolean) => void, entryToEdit?: HiracEntry | null, onFormSubmit: () => void }) {
     const [step, setStep] = React.useState(1);
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
 
+    const numericId = entryToEdit ? parseInt(entryToEdit.id.replace('HIRAC-', ''), 10) : null;
+
     const form = useForm<HiracFormValues>({
         resolver: zodResolver(hiracFormSchema),
-        defaultValues: {
+        defaultValues: entryToEdit ? {
+            ...entryToEdit,
+            initialLikelihood: entryToEdit.initialLikelihood,
+            initialSeverity: entryToEdit.initialSeverity,
+        } : {
             task: '',
             hazard: '',
             cause: '',
@@ -122,6 +130,28 @@ function HiracForm({ setOpen }: { setOpen: (open: boolean) => void }) {
             status: 'Ongoing',
         }
     });
+    
+    React.useEffect(() => {
+        if (entryToEdit) {
+            form.reset({
+                ...entryToEdit,
+                initialLikelihood: entryToEdit.initialLikelihood,
+                initialSeverity: entryToEdit.initialSeverity,
+            });
+        } else {
+            form.reset({
+                task: '',
+                hazard: '',
+                cause: '',
+                effect: '',
+                engineeringControls: '',
+                administrativeControls: '',
+                ppe: '',
+                responsiblePerson: '',
+                status: 'Ongoing',
+            });
+        }
+    }, [entryToEdit, form]);
 
     const initialLikelihood = form.watch('initialLikelihood');
     const initialSeverity = form.watch('initialSeverity');
@@ -129,24 +159,34 @@ function HiracForm({ setOpen }: { setOpen: (open: boolean) => void }) {
     async function onSubmit(data: HiracFormValues) {
         setIsSubmitting(true);
         try {
-            // Since residual values are not in the form, we set them to the initial values by default.
             const submissionData = {
                 ...data,
                 residualLikelihood: data.initialLikelihood,
                 residualSeverity: data.initialSeverity,
             };
-            await createHiracEntry(submissionData);
-            toast({
-                title: "Success",
-                description: "New HIRAC entry created successfully.",
-            });
+
+            if (numericId !== null) {
+                await updateHiracEntry(numericId, submissionData);
+                toast({
+                    title: "Success",
+                    description: "HIRAC entry updated successfully.",
+                });
+            } else {
+                await createHiracEntry(submissionData);
+                toast({
+                    title: "Success",
+                    description: "New HIRAC entry created successfully.",
+                });
+            }
+
             form.reset();
             setOpen(false);
+            onFormSubmit();
         } catch (error) {
              toast({
                 variant: 'destructive',
                 title: "Error",
-                description: "Failed to create HIRAC entry. Please try again.",
+                description: `Failed to ${numericId ? 'update' : 'create'} HIRAC entry. Please try again.`,
             });
         } finally {
             setIsSubmitting(false);
@@ -189,7 +229,7 @@ function HiracForm({ setOpen }: { setOpen: (open: boolean) => void }) {
                         <div className="space-y-4">
                              <FormField control={form.control} name="initialLikelihood" render={({ field }) => (
                                 <FormItem><FormLabel>Likelihood of Occurrence (L)</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
+                                    <Select onValueChange={(value) => field.onChange(parseInt(value))} value={String(field.value)}>
                                         <FormControl><SelectTrigger><SelectValue placeholder="Select likelihood..." /></SelectTrigger></FormControl>
                                         <SelectContent>{likelihoodOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
                                     </Select>
@@ -197,7 +237,7 @@ function HiracForm({ setOpen }: { setOpen: (open: boolean) => void }) {
                             )} />
                            <FormField control={form.control} name="initialSeverity" render={({ field }) => (
                                 <FormItem><FormLabel>Severity of Hazard (S)</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
+                                    <Select onValueChange={(value) => field.onChange(parseInt(value))} value={String(field.value)}>
                                         <FormControl><SelectTrigger><SelectValue placeholder="Select severity..." /></SelectTrigger></FormControl>
                                         <SelectContent>{severityOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
                                     </Select>
@@ -253,7 +293,7 @@ function HiracForm({ setOpen }: { setOpen: (open: boolean) => void }) {
                      {step < 2 && <Button type="button" onClick={triggerStep2Validation}>Next <ArrowRight className="ml-2 h-4 w-4" /></Button>}
                     {step === 2 && <Button type="submit" disabled={isSubmitting}>
                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Save Entry
+                        {numericId ? 'Update Entry' : 'Save Entry'}
                     </Button>}
                 </div>
             </DialogFooter>
@@ -263,19 +303,47 @@ function HiracForm({ setOpen }: { setOpen: (open: boolean) => void }) {
 }
 
 export default function HiracPage() {
-  const [open, setOpen] = React.useState(false);
+  const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [entryToEdit, setEntryToEdit] = React.useState<HiracEntry | null>(null);
   const [hiracData, setHiracData] = React.useState<HiracEntry[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const { toast } = useToast();
 
+  const loadData = React.useCallback(async () => {
+    setLoading(true);
+    const data = await getHiracEntries();
+    setHiracData(data);
+    setLoading(false);
+  }, []);
+  
   React.useEffect(() => {
-    async function loadData() {
-        setLoading(true);
-        const data = await getHiracEntries();
-        setHiracData(data);
-        setLoading(false);
-    }
     loadData();
-  }, [open]);
+  }, [loadData]);
+  
+  const handleFormSubmit = () => {
+    loadData();
+  }
+  
+  const handleNewEntry = () => {
+    setEntryToEdit(null);
+    setDialogOpen(true);
+  }
+
+  const handleEditEntry = (entry: HiracEntry) => {
+    setEntryToEdit(entry);
+    setDialogOpen(true);
+  }
+  
+  const handleDeleteEntry = async (id: string) => {
+    const numericId = parseInt(id.replace('HIRAC-', ''), 10);
+    try {
+        await deleteHiracEntry(numericId);
+        toast({ title: "Success", description: "HIRAC entry deleted." });
+        loadData();
+    } catch (error) {
+        toast({ variant: 'destructive', title: "Error", description: "Failed to delete entry." });
+    }
+  }
 
 
   return (
@@ -285,21 +353,19 @@ export default function HiracPage() {
             <h1 className="text-2xl font-bold tracking-tight">HIRAC Register</h1>
             <p className="text-muted-foreground">Hazard Identification, Risk Assessment, and Control</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button>
-                    <FilePlus2 className="mr-2 h-4 w-4" />
-                    New HIRAC Entry
-                </Button>
-            </DialogTrigger>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <Button onClick={handleNewEntry}>
+                <FilePlus2 className="mr-2 h-4 w-4" />
+                New HIRAC Entry
+            </Button>
             <DialogContent className="max-w-4xl">
                 <DialogHeader>
-                    <DialogTitle>New HIRAC Entry</DialogTitle>
+                    <DialogTitle>{entryToEdit ? 'Edit' : 'New'} HIRAC Entry</DialogTitle>
                     <DialogDescription>
-                        Follow the steps to add a new hazard identification and risk assessment.
+                        {entryToEdit ? 'Update the details for this HIRAC entry.' : 'Follow the steps to add a new hazard identification and risk assessment.'}
                     </DialogDescription>
                 </DialogHeader>
-                <HiracForm setOpen={setOpen} />
+                <HiracForm setOpen={setDialogOpen} entryToEdit={entryToEdit} onFormSubmit={handleFormSubmit} />
             </DialogContent>
         </Dialog>
       </div>
@@ -326,6 +392,7 @@ export default function HiracPage() {
                     <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Responsible</TableHead>
                     <TableHead colSpan={2} className="text-center border-b">Risk Re-assessment</TableHead>
                     <TableHead className="align-bottom" rowSpan={2}>Status</TableHead>
+                    <TableHead className="align-bottom" rowSpan={2}><span className="sr-only">Actions</span></TableHead>
                     </TableRow>
                     <TableRow>
                         <TableHead className="text-center">L,S</TableHead>
@@ -390,6 +457,40 @@ export default function HiracPage() {
                         </TableCell>
                         <TableCell className="align-top">
                             <Badge variant={item.status === 'Implemented' ? 'secondary' : 'default'}>{item.status}</Badge>
+                        </TableCell>
+                         <TableCell className="align-top text-right">
+                             <AlertDialog>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                        <span className="sr-only">Open menu</span>
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleEditEntry(item)}>
+                                        <FilePenLine className="mr-2 h-4 w-4" /> Edit
+                                    </DropdownMenuItem>
+                                    <AlertDialogTrigger asChild>
+                                        <DropdownMenuItem className="text-destructive focus:text-destructive-foreground focus:bg-destructive">
+                                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                        </DropdownMenuItem>
+                                    </AlertDialogTrigger>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This action cannot be undone. This will permanently delete the HIRAC entry.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDeleteEntry(item.id)}>Delete</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                         </TableCell>
                         </TableRow>
                     );
