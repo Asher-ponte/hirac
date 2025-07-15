@@ -1,3 +1,4 @@
+
 'use server';
 
 import { db } from '@/lib/db';
@@ -29,7 +30,6 @@ export async function getHiracEntries(): Promise<HiracEntry[]> {
 export async function createHiracEntry(formData: Omit<HiracEntry, 'id'>) {
     await db.insert(hiracEntries).values({
         ...formData,
-        // Set default residual values as they are not in the form anymore
         residualLikelihood: formData.initialLikelihood,
         residualSeverity: formData.initialSeverity,
     });

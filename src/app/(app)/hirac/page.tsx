@@ -65,8 +65,6 @@ const hiracFormSchema = z.object({
     ppe: z.string().min(1, "PPE is required."),
     responsiblePerson: z.string().min(1, "Responsible person is required."),
     status: z.enum(['Ongoing', 'Implemented', 'Not Implemented']),
-    // The database expects these fields, but they are not in the form.
-    // We will provide default values before submitting.
     residualLikelihood: z.coerce.number().optional(),
     residualSeverity: z.coerce.number().optional(),
 });
