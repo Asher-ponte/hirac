@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import type { HiracEntry, ControlStatus, ControlType, Department } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, BrainCircuit, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle, BarChart, Camera } from 'lucide-react';
+import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, BrainCircuit, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle, BarChart, Camera, Search } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -771,10 +771,12 @@ export default function HiracPage() {
   const [entryToEdit, setEntryToEdit] = React.useState<HiracEntry | null>(null);
   const [entryToReassess, setEntryToReassess] = React.useState<HiracEntry | null>(null);
   const [hiracData, setHiracData] = React.useState<HiracEntry[]>([]);
+  const [filteredHiracData, setFilteredHiracData] = React.useState<HiracEntry[]>([]);
   const [departments, setDepartments] = React.useState<Department[]>([]);
   const [loading, setLoading] = React.useState(true);
   const { toast } = useToast();
   const [departmentFilter, setDepartmentFilter] = React.useState<string>('all');
+  const [searchFilter, setSearchFilter] = React.useState('');
 
   const loadData = React.useCallback(async () => {
     setLoading(true);
@@ -795,6 +797,18 @@ export default function HiracPage() {
   React.useEffect(() => {
     loadData();
   }, [loadData]);
+
+  React.useEffect(() => {
+    const lowercasedFilter = searchFilter.toLowerCase();
+    const filtered = hiracData.filter(item => {
+        return (
+            item.task.toLowerCase().includes(lowercasedFilter) ||
+            item.hazard.toLowerCase().includes(lowercasedFilter) ||
+            item.hazardClass.toLowerCase().includes(lowercasedFilter)
+        );
+    });
+    setFilteredHiracData(filtered);
+  }, [searchFilter, hiracData]);
   
   const handleFormSubmit = () => {
     loadData();
@@ -834,7 +848,16 @@ export default function HiracPage() {
             <h1 className="text-2xl font-bold tracking-tight">HIRAC Register</h1>
             <p className="text-muted-foreground">Hazard Identification, Risk Assessment, and Control</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                    placeholder="Filter by task, hazard..."
+                    value={searchFilter}
+                    onChange={(e) => setSearchFilter(e.target.value)}
+                    className="w-full max-w-sm pl-9"
+                />
+            </div>
             <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
                 <SelectTrigger className="w-[200px]">
                     <SelectValue placeholder="Filter by Department" />
@@ -900,8 +923,8 @@ export default function HiracPage() {
         <CardContent>
           <div className="relative max-h-[600px] overflow-x-auto border rounded-lg">
              {loading && <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>}
-             {!loading && hiracData.length === 0 && <div className="flex justify-center items-center h-48"><p className="text-muted-foreground">No HIRAC entries found.</p></div>}
-             {!loading && hiracData.length > 0 && (
+             {!loading && filteredHiracData.length === 0 && <div className="flex justify-center items-center h-48"><p className="text-muted-foreground">No HIRAC entries found.</p></div>}
+             {!loading && filteredHiracData.length > 0 && (
                 <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                     <TableRow>
@@ -943,7 +966,7 @@ export default function HiracPage() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {hiracData.map((item, index) => {
+                    {filteredHiracData.map((item, index) => {
                     const initialRiskLevel = item.initialLikelihood * item.initialSeverity;
                     const initialRiskDetails = getRiskLevelDetails(initialRiskLevel);
                     
@@ -1065,7 +1088,7 @@ export default function HiracPage() {
                                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                             <AlertDialogDescription>
                                                 This action cannot be undone. This will permanently delete the HIRAC entry.
-                                            </AlertDialogDescription>
+                                            </Dėscription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
                                             <AlertDialogCancel>Cancel</AlertDialogCancel>
