@@ -22,7 +22,8 @@ export async function uploadHazardPhoto(formData: FormData): Promise<{ url?: str
         const buffer = Buffer.from(await file.arrayBuffer());
         const fileExtension = file.name.split('.').pop();
         const uniqueFilename = `${uuidv4()}.${fileExtension}`;
-        const publicPath = join(process.cwd(), 'public', 'images', uniqueFilename);
+        const uploadDir = join(process.cwd(), 'public', 'images');
+        const publicPath = join(uploadDir, uniqueFilename);
         
         await writeFile(publicPath, buffer);
 
