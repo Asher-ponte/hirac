@@ -488,33 +488,33 @@ export default function HiracPage() {
           <CardDescription>A register of all identified hazards, their risks, and control measures.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="relative max-h-[600px] overflow-x-auto">
+          <div className="relative max-h-[600px] overflow-x-auto border rounded-lg">
              {loading && <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>}
              {!loading && hiracData.length === 0 && <div className="flex justify-center items-center h-48"><p className="text-muted-foreground">No HIRAC entries found.</p></div>}
              {!loading && hiracData.length > 0 && (
                 <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                     <TableRow>
-                    <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Task/Job</TableHead>
-                    <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Hazard</TableHead>
-                    <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Hazard Class</TableHead>
-                    <TableHead className="min-w-[200px] align-bottom" rowSpan={2}>Hazardous Event</TableHead>
-                    <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Impact</TableHead>
-                    <TableHead colSpan={2} className="text-center border-b">Initial Risk Assessment</TableHead>
-                    <TableHead colSpan={3} className="text-center border-b">Control Measures</TableHead>
-                    <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Responsible</TableHead>
-                    <TableHead colSpan={2} className="text-center border-b">Risk Re-assessment</TableHead>
-                    <TableHead className="align-bottom" rowSpan={2}>Status</TableHead>
+                    <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Task/Job</TableHead>
+                    <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Hazard</TableHead>
+                    <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Hazard Class</TableHead>
+                    <TableHead className="min-w-[200px] align-bottom border-r" rowSpan={2}>Hazardous Event</TableHead>
+                    <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Impact</TableHead>
+                    <TableHead colSpan={2} className="text-center border-b border-r">Initial Risk Assessment</TableHead>
+                    <TableHead colSpan={3} className="text-center border-b border-r">Control Measures</TableHead>
+                    <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Responsible</TableHead>
+                    <TableHead colSpan={2} className="text-center border-b border-r">Risk Re-assessment</TableHead>
+                    <TableHead className="align-bottom border-r" rowSpan={2}>Status</TableHead>
                     <TableHead className="align-bottom" rowSpan={2}><span className="sr-only">Actions</span></TableHead>
                     </TableRow>
                     <TableRow>
-                        <TableHead className="text-center">P,S</TableHead>
-                        <TableHead className="text-center">RL</TableHead>
-                        <TableHead className="min-w-[200px] text-center">Engineering</TableHead>
-                        <TableHead className="min-w-[200px] text-center">Administrative</TableHead>
-                        <TableHead className="min-w-[200px] text-center">PPE</TableHead>
-                        <TableHead className="text-center">P,S</TableHead>
-                        <TableHead className="text-center">RL</TableHead>
+                        <TableHead className="text-center border-r">P,S</TableHead>
+                        <TableHead className="text-center border-r">RL</TableHead>
+                        <TableHead className="min-w-[200px] text-center border-r">Engineering</TableHead>
+                        <TableHead className="min-w-[200px] text-center border-r">Administrative</TableHead>
+                        <TableHead className="min-w-[200px] text-center border-r">PPE</TableHead>
+                        <TableHead className="text-center border-r">P,S</TableHead>
+                        <TableHead className="text-center border-r">RL</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -528,15 +528,15 @@ export default function HiracPage() {
 
                     return (
                         <TableRow key={item.id} className={cn(index % 2 === 0 ? "bg-muted/30" : "")}>
-                        <TableCell className="font-medium align-top">{item.task}</TableCell>
-                        <TableCell className="align-top">{item.hazard}</TableCell>
-                        <TableCell className="align-top">{item.hazardClass}</TableCell>
-                        <TableCell className="max-w-xs align-top whitespace-pre-wrap">{item.hazardousEvent}</TableCell>
-                        <TableCell className="align-top">{item.impact}</TableCell>
-                        <TableCell className="text-center align-top font-mono text-xs">
+                        <TableCell className="font-medium align-top border-r">{item.task}</TableCell>
+                        <TableCell className="align-top border-r">{item.hazard}</TableCell>
+                        <TableCell className="align-top border-r">{item.hazardClass}</TableCell>
+                        <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r">{item.hazardousEvent}</TableCell>
+                        <TableCell className="align-top border-r">{item.impact}</TableCell>
+                        <TableCell className="text-center align-top font-mono text-xs border-r">
                             P:{item.initialLikelihood}, S:{item.initialSeverity}
                         </TableCell>
-                        <TableCell className="text-center align-top p-2">
+                        <TableCell className="text-center align-top p-2 border-r">
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger className="w-full">
@@ -550,14 +550,14 @@ export default function HiracPage() {
                                 </Tooltip>
                             </TooltipProvider>
                         </TableCell>
-                        <TableCell className="max-w-xs align-top whitespace-pre-wrap">{item.engineeringControls}</TableCell>
-                        <TableCell className="max-w-xs align-top whitespace-pre-wrap">{item.administrativeControls}</TableCell>
-                        <TableCell className="max-w-xs align-top whitespace-pre-wrap">{item.ppe}</TableCell>
-                        <TableCell className="align-top">{item.responsiblePerson}</TableCell>
-                        <TableCell className="text-center align-top font-mono text-xs">
+                        <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r">{item.engineeringControls}</TableCell>
+                        <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r">{item.administrativeControls}</TableCell>
+                        <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r">{item.ppe}</TableCell>
+                        <TableCell className="align-top border-r">{item.responsiblePerson}</TableCell>
+                        <TableCell className="text-center align-top font-mono text-xs border-r">
                             {isReassessed ? `P:${item.residualLikelihood}, S:${item.residualSeverity}` : 'N/A'}
                         </TableCell>
-                        <TableCell className="text-center align-top p-2">
+                        <TableCell className="text-center align-top p-2 border-r">
                              {isReassessed ? (
                                 <TooltipProvider>
                                     <Tooltip>
@@ -575,7 +575,7 @@ export default function HiracPage() {
                                  <Badge variant="outline" className="w-full justify-center p-2 text-base">N/A</Badge>
                              )}
                         </TableCell>
-                        <TableCell className="align-top">
+                        <TableCell className="align-top border-r">
                             <Badge variant={item.status === 'Implemented' ? 'secondary' : 'default'}>{item.status}</Badge>
                         </TableCell>
                          <TableCell className="align-top text-right">
