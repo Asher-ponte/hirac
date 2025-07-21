@@ -78,8 +78,8 @@ const hiracFormSchema = z.object({
     hazardClass: z.string().min(1, "Hazard class is required."),
     hazardousEvent: z.string().min(1, "Hazardous event is required."),
     impact: z.string().min(1, "Impact is required."),
-    initialLikelihood: z.coerce.number().min(1).max(5),
-    initialSeverity: z.coerce.number().min(1).max(5),
+    initialLikelihood: z.coerce.number().min(0).max(5),
+    initialSeverity: z.coerce.number().min(0).max(5),
     
     controlMeasures: z.array(controlMeasureSchema),
 
