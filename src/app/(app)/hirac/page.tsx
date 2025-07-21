@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from 'react';
@@ -43,11 +42,11 @@ import { Calendar } from '@/components/ui/calendar';
 
 
 const likelihoodOptions = [
-  { value: 1, label: "1 - IMPROBABLE", description: "Presence of ALL CONTROLS: ADEQUATE engineering controls AND Standard operating procedures/administrative controls AND with provision for appropriate PPEs" },
-  { value: 2, label: "2 - LESS PROBABLE", description: "ADEQUATE engineering controls OR Standard operating procedures/administrative controls OR provision for appropriate PPEs" },
-  { value: 3, label: "3 - PROBABLE", description: "Absence of ADEQUATE engineering controls AND Presence of Standard operating procedures/administrative controls AND with provision for appropriate PPEs" },
-  { value: 4, label: "4 - ALMOST CERTAIN", description: "Absence of ADEQUATE engineering controls AND Presence of Standard operating procedures/administrative controls OR with provision for appropriate PPEs" },
-  { value: 5, label: "5 - CERTAIN", description: "Absence of all CONTROLS" },
+  { value: 1, label: "🟢 Rare (Level 1)", description: "Hazard is highly unlikely to occur as all safety controls—including engineering, SOPs, and PPE—are active, effective, and fully implemented." },
+  { value: 2, label: "🟡 Unlikely (Level 2)", description: "Hazard may occur if there are lapses, but most key safety controls—especially engineering plus either SOPs or PPE—are consistently applied." },
+  { value: 3, label: "🟠 Possible (Level 3)", description: "Hazard could occur under normal conditions since only SOPs and PPE are present, with no engineering controls in place." },
+  { value: 4, label: "🔴 Likely (Level 4)", description: "Hazard is expected unless immediate action is taken, as only one type of barrier (either SOPs or PPE) is active, and no engineering control is present." },
+  { value: 5, label: "⚠️ Almost Certain (Level 5)", description: "Hazard will almost certainly occur due to the complete absence of engineering controls, SOPs, and PPE." },
 ];
 
 const severityOptions = [
@@ -171,7 +170,7 @@ const ControlMeasureGroup = ({ form, controlType, title }: { form: any, controlT
                     <FormItem>
                         <FormLabel>Description</FormLabel>
                         <FormControl>
-                            <Textarea placeholder="Describe the control measure..." {...field} />
+                            <Textarea placeholder="Describe the control measure..." {...field} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -185,7 +184,7 @@ const ControlMeasureGroup = ({ form, controlType, title }: { form: any, controlT
                         <FormItem>
                             <FormLabel>Person-in-Charge</FormLabel>
                             <FormControl>
-                                <Input placeholder="e.g., A. Exparas, HR" {...field} />
+                                <Input placeholder="e.g., A. Exparas, HR" {...field} value={field.value ?? ''} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -262,15 +261,15 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
 
     const numericId = entryToEdit ? parseInt(entryToEdit.id.replace('HIRAC-', ''), 10) : null;
     
-    const getDefaultValues = (entry: HiracEntry | null) => ({
+    const getDefaultValues = (entry: HiracEntry | null | undefined): HiracFormValues => ({
         task: entry?.task ?? '',
         hazard: entry?.hazard ?? '',
         hazardPhotoUrl: entry?.hazardPhotoUrl ?? null,
         hazardClass: entry?.hazardClass ?? '',
         hazardousEvent: entry?.hazardousEvent ?? '',
         impact: entry?.impact ?? '',
-        initialLikelihood: entry?.initialLikelihood,
-        initialSeverity: entry?.initialSeverity,
+        initialLikelihood: entry?.initialLikelihood ?? 0,
+        initialSeverity: entry?.initialSeverity ?? 0,
         engineeringControls: {
             description: entry?.engineeringControls ?? '',
             pic: entry?.engineeringControlsPic ?? '',
@@ -336,7 +335,6 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
             ppeStatus: data.ppe.status,
             ppeCompletionDate: data.ppe.completionDate,
             
-            // Set residual to initial if not provided
             residualLikelihood: data.residualLikelihood ?? data.initialLikelihood,
             residualSeverity: data.residualSeverity ?? data.initialSeverity,
         };
@@ -792,3 +790,5 @@ export default function HiracPage() {
     </div>
   );
 }
+
+    
