@@ -267,7 +267,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
     return (
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {step === 1 && (
+            <div className={cn(step === 1 ? 'block' : 'hidden')}>
                 <Card className="border-none shadow-none">
                     <CardHeader>
                         <CardTitle>Step 1: Hazard Identification</CardTitle>
@@ -327,9 +327,9 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
                         )} />
                     </CardContent>
                 </Card>
-            )}
+            </div>
 
-            {step === 2 && (
+            <div className={cn(step === 2 ? 'block' : 'hidden')}>
                  <Card className="border-none shadow-none">
                     <CardHeader>
                         <CardTitle>Step 2: Risk Assessment &amp; Control Measures</CardTitle>
@@ -398,7 +398,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
                         </div>
                     </CardContent>
                 </Card>
-            )}
+            </div>
 
             <DialogFooter className="justify-between pt-4">
                 <div>
@@ -569,7 +569,7 @@ export default function HiracPage() {
                 <FilePlus2 className="mr-2 h-4 w-4" />
                 New HIRAC Entry
             </Button>
-            <DialogContent className="max-w-4xl">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>{entryToEdit ? 'Edit' : 'New'} HIRAC Entry</DialogTitle>
                     <DialogDescription>
@@ -582,7 +582,7 @@ export default function HiracPage() {
 
         <Dialog open={reassessmentDialogOpen} onOpenChange={setReassessmentDialogOpen}>
             {entryToReassess && (
-                <DialogContent className="max-w-4xl">
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>Re-assess Risk for HIRAC-{entryToReassess.id.replace('HIRAC-', '')}</DialogTitle>
                          <DialogDescription>Update the residual risk level and status after implementing control measures.</DialogDescription>
