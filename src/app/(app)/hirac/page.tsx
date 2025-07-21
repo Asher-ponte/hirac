@@ -120,7 +120,7 @@ const RiskDisplay = ({ likelihood, severity, title = "Calculated Risk Level" }: 
     const riskDetails = riskLevel !== undefined ? getRiskLevelDetails(riskLevel) : null;
 
     return (
-        <div className="flex flex-col items-center justify-center space-y-2 p-4 bg-muted rounded-lg h-full min-h-[180px] md:min-h-[200px]">
+        <div className="flex flex-col items-center justify-center space-y-2 p-2 bg-muted rounded-lg h-full min-h-[180px] md:min-h-[200px]">
             {riskDetails ? (
                 <>
                     <div className={cn("p-2 md:p-3 rounded-full", riskDetails.color)}>
@@ -131,7 +131,7 @@ const RiskDisplay = ({ likelihood, severity, title = "Calculated Risk Level" }: 
                     <Badge variant={riskDetails.variant}>{riskDetails.label}</Badge>
                 </>
             ) : (
-                <div className="text-center text-muted-foreground p-4">
+                <div className="text-center text-muted-foreground p-2">
                      <AlertTriangle className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 text-muted-foreground/50"/>
                     <p className="text-xs">Risk Level will be calculated here.</p>
                 </div>
@@ -397,7 +397,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
         }
     }
     
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             setIsUploading(true);
@@ -407,12 +407,11 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                 const dataUrl = loadEvent.target?.result as string;
                 if (dataUrl) {
                     form.setValue('hazardPhotoUrl', dataUrl, { shouldValidate: true });
-                    setIsUploading(false);
                 } else {
                     toast({ variant: 'destructive', title: "Upload Failed", description: "Could not read the image file." });
                     handleRemoveImage();
-                    setIsUploading(false);
                 }
+                setIsUploading(false);
             };
             reader.onerror = () => {
                 toast({ variant: 'destructive', title: "Upload Failed", description: "There was an error reading the file." });
@@ -956,7 +955,9 @@ export default function HiracPage() {
         return (
             item.task.toLowerCase().includes(lowercasedFilter) ||
             item.hazard.toLowerCase().includes(lowercasedFilter) ||
-            item.hazardClass.toLowerCase().includes(lowercasedFilter)
+            item.hazardClass.toLowerCase().includes(lowercasedFilter) ||
+            item.hazardousEvent.toLowerCase().includes(lowercasedFilter) ||
+            item.impact.toLowerCase().includes(lowercasedFilter)
         );
     });
     setFilteredHiracData(filtered);
@@ -1216,3 +1217,4 @@ export default function HiracPage() {
     </div>
   );
 }
+
