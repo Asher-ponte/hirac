@@ -16,6 +16,7 @@ export const hiracEntries = sqliteTable('hirac_entries', {
   initialSeverity: integer('initial_severity').notNull(),
   residualLikelihood: integer('residual_likelihood').notNull(),
   residualSeverity: integer('residual_severity').notNull(),
+  status: text('status', { enum: ['Ongoing', 'Implemented', 'Not Implemented'] }).notNull().default('Ongoing'),
 });
 
 export const hiracEntriesRelations = relations(hiracEntries, ({ many }) => ({
