@@ -25,8 +25,7 @@ export async function getHiracEntries(): Promise<HiracEntry[]> {
         ...cm,
         id: cm.id,
       })),
-      // Ensure status is one of the allowed values, default to Not Implemented
-      status: entry.status === 'Ongoing' || entry.status === 'Implemented' ? entry.status : 'Not Implemented'
+      status: entry.status ?? 'Ongoing' // Ensure status is not null
     }));
   } catch (error) {
     console.error("Failed to fetch HIRAC entries:", error);
@@ -103,14 +102,16 @@ export async function updateHiracEntry(id: number, formData: HiracEntryPayload) 
 
         const controlsToUpdate = formData.controlMeasures.filter(cm => cm.id && existingControls.some(ec => ec.id === cm.id));
         const controlsToInsert = formData.controlMeasures.filter(cm => !cm.id);
-        const controlsToDelete = existingControls.filter(ec => !formData.controlMeasures.some(cm => cm.id === cm.id));
+        const controlsToDelete = existingControls.filter(ec => !formData.controlMeasures.some(cm => cm.id === ec.id));
 
         if (controlsToUpdate.length > 0) {
             for (const cm of controlsToUpdate) {
-                await tx.update(controlMeasures).set({
-                    ...cm,
-                    description: cm.description || "N/A"
-                }).where(eq(controlMeasures.id, cm.id!));
+                if(cm.id) {
+                    await tx.update(controlMeasures).set({
+                        ...cm,
+                        description: cm.description || "N/A"
+                    }).where(eq(controlMeasures.id, cm.id));
+                }
             }
         }
         
@@ -123,7 +124,7 @@ export async function updateHiracEntry(id: number, formData: HiracEntryPayload) 
         }
 
         if (controlsToDelete.length > 0) {
-            await tx.delete(controlMeasures).where(inArray(controlMeasures.id, controlsToDelete.map(c => c.id)));
+            await tx.delete(controlMeasures).where(inArray(controlMeasures.id, controlsToDelete.map(c => c.id!)));
         }
     });
 
@@ -138,5 +139,12 @@ export async function deleteHiracEntry(id: number) {
 }
 
 export async function resetHiracSequence() {
-  await db.run(sql`DELETE FROM sqlite_sequence WHERE name='hirac_entries';`);
+  try {
+    await db.run(sql`DROP TABLE IF EXISTS control_measures`);
+    await db.run(sql`DROP TABLE IF EXISTS hirac_entries`);
+    await db.run(sql`DELETE FROM sqlite_sequence WHERE name IN ('hirac_entries', 'control_measures')`);
+    console.log("Database tables reset successfully.");
+  } catch(e) {
+    console.error("Error resetting database", e);
+  }
 }

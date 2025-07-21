@@ -551,10 +551,14 @@ export default function HiracPage() {
 
   const loadData = React.useCallback(async () => {
     setLoading(true);
-    const data = await getHiracEntries();
-    setHiracData(data);
+    try {
+        const data = await getHiracEntries();
+        setHiracData(data);
+    } catch(e) {
+        toast({ variant: 'destructive', title: "Error", description: "Failed to load HIRAC data. The database might be initializing." });
+    }
     setLoading(false);
-  }, []);
+  }, [toast]);
   
   React.useEffect(() => {
     loadData();
@@ -680,7 +684,7 @@ export default function HiracPage() {
                     {hiracData.map((item, index) => {
                     const initialRiskLevel = item.initialLikelihood * item.initialSeverity;
                     const initialRiskDetails = getRiskLevelDetails(initialRiskLevel);
-                    const residualRiskLevel = item.residualLikelihood * item.residualSeverity;
+                    const residualRiskLevel = (item.residualLikelihood ?? item.initialLikelihood) * (item.residualSeverity ?? item.initialSeverity);
                     const residualRiskDetails = getRiskLevelDetails(residualRiskLevel);
                     const isReassessed = item.initialLikelihood !== item.residualLikelihood || item.initialSeverity !== item.residualSeverity;
 
@@ -773,7 +777,7 @@ export default function HiracPage() {
                                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                             <AlertDialogDescription>
                                                 This action cannot be undone. This will permanently delete the HIRAC entry.
-                                            </AlertDialogDescription>
+                                            </Description>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
                                             <AlertDialogCancel>Cancel</AlertDialogCancel>

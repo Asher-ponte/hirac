@@ -41,7 +41,8 @@ export type HiracEntry = {
   impact: string;
   initialLikelihood: number;
   initialSeverity: number;
-  residualLikelihood: number;
-  residualSeverity: number;
+  residualLikelihood?: number | null;
+  residualSeverity?: number | null;
   controlMeasures: ControlMeasure[];
+  status?: 'Ongoing' | 'Implemented' | 'Not Implemented' | null;
 };

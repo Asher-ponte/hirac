@@ -3,20 +3,21 @@ import { relations } from 'drizzle-orm';
 
 const controlStatusEnum = ['Ongoing', 'Implemented', 'Not Implemented'] as const;
 const controlTypeEnum = ['Engineering', 'Administrative', 'PPE'] as const;
+const hazardClassEnum = ['Physical', 'Chemical', 'Biological', 'Mechanical', 'Electrical'] as const;
 
 export const hiracEntries = sqliteTable('hirac_entries', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   task: text('task').notNull(),
   hazard: text('hazard').notNull(),
   hazardPhotoUrl: text('hazard_photo_url'),
-  hazardClass: text('hazard_class', { enum: ['Physical', 'Chemical', 'Biological', 'Mechanical', 'Electrical'] }).notNull(),
+  hazardClass: text('hazard_class', { enum: hazardClassEnum }).notNull(),
   hazardousEvent: text('hazardous_event').notNull(),
   impact: text('impact').notNull(),
   initialLikelihood: integer('initial_likelihood').notNull(),
   initialSeverity: integer('initial_severity').notNull(),
-  residualLikelihood: integer('residual_likelihood').notNull(),
-  residualSeverity: integer('residual_severity').notNull(),
-  status: text('status', { enum: ['Ongoing', 'Implemented', 'Not Implemented'] }).notNull().default('Ongoing'),
+  residualLikelihood: integer('residual_likelihood'),
+  residualSeverity: integer('residual_severity'),
+  status: text('status', { enum: ['Ongoing', 'Implemented', 'Not Implemented'] }),
 });
 
 export const hiracEntriesRelations = relations(hiracEntries, ({ many }) => ({
