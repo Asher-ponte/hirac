@@ -9,6 +9,7 @@ import { ChartContainer, ChartTooltipContent, ChartLegend, ChartLegendContent } 
 import { getDashboardData } from './(app)/dashboard/actions';
 import AppLayout from './(app)/layout';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 type KpiData = {
     title: string;
@@ -45,6 +46,13 @@ const kpiIcons = {
     'High Risk': ShieldAlert,
 } as const;
 
+const kpiCardConfig: { [key: string]: { iconColor: string; cardClasses: string } } = {
+    'Low Risk': { iconColor: 'text-green-500', cardClasses: 'border-green-500/50 bg-green-500/10' },
+    'Medium Risk': { iconColor: 'text-yellow-500', cardClasses: 'border-yellow-500/50 bg-yellow-500/10' },
+    'High Risk': { iconColor: 'text-red-500', cardClasses: 'border-red-500/50 bg-red-500/10' },
+};
+
+
 export default function DashboardPage() {
   const [loading, setLoading] = React.useState(true);
   const [kpiData, setKpiData] = React.useState<KpiData[]>([]);
@@ -80,18 +88,22 @@ export default function DashboardPage() {
                     </Card>
                 ))
             ) : (
-                kpiData.map((kpi) => (
-                    <Card key={kpi.title}>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
-                            {kpi.title in kpiIcons && React.createElement(kpiIcons[kpi.title as keyof typeof kpiIcons], { className: "h-4 w-4 text-muted-foreground" })}
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{kpi.value}</div>
-                            <p className="text-xs text-muted-foreground">{kpi.description}</p>
-                        </CardContent>
-                    </Card>
-                ))
+                kpiData.map((kpi) => {
+                    const config = kpiCardConfig[kpi.title];
+                    const Icon = kpiIcons[kpi.title as keyof typeof kpiIcons];
+                    return (
+                        <Card key={kpi.title} className={cn(config?.cardClasses)}>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
+                                {Icon && <Icon className={cn("h-4 w-4 text-muted-foreground", config?.iconColor)} />}
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">{kpi.value}</div>
+                                <p className="text-xs text-muted-foreground">{kpi.description}</p>
+                            </CardContent>
+                        </Card>
+                    );
+                })
             )}
         </div>
 
