@@ -177,7 +177,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
                     description: "HIRAC entry updated successfully.",
                 });
             } else {
-                 const createData = {
+                const createData = {
                     ...data,
                     residualLikelihood: data.initialLikelihood,
                     residualSeverity: data.initialSeverity,
