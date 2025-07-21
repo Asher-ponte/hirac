@@ -137,14 +137,3 @@ export async function deleteHiracEntry(id: number) {
     revalidatePath('/hirac');
     revalidatePath('/dashboard');
 }
-
-export async function resetHiracSequence() {
-  try {
-    await db.run(sql`DROP TABLE IF EXISTS control_measures`);
-    await db.run(sql`DROP TABLE IF EXISTS hirac_entries`);
-    await db.run(sql`DELETE FROM sqlite_sequence WHERE name IN ('hirac_entries', 'control_measures')`);
-    console.log("Database tables reset successfully.");
-  } catch(e) {
-    console.error("Error resetting database", e);
-  }
-}
