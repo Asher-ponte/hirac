@@ -10,24 +10,6 @@ import { sql } from 'drizzle-orm';
 import { addYears, formatISO } from 'date-fns';
 
 
-export async function uploadHazardPhoto(formData: FormData): Promise<{ url?: string, error?: string }> {
-    const file = formData.get('file') as File;
-    if (!file) {
-        return { error: 'No file provided.' };
-    }
-
-    try {
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const base64 = buffer.toString('base64');
-        const dataUri = `data:${file.type};base64,${base64}`;
-        
-        return { url: dataUri };
-    } catch (e) {
-        console.error('Failed to process image:', e);
-        return { error: 'Failed to process image.' };
-    }
-}
-
 export async function getHiracEntries(departmentId?: number): Promise<HiracEntry[]> {
   try {
     const queryOptions = {

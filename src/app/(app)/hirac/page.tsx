@@ -36,7 +36,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry, updateResidualRisk, getDepartments, uploadHazardPhoto } from './actions';
+import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry, updateResidualRisk, getDepartments } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -305,7 +305,6 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [isUploading, setIsUploading] = React.useState(false);
-    const [imagePreview, setImagePreview] = React.useState<string | null>(null);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const numericId = entryToEdit ? parseInt(entryToEdit.id.replace('HIRAC-', ''), 10) : null;
@@ -335,10 +334,6 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
     React.useEffect(() => {
         const defaultValues = getDefaultValues(entryToEdit);
         form.reset(defaultValues);
-        setImagePreview(defaultValues.hazardPhotoUrl ?? null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
         form.setValue('hazardPhotoUrl', defaultValues.hazardPhotoUrl, { shouldValidate: true });
         setStep(1);
     }, [entryToEdit, form]);
@@ -351,6 +346,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
 
     const initialLikelihood = form.watch('initialLikelihood');
     const initialSeverity = form.watch('initialSeverity');
+    const imagePreview = form.watch('hazardPhotoUrl');
 
     async function onSubmit(data: HiracFormValues) {
         setIsSubmitting(true);
@@ -404,35 +400,30 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            
-            // Set preview
-            const previewUrl = URL.createObjectURL(file);
-            setImagePreview(previewUrl);
-
-            // Upload the file and get the URL
             setIsUploading(true);
-            try {
-                const formData = new FormData();
-                formData.append('file', file);
-                const result = await uploadHazardPhoto(formData);
 
-                if (result.error) {
-                    throw new Error(result.error);
+            const reader = new FileReader();
+            reader.onload = (loadEvent) => {
+                const dataUrl = loadEvent.target?.result as string;
+                if (dataUrl) {
+                    form.setValue('hazardPhotoUrl', dataUrl, { shouldValidate: true });
+                    setIsUploading(false);
+                } else {
+                    toast({ variant: 'destructive', title: "Upload Failed", description: "Could not read the image file." });
+                    handleRemoveImage();
+                    setIsUploading(false);
                 }
-                // Set the permanent URL in the form
-                form.setValue('hazardPhotoUrl', result.url, { shouldValidate: true });
-            } catch (error) {
-                toast({ variant: 'destructive', title: "Upload Failed", description: (error as Error).message });
-                // Reset on failure
+            };
+            reader.onerror = () => {
+                toast({ variant: 'destructive', title: "Upload Failed", description: "There was an error reading the file." });
                 handleRemoveImage();
-            } finally {
                 setIsUploading(false);
-            }
+            };
+            reader.readAsDataURL(file);
         }
     }
     
     const handleRemoveImage = () => {
-        setImagePreview(null);
         form.setValue('hazardPhotoUrl', null, { shouldValidate: true });
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -552,7 +543,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                                                  {isUploading && (
                                                     <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white rounded-md">
                                                         <Loader2 className="h-8 w-8 animate-spin mb-2" />
-                                                        <span>Uploading...</span>
+                                                        <span>Processing...</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -567,7 +558,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                                                 {isUploading ? (
                                                     <>
                                                         <Loader2 className="h-10 w-10 mb-2 animate-spin" />
-                                                        <span>Uploading...</span>
+                                                        <span>Processing...</span>
                                                     </>
                                                 ) : (
                                                     <>
