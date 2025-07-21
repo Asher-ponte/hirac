@@ -47,11 +47,11 @@ const likelihoodOptions = [
 ];
 
 const severityOptions = [
-  { value: 5, label: "5 - Catastrophic: May result to death or loss of facility" },
-  { value: 4, label: "4 - Major: May cause lost time injury, severe occupational illness or massive property damage" },
-  { value: 3, label: "3 - Significant: May cause injury or occupational illness that may require medical treatment and may cause major property damage" },
-  { value: 2, label: "2 - Minor: May cause minor injury or first aid case or minor damage to property" },
-  { value: 1, label: "1 - Insignificant: No harm or impact to people" },
+  { value: 1, label: "1 - NEGLIGIBLE/NEAR-MISS: Impact will not result to any personnel injury or ill-health. Impact will have no short-term effect." },
+  { value: 2, label: "2 - MINOR REQUIRING FIRST AID OR CAUSE MINOR PROPERTY DAMAGE: Impact will cause minor personnel injury requiring first aid. Impact will cause temporary ill health discomfort (headache, dizziness, nausea, muscle pain, etc.)" },
+  { value: 3, label: "3 - MINOR RESULTING TO LOST TIME OR CAUSE MINOR PROPERTY DAMAGE: Impact will cause minor personnel injury resulting to lost time. Impact will have short-term health effect (fever, upper respiratory infection, allergies, diarrhea)." },
+  { value: 4, label: "4 - MAJOR RESULTING TO PERMANENT DISABILITY AND MAJOR PROPERTY DAMAGE: Impact will cause major personnel injury resulting to permanent disability. Impact will have long-term or chronic health effect (permanent hearing loss, cancer, hypertension, etc.)." },
+  { value: 5, label: "5 - MAJOR RESULTING TO FATALITY AND CATASTROPHE: Impact will cause major personnel injury or illness resulting to fatality. Impact will cause major damage resulting to catastrophe." },
 ];
 
 const statusOptions = ['Ongoing', 'Implemented', 'Not Implemented'];
