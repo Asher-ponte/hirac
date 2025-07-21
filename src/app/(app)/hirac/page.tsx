@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import type { HiracEntry, ControlStatus, ControlType, Department } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle, BarChart, Camera, Search, ChevronDown } from 'lucide-react';
+import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle, BarChart, Camera, Search, ChevronDown, BrainCircuit } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -903,6 +903,8 @@ export default function HiracPage() {
                               <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Task/Job</TableHead>
                               <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Hazard Class</TableHead>
                               <TableHead className="min-w-[250px] align-bottom border-r" rowSpan={2}>Hazard</TableHead>
+                              <TableHead className="min-w-[250px] align-bottom border-r" rowSpan={2}>Hazardous Event</TableHead>
+                              <TableHead className="min-w-[250px] align-bottom border-r" rowSpan={2}>Impact</TableHead>
                               <TableHead colSpan={2} className="text-center border-b border-r">Initial Risk</TableHead>
                               <TableHead colSpan={4} className="text-center border-b border-r">Engineering Controls</TableHead>
                               <TableHead colSpan={4} className="text-center border-b border-r">Administrative Controls</TableHead>
@@ -965,6 +967,8 @@ export default function HiracPage() {
                                       )}
                                       {item.hazard}
                                   </TableCell>
+                                  <TableCell className="align-top border-r whitespace-pre-wrap">{item.hazardousEvent}</TableCell>
+                                  <TableCell className="align-top border-r whitespace-pre-wrap">{item.impact}</TableCell>
                                   <TableCell className="text-center align-top font-mono text-xs border-r">P:{item.initialLikelihood}, S:{item.initialSeverity}</TableCell>
                                   <TableCell className="text-center align-top p-2 border-r">
                                       <TooltipProvider><Tooltip><TooltipTrigger className="w-full"><Badge variant={initialRiskDetails.variant} className={cn("cursor-pointer w-full justify-center p-2 text-base", initialRiskDetails.color)}>{initialRiskLevel}</Badge></TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
@@ -1187,4 +1191,3 @@ function HiracCard({ item, onEdit, onReassess, onDelete }: { item: HiracEntry, o
         </Card>
     )
 }
-
