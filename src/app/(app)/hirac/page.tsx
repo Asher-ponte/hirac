@@ -391,7 +391,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
     }
     
     const triggerStep2Validation = async () => {
-        const isValid = await form.trigger(['task', 'hazard', 'hazardClass', 'hazardousEvent', 'impact']);
+        const isValid = await form.trigger(['task', 'hazard', 'hazardClass', 'hazardousEvent', 'impact', 'initialLikelihood', 'initialSeverity']);
         if (isValid) {
             setStep(2);
         }
@@ -403,7 +403,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
             const previewUrl = URL.createObjectURL(file);
             // In a real app, you'd upload the file here and set the returned URL.
             // For demonstration, we use a placeholder and the local preview.
-            form.setValue('hazardPhotoUrl', `https://placehold.co/400x300.png?text=Hazard`, { shouldValidate: true });
+            form.setValue('hazardPhotoUrl', `/images/hazard-placeholder.png`, { shouldValidate: true });
             setImagePreview(previewUrl);
              toast({
                 title: "Image Added",
@@ -865,15 +865,33 @@ export default function HiracPage() {
                             <TableCell className="align-top border-r">{item.hazardClass}</TableCell>
                             <TableCell className="align-top border-r">
                                {item.hazardPhotoUrl && (
-                                    <div className="mb-2 relative w-full aspect-video">
-                                        <Image 
-                                            src={item.hazardPhotoUrl} 
-                                            alt={`Photo for ${item.hazard}`} 
-                                            fill
-                                            data-ai-hint="hazard"
-                                            className="rounded-md object-contain"
-                                        />
-                                    </div>
+                                    <Dialog>
+                                      <DialogTrigger asChild>
+                                        <div className="mb-2 relative w-full aspect-video cursor-pointer hover:opacity-80 transition-opacity">
+                                            <Image 
+                                                src={item.hazardPhotoUrl} 
+                                                alt={`Photo for ${item.hazard}`} 
+                                                fill
+                                                data-ai-hint="hazard"
+                                                className="rounded-md object-contain"
+                                            />
+                                        </div>
+                                      </DialogTrigger>
+                                      <DialogContent className="max-w-2xl">
+                                        <DialogHeader>
+                                          <DialogTitle>{item.hazard}</DialogTitle>
+                                          <DialogDescription>{item.task}</DialogDescription>
+                                        </DialogHeader>
+                                        <div className="relative w-full aspect-video">
+                                            <Image 
+                                                src={item.hazardPhotoUrl} 
+                                                alt={`Photo for ${item.hazard}`} 
+                                                fill
+                                                className="rounded-md object-contain"
+                                            />
+                                        </div>
+                                      </DialogContent>
+                                    </Dialog>
                                 )}
                                 {item.hazard}
                             </TableCell>
