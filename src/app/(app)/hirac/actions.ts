@@ -10,6 +10,7 @@ import { sql } from 'drizzle-orm';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { addYears, formatISO } from 'date-fns';
 
 
 export async function uploadHazardPhoto(formData: FormData): Promise<{ url?: string, error?: string }> {
@@ -70,6 +71,11 @@ type HiracEntryPayload = Omit<HiracEntry, 'id' | 'controlMeasures' | 'status' | 
 
 export async function createHiracEntry(formData: HiracEntryPayload) {
   await db.transaction(async (tx) => {
+    
+    const nextReviewDate = formData.nextReviewDate 
+        ? formData.nextReviewDate 
+        : formatISO(addYears(new Date(), 1));
+
     const [newHiracEntry] = await tx.insert(hiracEntries).values({
       departmentId: formData.departmentId,
       task: formData.task,
@@ -82,7 +88,7 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
       initialSeverity: formData.initialSeverity,
       residualLikelihood: formData.residualLikelihood,
       residualSeverity: formData.residualSeverity,
-      nextReviewDate: formData.nextReviewDate,
+      nextReviewDate: nextReviewDate,
       // Default status for new entries
       status: 'Ongoing'
     }).returning({ id: hiracEntries.id });

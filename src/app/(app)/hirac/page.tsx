@@ -316,8 +316,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
         hazardClass: entry?.hazardClass ?? '',
         hazardousEvent: entry?.hazardousEvent ?? '',
         impact: entry?.impact ?? '',
-        initialLikelihood: entry?.initialLikelihood,
-        initialSeverity: entry?.initialSeverity,
+        initialLikelihood: entry?.initialLikelihood ?? 0,
+        initialSeverity: entry?.initialSeverity ?? 0,
         nextReviewDate: entry?.nextReviewDate ?? null,
         controlMeasures: entry?.controlMeasures ?? [],
         residualLikelihood: entry?.residualLikelihood ?? undefined,
@@ -479,7 +479,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
                                                 />
                                             </PopoverContent>
                                         </Popover>
-                                        <FormDescription>Optional: Schedule the next review.</FormDescription>
+                                        <FormDescription>Defaults to 1 year. Set for early review.</FormDescription>
                                         <FormMessage />
                                     </FormItem>
                                 )}
@@ -1060,9 +1060,9 @@ export default function HiracPage() {
                                     <AlertDialogContent>
                                         <AlertDialogHeader>
                                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                            <DialogDescription>
+                                            <AlertDialogDescription>
                                                 This action cannot be undone. This will permanently delete the HIRAC entry.
-                                            </DialogDescription>
+                                            </AlertDialogDescription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
                                             <AlertDialogCancel>Cancel</AlertDialogCancel>
