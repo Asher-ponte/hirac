@@ -29,6 +29,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -39,20 +40,21 @@ import { Separator } from '@/components/ui/separator';
 
 
 const likelihoodOptions = [
-  { value: 1, label: "1 - IMPROBABLE: Presence of ALL CONTROLS (e.g., Guarding, Interlock, Procedures, Training, Supervision, PPEs)" },
-  { value: 2, label: "2 - LESS PROBABLE: Presence of MOST CONTROLS" },
-  { value: 3, label: "3 - PROBABLE: Presence of SOME CONTROLS" },
-  { value: 4, label: "4 - ALMOST CERTAIN: Presence of FEW CONTROLS" },
-  { value: 5, label: "5 - CERTAIN: Absence of all CONTROLS" },
+  { value: 1, label: "1 - IMPROBABLE", description: "Presence of ALL CONTROLS (e.g., Guarding, Interlock, Procedures, Training, Supervision, PPEs)" },
+  { value: 2, label: "2 - LESS PROBABLE", description: "Presence of MOST CONTROLS" },
+  { value: 3, label: "3 - PROBABLE", description: "Presence of SOME CONTROLS" },
+  { value: 4, label: "4 - ALMOST CERTAIN", description: "Presence of FEW CONTROLS" },
+  { value: 5, label: "5 - CERTAIN", description: "Absence of all CONTROLS" },
 ];
 
 const severityOptions = [
-  { value: 1, label: "1 - NEGLIGIBLE/NEAR-MISS: Impact will not result to any personnel injury or ill-health. Impact will have no short-term effect." },
-  { value: 2, label: "2 - MINOR REQUIRING FIRST AID OR CAUSE MINOR PROPERTY DAMAGE: Impact will cause minor personnel injury requiring first aid. Impact will cause temporary ill health discomfort (headache, dizziness, nausea, muscle pain, etc.)" },
-  { value: 3, label: "3 - MINOR RESULTING TO LOST TIME OR CAUSE MINOR PROPERTY DAMAGE: Impact will cause minor personnel injury resulting to lost time. Impact will have short-term health effect (fever, upper respiratory infection, allergies, diarrhea)." },
-  { value: 4, label: "4 - MAJOR RESULTING TO PERMANENT DISABILITY AND MAJOR PROPERTY DAMAGE: Impact will cause major personnel injury resulting to permanent disability. Impact will have long-term or chronic health effect (permanent hearing loss, cancer, hypertension, etc.)." },
-  { value: 5, label: "5 - MAJOR RESULTING TO FATALITY AND CATASTROPHE: Impact will cause major personnel injury or illness resulting to fatality. Impact will cause major damage resulting to catastrophe." },
+  { value: 1, label: "1 - NEGLIGIBLE/NEAR-MISS", description: "Impact will not result to any personnel injury or ill-health. Impact will have no short-term effect." },
+  { value: 2, label: "2 - MINOR REQUIRING FIRST AID OR CAUSE MINOR PROPERTY DAMAGE", description: "Impact will cause minor personnel injury requiring first aid. Impact will cause temporary ill health discomfort (headache, dizziness, nausea, muscle pain, etc.)" },
+  { value: 3, label: "3 - MINOR RESULTING TO LOST TIME OR CAUSE MINOR PROPERTY DAMAGE", description: "Impact will cause minor personnel injury resulting to lost time. Impact will have short-term health effect (fever, upper respiratory infection, allergies, diarrhea)." },
+  { value: 4, label: "4 - MAJOR RESULTING TO PERMANENT DISABILITY AND MAJOR PROPERTY DAMAGE", description: "Impact will cause major personnel injury resulting to permanent disability. Impact will have long-term or chronic health effect (permanent hearing loss, cancer, hypertension, etc.)." },
+  { value: 5, label: "5 - MAJOR RESULTING TO FATALITY AND CATASTROPHE", description: "Impact will cause major personnel injury or illness resulting to fatality. Impact will cause major damage resulting to catastrophe." },
 ];
+
 
 const statusOptions = ['Ongoing', 'Implemented', 'Not Implemented'];
 const hazardClassOptions = ['Physical', 'Chemical', 'Biological', 'Mechanical', 'Electrical'];
@@ -94,7 +96,7 @@ const RiskDisplay = ({ likelihood, severity, title = "Calculated Risk Level" }: 
     const riskDetails = riskLevel !== undefined ? getRiskLevelDetails(riskLevel) : null;
 
     return (
-        <div className="flex flex-col items-center justify-center space-y-4 p-4 bg-muted rounded-lg h-full min-h-[180px]">
+        <div className="flex flex-col items-center justify-center space-y-4 p-4 bg-muted rounded-lg h-full min-h-[180px] md:min-h-[220px]">
             {riskDetails ? (
                 <>
                     <div className={cn("p-4 rounded-full", riskDetails.color)}>
@@ -113,6 +115,35 @@ const RiskDisplay = ({ likelihood, severity, title = "Calculated Risk Level" }: 
         </div>
     )
 };
+
+const RiskRadioGroup = ({
+  field,
+  options,
+}: {
+  field: any;
+  options: { value: number; label: string; description: string }[];
+}) => (
+  <RadioGroup
+    onValueChange={(value) => field.onChange(parseInt(value))}
+    value={String(field.value)}
+    className="grid grid-cols-1 gap-3"
+  >
+    {options.map((option) => (
+      <FormItem key={option.value}>
+        <FormControl>
+          <RadioGroupItem value={String(option.value)} id={`${field.name}-${option.value}`} className="peer sr-only" />
+        </FormControl>
+        <Label
+          htmlFor={`${field.name}-${option.value}`}
+          className="flex flex-col rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+        >
+          <span className="font-semibold mb-1">{option.label}</span>
+          <span className="text-sm text-muted-foreground">{option.description}</span>
+        </Label>
+      </FormItem>
+    ))}
+  </RadioGroup>
+);
 
 
 function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boolean) => void, entryToEdit?: HiracEntry | null, onFormSubmit: () => void }) {
@@ -138,6 +169,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
             ppe: '',
             responsiblePerson: '',
             status: 'Ongoing',
+            initialLikelihood: undefined,
+            initialSeverity: undefined,
         }
     });
     
@@ -160,6 +193,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
                 ppe: '',
                 responsiblePerson: '',
                 status: 'Ongoing',
+                initialLikelihood: undefined,
+                initialSeverity: undefined,
             });
             setStep(1);
         }
@@ -301,26 +336,38 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
                         <CardDescription>Assess the initial risk, define control measures, and assign responsibility.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                             <div className="space-y-4">
-                                 <FormField control={form.control} name="initialLikelihood" render={({ field }) => (
-                                    <FormItem><FormLabel>Probability of Occurrence (P)</FormLabel>
-                                        <Select onValueChange={(value) => field.onChange(parseInt(value))} value={String(field.value)}>
-                                            <FormControl><SelectTrigger><SelectValue placeholder="Select probability..." /></SelectTrigger></FormControl>
-                                            <SelectContent>{likelihoodOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
-                                        </Select>
-                                    <FormMessage /></FormItem>
-                                )} />
-                                <FormField control={form.control} name="initialSeverity" render={({ field }) => (
-                                    <FormItem><FormLabel>Severity of Hazard (S)</FormLabel>
-                                        <Select onValueChange={(value) => field.onChange(parseInt(value))} value={String(field.value)}>
-                                            <FormControl><SelectTrigger><SelectValue placeholder="Select severity..." /></SelectTrigger></FormControl>
-                                            <SelectContent>{severityOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
-                                        </Select>
-                                    <FormMessage /></FormItem>
-                                )} />
+                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                            <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <FormField
+                                    control={form.control}
+                                    name="initialLikelihood"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-3">
+                                            <FormLabel className="text-base font-semibold">Probability of Occurrence (P)</FormLabel>
+                                            <FormControl>
+                                                <RiskRadioGroup field={field} options={likelihoodOptions} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="initialSeverity"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-3">
+                                            <FormLabel className="text-base font-semibold">Severity of Hazard (S)</FormLabel>
+                                            <FormControl>
+                                                <RiskRadioGroup field={field} options={severityOptions} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
                             </div>
-                            <RiskDisplay likelihood={initialLikelihood} severity={initialSeverity} title="Initial Risk Level" />
+                            <div className="sticky top-4">
+                                <RiskDisplay likelihood={initialLikelihood} severity={initialSeverity} title="Initial Risk Level" />
+                            </div>
                         </div>
 
                         <Separator />
@@ -405,35 +452,48 @@ function ReassessmentForm({ setOpen, entry, onFormSubmit }: { setOpen: (open: bo
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                    <div className="space-y-4">
-                        <FormField control={form.control} name="residualLikelihood" render={({ field }) => (
-                            <FormItem><FormLabel>Residual Probability (P)</FormLabel>
-                                <Select onValueChange={(value) => field.onChange(parseInt(value))} value={String(field.value)}>
-                                    <FormControl><SelectTrigger><SelectValue placeholder="Select probability..." /></SelectTrigger></FormControl>
-                                    <SelectContent>{likelihoodOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
-                                </Select>
-                            <FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="residualSeverity" render={({ field }) => (
-                            <FormItem><FormLabel>Residual Severity (S)</FormLabel>
-                                <Select onValueChange={(value) => field.onChange(parseInt(value))} value={String(field.value)}>
-                                    <FormControl><SelectTrigger><SelectValue placeholder="Select severity..." /></SelectTrigger></FormControl>
-                                    <SelectContent>{severityOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
-                                </Select>
-                            <FormMessage /></FormItem>
-                        )} />
-                         <FormField control={form.control} name="status" render={({ field }) => (
-                            <FormItem><FormLabel>Status</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl><SelectTrigger><SelectValue placeholder="Select status..." /></SelectTrigger></FormControl>
-                                    <SelectContent>{statusOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                                </Select>
-                            <FormMessage /></FormItem>
-                        )} />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                     <div className="lg:col-span-2 space-y-6">
+                        <FormField
+                            control={form.control}
+                            name="residualLikelihood"
+                            render={({ field }) => (
+                                <FormItem className="space-y-3">
+                                    <FormLabel className="text-base font-semibold">Residual Probability (P)</FormLabel>
+                                    <FormControl>
+                                        <RiskRadioGroup field={field} options={likelihoodOptions} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="residualSeverity"
+                            render={({ field }) => (
+                                <FormItem className="space-y-3">
+                                    <FormLabel className="text-base font-semibold">Residual Severity (S)</FormLabel>
+                                    <FormControl>
+                                        <RiskRadioGroup field={field} options={severityOptions} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                     </div>
-                    <RiskDisplay likelihood={residualLikelihood} severity={residualSeverity} title="Residual Risk Level" />
+                    <div className="sticky top-4">
+                        <RiskDisplay likelihood={residualLikelihood} severity={residualSeverity} title="Residual Risk Level" />
+                    </div>
                 </div>
+                 <FormField control={form.control} name="status" render={({ field }) => (
+                    <FormItem className="pt-4"><FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl><SelectTrigger><SelectValue placeholder="Select status..." /></SelectTrigger></FormControl>
+                            <SelectContent>{statusOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                        </Select>
+                    <FormMessage /></FormItem>
+                )} />
+
                  <DialogFooter>
                     <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
                     <Button type="submit" disabled={isSubmitting}>
@@ -522,7 +582,7 @@ export default function HiracPage() {
 
         <Dialog open={reassessmentDialogOpen} onOpenChange={setReassessmentDialogOpen}>
             {entryToReassess && (
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-4xl">
                     <DialogHeader>
                         <DialogTitle>Re-assess Risk for HIRAC-{entryToReassess.id.replace('HIRAC-', '')}</DialogTitle>
                          <DialogDescription>Update the residual risk level and status after implementing control measures.</DialogDescription>
@@ -710,5 +770,3 @@ export default function HiracPage() {
     </div>
   );
 }
-
-    
