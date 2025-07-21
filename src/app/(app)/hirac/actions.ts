@@ -6,6 +6,8 @@ import { hiracEntries } from '@/lib/db/schema';
 import type { HiracEntry } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
+
 
 export async function getHiracEntries(): Promise<HiracEntry[]> {
   try {
@@ -26,8 +28,9 @@ export async function createHiracEntry(formData: Omit<HiracEntry, 'id'>) {
     await db.insert(hiracEntries).values({
         task: formData.task,
         hazard: formData.hazard,
-        cause: formData.cause,
-        effect: formData.effect,
+        hazardClass: formData.hazardClass,
+        hazardousEvent: formData.hazardousEvent,
+        impact: formData.impact,
         initialLikelihood: formData.initialLikelihood,
         initialSeverity: formData.initialSeverity,
         engineeringControls: formData.engineeringControls,
@@ -62,4 +65,8 @@ export async function reassessHiracEntry(id: number, data: { residualLikelihood:
     }).where(eq(hiracEntries.id, id));
     revalidatePath('/hirac');
     revalidatePath('/dashboard');
+}
+
+export async function resetHiracSequence() {
+  await db.run(sql`DELETE FROM sqlite_sequence WHERE name='hirac_entries';`);
 }

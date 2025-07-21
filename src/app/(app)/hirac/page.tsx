@@ -52,13 +52,15 @@ const severityOptions = [
 ];
 
 const statusOptions = ['Ongoing', 'Implemented', 'Not Implemented'];
+const hazardClassOptions = ['Physical', 'Chemical', 'Biological', 'Mechanical', 'Electrical'];
 
 const hiracFormSchema = z.object({
     task: z.string().min(1, "Task is required."),
     hazard: z.string().min(1, "Hazard is required."),
-    cause: z.string().min(1, "Cause is required."),
-    effect: z.string().min(1, "Effect is required."),
-    initialLikelihood: z.coerce.number().min(1, "Likelihood is required."),
+    hazardClass: z.string().min(1, "Hazard class is required."),
+    hazardousEvent: z.string().min(1, "Hazardous event is required."),
+    impact: z.string().min(1, "Impact is required."),
+    initialLikelihood: z.coerce.number().min(1, "Probability is required."),
     initialSeverity: z.coerce.number().min(1, "Severity is required."),
     engineeringControls: z.string().min(1, "Engineering controls are required."),
     administrativeControls: z.string().min(1, "Administrative controls are required."),
@@ -71,7 +73,7 @@ type HiracFormValues = z.infer<typeof hiracFormSchema>;
 
 const reassessmentFormSchema = z.object({
     status: z.enum(['Ongoing', 'Implemented', 'Not Implemented']),
-    residualLikelihood: z.coerce.number().min(1, "Residual likelihood is required."),
+    residualLikelihood: z.coerce.number().min(1, "Residual probability is required."),
     residualSeverity: z.coerce.number().min(1, "Residual severity is required."),
 });
 type ReassessmentFormValues = z.infer<typeof reassessmentFormSchema>;
@@ -123,8 +125,9 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
         } : {
             task: '',
             hazard: '',
-            cause: '',
-            effect: '',
+            hazardClass: '',
+            hazardousEvent: '',
+            impact: '',
             engineeringControls: '',
             administrativeControls: '',
             ppe: '',
@@ -143,8 +146,9 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
             form.reset({
                 task: '',
                 hazard: '',
-                cause: '',
-                effect: '',
+                hazardClass: '',
+                hazardousEvent: '',
+                impact: '',
                 engineeringControls: '',
                 administrativeControls: '',
                 ppe: '',
@@ -200,7 +204,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
     }
     
     const triggerStep2Validation = async () => {
-        const isValid = await form.trigger(['task', 'hazard', 'cause', 'effect', 'initialLikelihood', 'initialSeverity']);
+        const isValid = await form.trigger(['task', 'hazard', 'hazardClass', 'hazardousEvent', 'impact', 'initialLikelihood', 'initialSeverity']);
         if (isValid) {
             setStep(2);
         }
@@ -217,26 +221,34 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                         <div className="space-y-4">
+                            <FormField control={form.control} name="task" render={({ field }) => (
+                                <FormItem><FormLabel>Task/Job</FormLabel><FormControl><Input placeholder="e.g., Transportation Services" {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField control={form.control} name="task" render={({ field }) => (
-                                    <FormItem><FormLabel>Task/Job</FormLabel><FormControl><Input placeholder="e.g., Transportation Services" {...field} /></FormControl><FormMessage /></FormItem>
-                                )} />
                                 <FormField control={form.control} name="hazard" render={({ field }) => (
                                     <FormItem><FormLabel>Hazard</FormLabel><FormControl><Input placeholder="e.g., Riding on the Shuttle" {...field} /></FormControl><FormMessage /></FormItem>
                                 )} />
+                                <FormField control={form.control} name="hazardClass" render={({ field }) => (
+                                    <FormItem><FormLabel>Hazard Class</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Select class..." /></SelectTrigger></FormControl>
+                                            <SelectContent>{hazardClassOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                        </Select>
+                                    <FormMessage /></FormItem>
+                                )} />
                             </div>
-                             <FormField control={form.control} name="cause" render={({ field }) => (
-                                <FormItem><FormLabel>Cause</FormLabel><FormControl><Textarea placeholder="e.g., No Maintenance of shuttle service" rows={2} {...field} /></FormControl><FormMessage /></FormItem>
+                             <FormField control={form.control} name="hazardousEvent" render={({ field }) => (
+                                <FormItem><FormLabel>Hazardous Event</FormLabel><FormControl><Textarea placeholder="e.g., No Maintenance of shuttle service" rows={2} {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
-                            <FormField control={form.control} name="effect" render={({ field }) => (
-                                <FormItem><FormLabel>Effect</FormLabel><FormControl><Textarea placeholder="e.g., Car Accident, Death" rows={2} {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormField control={form.control} name="impact" render={({ field }) => (
+                                <FormItem><FormLabel>Impact</FormLabel><FormControl><Textarea placeholder="e.g., Car Accident, Death" rows={2} {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
                         </div>
                         <div className="space-y-4">
                              <FormField control={form.control} name="initialLikelihood" render={({ field }) => (
-                                <FormItem><FormLabel>Likelihood of Occurrence (L)</FormLabel>
+                                <FormItem><FormLabel>Probability of Occurrence (P)</FormLabel>
                                     <Select onValueChange={(value) => field.onChange(parseInt(value))} value={String(field.value)}>
-                                        <FormControl><SelectTrigger><SelectValue placeholder="Select likelihood..." /></SelectTrigger></FormControl>
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Select probability..." /></SelectTrigger></FormControl>
                                         <SelectContent>{likelihoodOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
                                     </Select>
                                 <FormMessage /></FormItem>
@@ -345,9 +357,9 @@ function ReassessmentForm({ setOpen, entry, onFormSubmit }: { setOpen: (open: bo
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                     <div className="space-y-4">
                         <FormField control={form.control} name="residualLikelihood" render={({ field }) => (
-                            <FormItem><FormLabel>Residual Likelihood (L)</FormLabel>
+                            <FormItem><FormLabel>Residual Probability (P)</FormLabel>
                                 <Select onValueChange={(value) => field.onChange(parseInt(value))} value={String(field.value)}>
-                                    <FormControl><SelectTrigger><SelectValue placeholder="Select likelihood..." /></SelectTrigger></FormControl>
+                                    <FormControl><SelectTrigger><SelectValue placeholder="Select probability..." /></SelectTrigger></FormControl>
                                     <SelectContent>{likelihoodOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
                                 </Select>
                             <FormMessage /></FormItem>
@@ -485,8 +497,9 @@ export default function HiracPage() {
                     <TableRow>
                     <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Task/Job</TableHead>
                     <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Hazard</TableHead>
-                    <TableHead className="min-w-[200px] align-bottom" rowSpan={2}>Cause</TableHead>
-                    <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Effect</TableHead>
+                    <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Hazard Class</TableHead>
+                    <TableHead className="min-w-[200px] align-bottom" rowSpan={2}>Hazardous Event</TableHead>
+                    <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Impact</TableHead>
                     <TableHead colSpan={2} className="text-center border-b">Initial Risk Assessment</TableHead>
                     <TableHead colSpan={3} className="text-center border-b">Control Measures</TableHead>
                     <TableHead className="min-w-[150px] align-bottom" rowSpan={2}>Responsible</TableHead>
@@ -495,12 +508,12 @@ export default function HiracPage() {
                     <TableHead className="align-bottom" rowSpan={2}><span className="sr-only">Actions</span></TableHead>
                     </TableRow>
                     <TableRow>
-                        <TableHead className="text-center">L,S</TableHead>
+                        <TableHead className="text-center">P,S</TableHead>
                         <TableHead className="text-center">RL</TableHead>
                         <TableHead className="min-w-[200px] text-center">Engineering</TableHead>
                         <TableHead className="min-w-[200px] text-center">Administrative</TableHead>
                         <TableHead className="min-w-[200px] text-center">PPE</TableHead>
-                        <TableHead className="text-center">L,S</TableHead>
+                        <TableHead className="text-center">P,S</TableHead>
                         <TableHead className="text-center">RL</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -515,10 +528,11 @@ export default function HiracPage() {
                         <TableRow key={item.id} className={cn(index % 2 === 0 ? "bg-muted/30" : "")}>
                         <TableCell className="font-medium align-top">{item.task}</TableCell>
                         <TableCell className="align-top">{item.hazard}</TableCell>
-                        <TableCell className="max-w-xs align-top whitespace-pre-wrap">{item.cause}</TableCell>
-                        <TableCell className="align-top">{item.effect}</TableCell>
+                        <TableCell className="align-top">{item.hazardClass}</TableCell>
+                        <TableCell className="max-w-xs align-top whitespace-pre-wrap">{item.hazardousEvent}</TableCell>
+                        <TableCell className="align-top">{item.impact}</TableCell>
                         <TableCell className="text-center align-top font-mono text-xs">
-                            L:{item.initialLikelihood}, S:{item.initialSeverity}
+                            P:{item.initialLikelihood}, S:{item.initialSeverity}
                         </TableCell>
                         <TableCell className="text-center align-top p-2">
                             <TooltipProvider>
@@ -539,7 +553,7 @@ export default function HiracPage() {
                         <TableCell className="max-w-xs align-top whitespace-pre-wrap">{item.ppe}</TableCell>
                         <TableCell className="align-top">{item.responsiblePerson}</TableCell>
                         <TableCell className="text-center align-top font-mono text-xs">
-                            L:{item.residualLikelihood}, S:{item.residualSeverity}
+                            P:{item.residualLikelihood}, S:{item.residualSeverity}
                         </TableCell>
                         <TableCell className="text-center align-top p-2">
                             <TooltipProvider>
@@ -607,4 +621,3 @@ export default function HiracPage() {
     </div>
   );
 }
-

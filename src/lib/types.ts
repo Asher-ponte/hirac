@@ -23,8 +23,9 @@ export type HiracEntry = {
   id: string;
   task: string;
   hazard: string;
-  cause: string;
-  effect: string;
+  hazardClass: 'Physical' | 'Chemical' | 'Biological' | 'Mechanical' | 'Electrical';
+  hazardousEvent: string;
+  impact: string;
   initialLikelihood: number;
   initialSeverity: number;
   engineeringControls: string;
