@@ -1,7 +1,7 @@
 import { integer, text, sqliteTable } from 'drizzle-orm/sqlite-core';
 import { relations } from 'drizzle-orm';
 
-const controlStatusEnum = ['Ongoing', 'Implemented', 'Not Implemented'] as const;
+const controlStatusEnum = ['Ongoing', 'Implemented', 'For Implementation'] as const;
 const controlTypeEnum = ['Engineering', 'Administrative', 'PPE'] as const;
 const hazardClassEnum = ['Physical', 'Chemical', 'Biological', 'Mechanical', 'Electrical'] as const;
 
@@ -17,7 +17,7 @@ export const hiracEntries = sqliteTable('hirac_entries', {
   initialSeverity: integer('initial_severity').notNull(),
   residualLikelihood: integer('residual_likelihood'),
   residualSeverity: integer('residual_severity'),
-  status: text('status', { enum: ['Ongoing', 'Implemented', 'Not Implemented'] }),
+  status: text('status', { enum: ['Ongoing', 'Implemented', 'For Implementation'] }),
 });
 
 export const hiracEntriesRelations = relations(hiracEntries, ({ many }) => ({

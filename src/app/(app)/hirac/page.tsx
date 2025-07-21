@@ -59,7 +59,7 @@ const severityOptions = [
 ];
 
 
-const statusOptions: ControlStatus[] = ['Ongoing', 'Implemented', 'Not Implemented'];
+const statusOptions: ControlStatus[] = ['Ongoing', 'Implemented', 'For Implementation'];
 const hazardClassOptions = ['Physical', 'Chemical', 'Biological', 'Mechanical', 'Electrical'];
 
 const controlMeasureSchema = z.object({
@@ -87,10 +87,10 @@ const hiracFormSchema = z.object({
     residualSeverity: z.coerce.number().min(1).max(5).optional(),
 }).superRefine((data, ctx) => {
     data.controlMeasures.forEach((control, index) => {
-        if (control.status === 'Not Implemented' && !control.completionDate) {
+        if (control.status === 'For Implementation' && !control.completionDate) {
             ctx.addIssue({
                 path: [`controlMeasures.${index}.completionDate`],
-                message: "Completion date is required when status is 'Not Implemented'",
+                message: "Completion date is required when status is 'For Implementation'",
                 code: z.ZodIssueCode.custom,
             });
         }
@@ -283,7 +283,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                                             />
                                         </PopoverContent>
                                     </Popover>
-                                    <FormDescription>Required if status is 'Not Implemented'.</FormDescription>
+                                    <FormDescription>Required if status is 'For Implementation'.</FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}

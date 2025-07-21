@@ -74,7 +74,7 @@ export async function updateHiracEntry(id: number, formData: HiracEntryPayload) 
         const allImplemented = formData.controlMeasures.length > 0 && formData.controlMeasures.every(cm => cm.status === 'Implemented');
         const anyOngoing = formData.controlMeasures.some(cm => cm.status === 'Ongoing');
         
-        let newStatus: HiracEntry['status'] = 'Not Implemented';
+        let newStatus: HiracEntry['status'] = 'For Implementation';
         if (allImplemented) {
             newStatus = 'Implemented';
         } else if (anyOngoing) {

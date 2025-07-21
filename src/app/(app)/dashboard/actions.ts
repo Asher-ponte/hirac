@@ -15,7 +15,7 @@ export async function getDashboardData() {
 
   const totalHazards = hiracEntries.length;
   const resolved = hiracEntries.filter(e => e.status === 'Implemented').length;
-  const openIssues = hiracEntries.filter(e => e.status === 'Ongoing' || e.status === 'Not Implemented').length;
+  const openIssues = hiracEntries.filter(e => e.status === 'Ongoing' || e.status === 'For Implementation').length;
   const highRiskHazards = hiracEntries.filter(e => (e.initialLikelihood * e.initialSeverity) > 12).length;
 
   const kpiData = [
@@ -26,7 +26,7 @@ export async function getDashboardData() {
   ];
 
   const statusMap = hiracEntries.reduce((acc, entry) => {
-    const status = entry.status === 'Not Implemented' ? 'Open' : entry.status;
+    const status = entry.status === 'For Implementation' ? 'Open' : entry.status;
     acc[status] = (acc[status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);

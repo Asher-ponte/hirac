@@ -19,7 +19,7 @@ export type User = {
     last_login: string;
 };
 
-export type ControlStatus = 'Ongoing' | 'Implemented' | 'Not Implemented';
+export type ControlStatus = 'Ongoing' | 'Implemented' | 'For Implementation';
 export type ControlType = 'Engineering' | 'Administrative' | 'PPE';
 
 export type ControlMeasure = {
@@ -41,8 +41,8 @@ export type HiracEntry = {
   impact: string;
   initialLikelihood: number;
   initialSeverity: number;
-  residualLikelihood?: number;
-  residualSeverity?: number;
+  residualLikelihood?: number | null;
+  residualSeverity?: number | null;
   controlMeasures: ControlMeasure[];
-  status?: 'Ongoing' | 'Implemented' | 'Not Implemented' | null;
+  status?: 'Ongoing' | 'Implemented' | 'For Implementation' | null;
 };
