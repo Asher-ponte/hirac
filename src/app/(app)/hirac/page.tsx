@@ -40,6 +40,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { analyzeHazard } from '@/ai/flows/analyze-hazard-flow';
 
 
 const likelihoodOptions = [
@@ -305,6 +306,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
     const [isUploading, setIsUploading] = React.useState(false);
     const [imagePreview, setImagePreview] = React.useState<string | null>(null);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+    const [uploadedFile, setUploadedFile] = React.useState<File | null>(null);
 
     const numericId = entryToEdit ? parseInt(entryToEdit.id.replace('HIRAC-', ''), 10) : null;
     
@@ -334,6 +337,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
         const defaultValues = getDefaultValues(entryToEdit);
         form.reset(defaultValues);
         setImagePreview(defaultValues.hazardPhotoUrl ?? null);
+        setUploadedFile(null);
         form.setValue('hazardPhotoUrl', defaultValues.hazardPhotoUrl, { shouldValidate: true });
         setStep(1);
     }, [entryToEdit, form]);
@@ -343,13 +347,25 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
 
     async function onSubmit(data: HiracFormValues) {
         setIsSubmitting(true);
-        const payload = {
-            ...data,
-            residualLikelihood: data.residualLikelihood ?? data.initialLikelihood,
-            residualSeverity: data.residualSeverity ?? data.initialSeverity,
-        };
-
         try {
+            // Handle file upload before submitting the rest of the data
+            if (uploadedFile) {
+                const formData = new FormData();
+                formData.append('file', uploadedFile);
+                const result = await uploadHazardPhoto(formData);
+
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+                data.hazardPhotoUrl = result.url;
+            }
+
+            const payload = {
+                ...data,
+                residualLikelihood: data.residualLikelihood ?? data.initialLikelihood,
+                residualSeverity: data.residualSeverity ?? data.initialSeverity,
+            };
+
             if (numericId !== null && entryToEdit) {
                 await updateHiracEntry(numericId, payload);
                 toast({
@@ -371,7 +387,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
              toast({
                 variant: 'destructive',
                 title: "Error",
-                description: `Failed to ${numericId ? 'update' : 'create'} HIRAC entry. Please try again.`,
+                description: `Failed to ${numericId ? 'update' : 'create'} HIRAC entry. ${(error as Error).message}`,
             });
         } finally {
             setIsSubmitting(false);
@@ -388,43 +404,72 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            const formData = new FormData();
-            formData.append('file', file);
-            
-            setIsUploading(true);
+            setUploadedFile(file);
             const previewUrl = URL.createObjectURL(file);
             setImagePreview(previewUrl);
-
-            try {
-                const result = await uploadHazardPhoto(formData);
-
-                if(result.error) {
-                    toast({ variant: 'destructive', title: "Upload Failed", description: result.error });
-                    setImagePreview(form.getValues('hazardPhotoUrl')); // Revert to original photo on failure
-                     if (fileInputRef.current) {
-                        fileInputRef.current.value = '';
-                    }
-                } else if (result.url) {
-                    form.setValue('hazardPhotoUrl', result.url, { shouldValidate: true });
-                    setImagePreview(result.url); // Show the final URL after upload
-                    toast({ title: "Success", description: "Image uploaded." });
-                }
-            } catch (error) {
-                toast({ variant: 'destructive', title: "Upload Failed", description: "An unexpected error occurred." });
-                setImagePreview(form.getValues('hazardPhotoUrl'));
-            } finally {
-                setIsUploading(false);
-            }
         }
     }
     
     const handleRemoveImage = () => {
         setImagePreview(null);
+        setUploadedFile(null);
         form.setValue('hazardPhotoUrl', null, { shouldValidate: true });
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
     }
+
+    const fileToDataUri = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const handleAnalyzeHazard = async () => {
+        if (!uploadedFile) {
+            toast({
+                variant: 'destructive',
+                title: 'No Photo Uploaded',
+                description: 'Please upload a photo of the hazard first to use the AI analysis.',
+            });
+            return;
+        }
+
+        const hazardDescription = form.getValues('hazard');
+        if (!hazardDescription) {
+             toast({
+                variant: 'destructive',
+                title: 'Hazard Description Missing',
+                description: 'Please describe the hazard before running the AI analysis.',
+            });
+            return;
+        }
+
+        setIsAnalyzing(true);
+        try {
+            const photoDataUri = await fileToDataUri(uploadedFile);
+            const result = await analyzeHazard({ photoDataUri, hazardDescription });
+            if (result.suggestedEvent) {
+                form.setValue('hazardousEvent', result.suggestedEvent, { shouldValidate: true });
+                toast({
+                    title: 'AI Analysis Complete',
+                    description: 'The hazardous event has been filled in.',
+                });
+            }
+        } catch (error) {
+             toast({
+                variant: 'destructive',
+                title: 'AI Analysis Failed',
+                description: (error as Error).message || 'An unexpected error occurred.',
+            });
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
 
     return (
       <Form {...form}>
@@ -571,7 +616,17 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
                         )} />
 
                         <FormField control={form.control} name="hazardousEvent" render={({ field }) => (
-                            <FormItem><FormLabel>Hazardous Event</FormLabel><FormControl><Textarea placeholder="e.g., No Maintenance of shuttle service" rows={2} {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormItem>
+                                <div className="flex items-center justify-between">
+                                    <FormLabel>Hazardous Event</FormLabel>
+                                    <Button type="button" variant="outline" size="sm" onClick={handleAnalyzeHazard} disabled={isAnalyzing}>
+                                        {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BrainCircuit className="mr-2 h-4 w-4" />}
+                                        Analyze with AI
+                                    </Button>
+                                </div>
+                                <FormControl><Textarea placeholder="e.g., No Maintenance of shuttle service" rows={2} {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
                         )} />
                         <FormField control={form.control} name="impact" render={({ field }) => (
                             <FormItem><FormLabel>Impact</FormLabel><FormControl><Textarea placeholder="e.g., Car Accident, Death" rows={2} {...field} /></FormControl><FormMessage /></FormItem>
@@ -640,8 +695,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
                 <div className="flex gap-2">
                     <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
                      {step < 2 && <Button type="button" onClick={triggerStep2Validation}>Next <ArrowRight className="ml-2 h-4 w-4" /></Button>}
-                    {step === 2 && <Button type="submit" disabled={isSubmitting || isUploading}>
-                        {(isSubmitting || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {step === 2 && <Button type="submit" disabled={isSubmitting || isUploading || isAnalyzing}>
+                        {(isSubmitting || isUploading || isAnalyzing) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {numericId ? 'Update Entry' : 'Save Entry'}
                     </Button>}
                 </div>
@@ -883,19 +938,19 @@ export default function HiracPage() {
                 </DialogContent>
             </Dialog>
         </div>
-        
-        {entryToReassess && (
-            <Dialog open={reassessDialogOpen} onOpenChange={setReassessDialogOpen}>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                     <ReassessmentForm 
-                        entry={entryToReassess} 
-                        setOpen={setReassessDialogOpen}
-                        onFormSubmit={handleFormSubmit}
-                    />
-                </DialogContent>
-            </Dialog>
-        )}
       </div>
+      
+      {entryToReassess && (
+          <Dialog open={reassessDialogOpen} onOpenChange={setReassessDialogOpen}>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <ReassessmentForm 
+                      entry={entryToReassess} 
+                      setOpen={setReassessDialogOpen}
+                      onFormSubmit={handleFormSubmit}
+                  />
+              </DialogContent>
+          </Dialog>
+      )}
 
       <Card>
         <CardHeader>
@@ -1088,7 +1143,7 @@ export default function HiracPage() {
                                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                             <AlertDialogDescription>
                                                 This action cannot be undone. This will permanently delete the HIRAC entry.
-                                            </Dėscription>
+                                            </AlertDialogDescription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
                                             <AlertDialogCancel>Cancel</AlertDialogCancel>
