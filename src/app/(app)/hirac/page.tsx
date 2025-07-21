@@ -42,7 +42,7 @@ const likelihoodOptions = [
   { value: 5, label: "5 - It may happen every day / week" },
   { value: 4, label: "4 - It may happen every month" },
   { value: 3, label: "3 - It may happen every three months" },
-  { value: 2, label: "2 - It may happen every six months" },
+  { value: 2, label: "2 - It may happen every year" },
   { value: 1, label: "1 - It may happen every year" },
 ];
 
@@ -217,12 +217,9 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
         }
     }
     
-    // In a real app, this would involve uploading to a service like Cloud Storage
-    // and getting back a URL. For this prototype, we'll simulate it.
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            // Using a placeholder service for the prototype
-            const placeholderUrl = `https://placehold.co/400x300.png?text=Hazard`;
+            const placeholderUrl = `https://placehold.co/400x300.png`;
             form.setValue('hazardPhotoUrl', placeholderUrl);
              toast({
                 title: "Image Added",
@@ -689,7 +686,7 @@ export default function HiracPage() {
                                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                         <AlertDialogDescription>
                                             This action cannot be undone. This will permanently delete the HIRAC entry.
-                                        </description>
+                                        </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
