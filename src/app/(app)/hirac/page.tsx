@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import type { HiracEntry, ControlStatus, ControlType, Department } from '@/lib/types';
+import type { HiracEntry, ControlStatus, ControlType, Department, TaskType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle, BarChart, Camera, Search, ChevronDown } from 'lucide-react';
 import {
@@ -62,6 +62,7 @@ const severityOptions = [
 
 const statusOptions: ControlStatus[] = ['Ongoing', 'Implemented', 'For Implementation'];
 const hazardClassOptions = ['Physical', 'Chemical', 'Biological', 'Mechanical', 'Electrical'];
+const taskTypeOptions: TaskType[] = ['Routine', 'Non-Routine'];
 
 const controlMeasureSchema = z.object({
     id: z.number().optional(),
@@ -75,6 +76,7 @@ const controlMeasureSchema = z.object({
 const hiracFormSchema = z.object({
     departmentId: z.coerce.number().min(1, "Department is required."),
     task: z.string().min(1, "Task is required."),
+    taskType: z.enum(taskTypeOptions, { required_error: 'Task type is required' }),
     hazard: z.string().min(1, "Hazard is required."),
     hazardPhotoUrl: z.string().nullable().optional(),
     hazardClass: z.string().min(1, "Hazard class is required."),
@@ -191,7 +193,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                     </Button>
                 </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-2">
                 {filteredFields.length === 0 && (
                     <p className="text-sm text-muted-foreground text-center py-4">No {title.toLowerCase()} added.</p>
                 )}
@@ -311,6 +313,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
     const getDefaultValues = (entry: HiracEntry | null | undefined): HiracFormValues => ({
         departmentId: entry?.departmentId ?? 0,
         task: entry?.task ?? '',
+        taskType: entry?.taskType ?? 'Routine',
         hazard: entry?.hazard ?? '',
         hazardPhotoUrl: entry?.hazardPhotoUrl ?? null,
         hazardClass: entry?.hazardClass ?? '',
@@ -384,7 +387,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
         
         if (targetStep > step) {
             if (step === 1) {
-                fieldsToValidate = ['departmentId', 'task', 'hazard', 'hazardClass', 'hazardousEvent', 'impact'];
+                fieldsToValidate = ['departmentId', 'task', 'taskType', 'hazard', 'hazardClass', 'hazardousEvent', 'impact'];
             } else if (step === 2) {
                  fieldsToValidate = ['initialLikelihood', 'initialSeverity'];
             }
@@ -491,6 +494,41 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                         <FormField control={form.control} name="task" render={({ field }) => (
                             <FormItem><FormLabel>Task/Job</FormLabel><FormControl><Input placeholder="e.g., Transportation Services" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
+
+                        <FormField
+                            control={form.control}
+                            name="taskType"
+                            render={({ field }) => (
+                                <FormItem className="space-y-3">
+                                <FormLabel>Task Type</FormLabel>
+                                <FormControl>
+                                    <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-col space-y-1"
+                                    >
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                        <FormControl>
+                                        <RadioGroupItem value="Routine" />
+                                        </FormControl>
+                                        <FormLabel className="font-normal">
+                                        Routine
+                                        </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                        <FormControl>
+                                        <RadioGroupItem value="Non-Routine" />
+                                        </FormControl>
+                                        <FormLabel className="font-normal">
+                                        Non-Routine
+                                        </FormLabel>
+                                    </FormItem>
+                                    </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField control={form.control} name="hazard" render={({ field }) => (
@@ -751,11 +789,11 @@ function ReassessmentForm({ entry, setOpen, onFormSubmit }: { entry: HiracEntry,
 const ControlMeasuresDetails = ({ controls, type }: { controls: HiracEntry['controlMeasures'], type: ControlType }) => {
     const filteredControls = controls.filter(c => c.type === type);
     if (filteredControls.length === 0) {
-        return <TableCell colSpan={4} className="text-center text-muted-foreground border-r py-2">No {type.toLowerCase()} controls.</TableCell>;
+        return <TableCell colSpan={4} className="text-center text-muted-foreground border-r p-2">No {type.toLowerCase()} controls.</TableCell>;
     }
 
     return (
-        <React.Fragment>
+        <>
             <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r p-0">
                 {filteredControls.map((c, i) => <div key={i} className={cn("p-2", i < filteredControls.length -1 && "border-b")}>{c.description}</div>)}
             </TableCell>
@@ -768,7 +806,7 @@ const ControlMeasuresDetails = ({ controls, type }: { controls: HiracEntry['cont
             <TableCell className="align-top border-r p-0">
                 {filteredControls.map((c, i) => <div key={i} className={cn("p-2", i < filteredControls.length -1 && "border-b")}>{c.completionDate ? format(new Date(c.completionDate), "P") : ''}</div>)}
             </TableCell>
-        </React.Fragment>
+        </>
     );
 };
 
@@ -794,7 +832,7 @@ function HiracCard({ item, onEdit, onReassess, onDelete }: { item: HiracEntry, o
                 <div className="flex justify-between items-start">
                     <div>
                         <CardTitle className="text-base font-semibold">{item.task}</CardTitle>
-                        <CardDescription>{item.department?.name}</CardDescription>
+                        <CardDescription>{item.department?.name} ({item.taskType})</CardDescription>
                     </div>
                     <AlertDialog>
                         <DropdownMenu>
@@ -1061,6 +1099,7 @@ export default function HiracPage() {
                           <TableRow>
                               <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Department</TableHead>
                               <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Task/Job</TableHead>
+                              <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Task Type</TableHead>
                               <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Hazard Class</TableHead>
                               <TableHead className="min-w-[250px] align-bottom border-r" rowSpan={2}>Hazard</TableHead>
                               <TableHead className="min-w-[250px] align-bottom border-r" rowSpan={2}>Hazardous Event</TableHead>
@@ -1105,6 +1144,7 @@ export default function HiracPage() {
                               <TableRow key={item.id} className={cn(index % 2 === 0 ? "bg-muted/30" : "")}>
                                   <TableCell className="font-medium align-top border-r p-2">{item.department?.name}</TableCell>
                                   <TableCell className="font-medium align-top border-r p-2">{item.task}</TableCell>
+                                  <TableCell className="align-top border-r p-2">{item.taskType}</TableCell>
                                   <TableCell className="align-top border-r p-2">{item.hazardClass}</TableCell>
                                   <TableCell className="align-top border-r p-2">
                                     {item.hazardPhotoUrl && (

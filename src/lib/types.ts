@@ -30,6 +30,7 @@ export type Department = {
 
 export type ControlStatus = 'Ongoing' | 'Implemented' | 'For Implementation';
 export type ControlType = 'Engineering' | 'Administrative' | 'PPE';
+export type TaskType = 'Routine' | 'Non-Routine';
 
 export type ControlMeasure = {
   id?: number;
@@ -45,6 +46,7 @@ export type HiracEntry = {
   departmentId: number;
   department?: Department; // Added for relation
   task: string;
+  taskType: TaskType;
   hazard: string;
   hazardPhotoUrl?: string | null;
   hazardClass: 'Physical' | 'Chemical' | 'Biological' | 'Mechanical' | 'Electrical';

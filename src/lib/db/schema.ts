@@ -5,6 +5,7 @@ const controlStatusEnum = ['Ongoing', 'Implemented', 'For Implementation'] as co
 const controlTypeEnum = ['Engineering', 'Administrative', 'PPE'] as const;
 const hazardClassEnum = ['Physical', 'Chemical', 'Biological', 'Mechanical', 'Electrical'] as const;
 const userRoleEnum = ['Admin', 'Safety Officer', 'Viewer'] as const;
+const taskTypeEnum = ['Routine', 'Non-Routine'] as const;
 
 export const users = sqliteTable('users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -38,6 +39,7 @@ export const hiracEntries = sqliteTable('hirac_entries', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   departmentId: integer('department_id').notNull().references(() => departments.id, { onDelete: 'cascade' }),
   task: text('task').notNull(),
+  taskType: text('task_type', { enum: taskTypeEnum }).notNull().default('Routine'),
   hazard: text('hazard').notNull(),
   hazardPhotoUrl: text('hazard_photo_url'),
   hazardClass: text('hazard_class', { enum: hazardClassEnum }).notNull(),

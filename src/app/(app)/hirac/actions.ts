@@ -3,7 +3,7 @@
 
 import { db } from '@/lib/db';
 import { hiracEntries, controlMeasures, departments } from '@/lib/db/schema';
-import type { HiracEntry, ControlMeasure } from '@/lib/types';
+import type { HiracEntry, ControlMeasure, TaskType } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { eq, inArray } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
@@ -31,7 +31,8 @@ export async function getHiracEntries(departmentId?: number): Promise<HiracEntry
         ...cm,
         id: cm.id,
       })),
-      status: entry.status ?? 'Ongoing' // Ensure status is not null
+      status: entry.status ?? 'Ongoing', // Ensure status is not null
+      taskType: entry.taskType ?? 'Routine',
     }));
   } catch (error) {
     console.error("Failed to fetch HIRAC entries:", error);
@@ -53,6 +54,7 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
     const [newHiracEntry] = await tx.insert(hiracEntries).values({
       departmentId: formData.departmentId,
       task: formData.task,
+      taskType: formData.taskType,
       hazard: formData.hazard,
       hazardPhotoUrl: formData.hazardPhotoUrl,
       hazardClass: formData.hazardClass,
@@ -98,6 +100,7 @@ export async function updateHiracEntry(id: number, formData: HiracEntryPayload) 
         await tx.update(hiracEntries).set({
             departmentId: formData.departmentId,
             task: formData.task,
+            taskType: formData.taskType,
             hazard: formData.hazard,
             hazardPhotoUrl: formData.hazardPhotoUrl,
             hazardClass: formData.hazardClass,
