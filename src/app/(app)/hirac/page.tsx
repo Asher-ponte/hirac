@@ -300,7 +300,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
 };
 
 
-function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpen: (open: boolean) => void, entryToEdit?: HiracEntry | null, onFormSubmit: () => void, departments: Department[] }) {
+function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogContentRef }: { setOpen: (open: boolean) => void, entryToEdit?: HiracEntry | null, onFormSubmit: () => void, departments: Department[], dialogContentRef: React.RefObject<HTMLDivElement> }) {
     const [step, setStep] = React.useState(1);
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -342,6 +342,12 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
         form.setValue('hazardPhotoUrl', defaultValues.hazardPhotoUrl, { shouldValidate: true });
         setStep(1);
     }, [entryToEdit, form]);
+    
+    React.useEffect(() => {
+        if (dialogContentRef.current) {
+            dialogContentRef.current.scrollTo(0, 0);
+        }
+    }, [step, dialogContentRef]);
 
     const initialLikelihood = form.watch('initialLikelihood');
     const initialSeverity = form.watch('initialSeverity');
@@ -377,15 +383,18 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
         }
     }
     
-    const triggerStepValidation = async (targetStep: number) => {
+    const handleStepNavigation = async (targetStep: number) => {
         let fieldsToValidate: (keyof HiracFormValues)[] = [];
-        if (step === 1) {
-            fieldsToValidate = ['departmentId', 'task', 'hazard', 'hazardClass', 'hazardousEvent', 'impact'];
-        } else if (step === 2) {
-             fieldsToValidate = ['initialLikelihood', 'initialSeverity'];
-        }
+        let isValid = true;
         
-        const isValid = await form.trigger(fieldsToValidate);
+        if (targetStep > step) {
+            if (step === 1) {
+                fieldsToValidate = ['departmentId', 'task', 'hazard', 'hazardClass', 'hazardousEvent', 'impact'];
+            } else if (step === 2) {
+                 fieldsToValidate = ['initialLikelihood', 'initialSeverity'];
+            }
+            isValid = await form.trigger(fieldsToValidate);
+        }
 
         if (isValid) {
             setStep(targetStep);
@@ -649,11 +658,11 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
 
             <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between pt-4 gap-2">
                 <div>
-                    {step > 1 && <Button variant="outline" type="button" onClick={() => setStep(step - 1)} className="w-full sm:w-auto"><ArrowLeft className="mr-2 h-4 w-4" /> Previous</Button>}
+                    {step > 1 && <Button variant="outline" type="button" onClick={() => handleStepNavigation(step - 1)} className="w-full sm:w-auto"><ArrowLeft className="mr-2 h-4 w-4" /> Previous</Button>}
                 </div>
                 <div className="flex flex-col-reverse sm:flex-row gap-2">
                     <DialogClose asChild><Button type="button" variant="secondary" className="w-full sm:w-auto">Cancel</Button></DialogClose>
-                     {step < 3 && <Button type="button" onClick={() => triggerStepValidation(step + 1)} className="w-full sm:w-auto">Next <ArrowRight className="ml-2 h-4 w-4" /></Button>}
+                     {step < 3 && <Button type="button" onClick={() => handleStepNavigation(step + 1)} className="w-full sm:w-auto">Next <ArrowRight className="ml-2 h-4 w-4" /></Button>}
                     {step === 3 && <Button type="submit" disabled={isSubmitting || isUploading} className="w-full sm:w-auto">
                         {(isSubmitting || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {numericId ? 'Update Entry' : 'Save Entry'}
@@ -785,6 +794,7 @@ export default function HiracPage() {
   const { toast } = useToast();
   const [departmentFilter, setDepartmentFilter] = React.useState<string>('all');
   const [searchFilter, setSearchFilter] = React.useState('');
+  const dialogContentRef = React.useRef<HTMLDivElement>(null);
 
   const loadData = React.useCallback(async () => {
     setLoading(true);
@@ -1013,7 +1023,7 @@ export default function HiracPage() {
                                           <AlertDialogContent>
                                               <AlertDialogHeader>
                                                   <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                  <AlertDialogDescription>This action cannot be undone. This will permanently delete the HIRAC entry.</AlertDialogDescription>
+                                                  <AlertDialogDescription>This action cannot be undone. This will permanently delete the HIRAC entry.</AlertDialogHeader>
                                               </AlertDialogHeader>
                                               <AlertDialogFooter>
                                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -1034,14 +1044,20 @@ export default function HiracPage() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent ref={dialogContentRef} className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
                 <DialogTitle>{entryToEdit ? 'Edit' : 'New'} HIRAC Entry</DialogTitle>
                 <DialogDescription>
                     {entryToEdit ? "Update the details for this HIRAC entry. This will also update the 'Last Reviewed' date." : 'Follow the steps to add a new hazard identification and risk assessment.'}
                 </DialogDescription>
             </DialogHeader>
-            <HiracForm setOpen={setDialogOpen} entryToEdit={entryToEdit} onFormSubmit={handleFormSubmit} departments={departments} />
+            <HiracForm 
+                setOpen={setDialogOpen} 
+                entryToEdit={entryToEdit} 
+                onFormSubmit={handleFormSubmit} 
+                departments={departments}
+                dialogContentRef={dialogContentRef}
+            />
         </DialogContent>
       </Dialog>
       
@@ -1145,7 +1161,7 @@ function HiracCard({ item, onEdit, onReassess, onDelete }: { item: HiracEntry, o
 
                 <div className="space-y-2 border-t pt-4">
                     <h4 className="text-sm font-semibold tracking-tight">Identification Details</h4>
-                    <IdentificationDetail label="Hazard" value={item.hazard} />
+                     <IdentificationDetail label="Hazard" value={item.hazard} />
                     <IdentificationDetail label="Hazard Class" value={item.hazardClass} />
                     <IdentificationDetail label="Hazardous Event" value={item.hazardousEvent} />
                     <IdentificationDetail label="Impact" value={item.impact} />
@@ -1204,5 +1220,7 @@ function HiracCard({ item, onEdit, onReassess, onDelete }: { item: HiracEntry, o
                 </span>
             </CardFooter>
         </Card>
-    )
+    );
 }
+
+    
