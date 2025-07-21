@@ -15,26 +15,25 @@ export async function getDashboardData() {
   const hiracEntries = await getHiracEntries();
 
   const totalHazards = hiracEntries.length;
-  const resolved = hiracEntries.filter(e => e.status === 'Implemented').length;
-  const openIssues = hiracEntries.filter(e => e.status === 'Ongoing' || e.status === 'For Implementation').length;
+  const implemented = hiracEntries.filter(e => e.status === 'Implemented').length;
+  const forImplementation = hiracEntries.filter(e => e.status === 'For Implementation').length;
   const highRiskHazards = hiracEntries.filter(e => (e.initialLikelihood * e.initialSeverity) > 12).length;
 
   const kpiData = [
     { title: 'Total Hazards', value: totalHazards.toString(), description: '' },
-    { title: 'Open Issues', value: openIssues.toString(), description: '' },
-    { title: 'Resolved', value: resolved.toString(), description: '' },
+    { title: 'For Implementation', value: forImplementation.toString(), description: '' },
+    { title: 'Implemented', value: implemented.toString(), description: '' },
     { title: 'High-Risk Hazards', value: highRiskHazards.toString(), description: 'Based on initial assessment' },
   ];
 
   const statusMap = hiracEntries.reduce((acc, entry) => {
-    const status = entry.status === 'For Implementation' ? 'Open' : (entry.status ?? 'Open');
+    const status = entry.status ?? 'For Implementation';
     acc[status] = (acc[status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   const statusChartData = [
-    { status: 'Open', count: statusMap['Open'] || 0, fill: 'var(--color-open)' },
-    { status: 'Ongoing', count: statusMap['Ongoing'] || 0, fill: 'var(--color-in-progress)' },
+    { status: 'For Implementation', count: statusMap['For Implementation'] || 0, fill: 'var(--color-open)' },
     { status: 'Implemented', count: statusMap['Implemented'] || 0, fill: 'var(--color-resolved)' },
   ];
   

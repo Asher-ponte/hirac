@@ -31,7 +31,7 @@ export async function getHiracEntries(departmentId?: number): Promise<HiracEntry
         ...cm,
         id: cm.id,
       })),
-      status: entry.status ?? 'Ongoing', // Ensure status is not null
+      status: entry.status ?? 'For Implementation', // Ensure status is not null
       taskType: entry.taskType ?? 'Routine',
     }));
   } catch (error) {
@@ -66,7 +66,7 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
       residualSeverity: null,
       nextReviewDate: nextReviewDate,
       // Default status for new entries
-      status: 'Ongoing'
+      status: 'For Implementation'
     }).returning({ id: hiracEntries.id });
 
     if (formData.controlMeasures.length > 0) {
@@ -87,15 +87,11 @@ export async function updateHiracEntry(id: number, formData: HiracEntryPayload) 
     await db.transaction(async (tx) => {
         // Recalculate status based on control measures
         const allImplemented = formData.controlMeasures.length > 0 && formData.controlMeasures.every(cm => cm.status === 'Implemented');
-        const anyOngoing = formData.controlMeasures.some(cm => cm.status === 'Ongoing');
         
         let newStatus: HiracEntry['status'] = 'For Implementation';
         if (allImplemented) {
             newStatus = 'Implemented';
-        } else if (anyOngoing) {
-            newStatus = 'Ongoing';
         }
-
 
         await tx.update(hiracEntries).set({
             departmentId: formData.departmentId,

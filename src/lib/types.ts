@@ -28,7 +28,7 @@ export type Department = {
     supervisor?: User | null;
 };
 
-export type ControlStatus = 'Ongoing' | 'Implemented' | 'For Implementation';
+export type ControlStatus = 'Implemented' | 'For Implementation';
 export type ControlType = 'Engineering' | 'Administrative' | 'PPE';
 export type TaskType = 'Routine' | 'Non-Routine';
 
@@ -57,7 +57,7 @@ export type HiracEntry = {
   residualLikelihood?: number | null;
   residualSeverity?: number | null;
   controlMeasures: ControlMeasure[];
-  status?: 'Ongoing' | 'Implemented' | 'For Implementation' | null;
+  status?: 'Implemented' | 'For Implementation' | null;
   createdAt: string;
   reviewedAt?: string | null;
   nextReviewDate?: string | null;

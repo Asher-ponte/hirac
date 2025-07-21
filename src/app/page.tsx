@@ -26,9 +26,8 @@ type ChartData = {
 
 const statusChartConfig = {
     count: { label: 'Count' },
-    open: { label: 'Open', color: 'hsl(var(--chart-4))' },
-    "in-progress": { label: 'In Progress', color: 'hsl(var(--chart-1))' },
-    resolved: { label: 'Resolved', color: 'hsl(var(--chart-2))' },
+    "For Implementation": { label: 'For Implementation', color: 'hsl(var(--chart-1))' },
+    Implemented: { label: 'Implemented', color: 'hsl(var(--chart-2))' },
 }
 
 const riskChartConfig = {
@@ -41,8 +40,8 @@ const riskChartConfig = {
 
 const kpiIcons = {
     'Total Hazards': Sigma,
-    'Open Issues': ShieldAlert,
-    'Resolved': ShieldCheck,
+    'For Implementation': ShieldAlert,
+    'Implemented': ShieldCheck,
     'High-Risk Hazards': Flame,
 } as const;
 
@@ -106,7 +105,7 @@ export default function DashboardPage() {
                 {loading ? <Skeleton className="h-[250px] w-full" /> : (
                     <ChartContainer config={statusChartConfig} className="h-[250px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={statusChartData} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
+                            <BarChart data={statusChartData} margin={{ top: 20, right: 20, bottom: 20, left: 0 }} accessibilityLayer>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 <XAxis dataKey="status" tickLine={false} axisLine={false} />
                                 <YAxis tickLine={false} axisLine={false} />
@@ -114,7 +113,11 @@ export default function DashboardPage() {
                                     cursor={{ fill: 'hsl(var(--muted))' }}
                                     content={<ChartTooltipContent />}
                                 />
-                                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                                     {statusChartData.map((entry) => (
+                                        <Cell key={entry.status} fill={entry.fill} />
+                                    ))}
+                                </Bar>
                             </BarChart>
                         </ResponsiveContainer>
                     </ChartContainer>
@@ -127,20 +130,20 @@ export default function DashboardPage() {
                 <CardTitle>Hazards by Initial Risk Level</CardTitle>
                 <CardDescription>Overall distribution of hazards.</CardDescription>
             </CardHeader>
-            <CardContent className="flex items-center justify-center pt-4">
+            <CardContent className="flex items-center justify-center">
                  {loading ? <Skeleton className="h-[250px] w-full" /> : (
-                    <ChartContainer config={riskChartConfig} className="h-[250px] w-full">
+                    <ChartContainer config={riskChartConfig} className="mx-auto aspect-square h-full w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Tooltip content={<ChartTooltipContent nameKey="risk" hideLabel />} />
-                                <Pie data={riskChartData} dataKey="value" nameKey="risk" innerRadius={60} labelLine={false} label>
+                                <Pie data={riskChartData} dataKey="value" nameKey="risk" innerRadius={60} strokeWidth={5} labelLine={false} label>
                                     {riskChartData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={entry.fill} />
                                     ))}
                                 </Pie>
                                 <ChartLegend
                                     content={<ChartLegendContent nameKey="risk" />}
-                                    className="-translate-y-[20px]"
+                                    className="-translate-y-2"
                                 />
                             </PieChart>
                         </ResponsiveContainer>

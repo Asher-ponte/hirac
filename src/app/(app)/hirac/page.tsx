@@ -60,7 +60,7 @@ const severityOptions = [
 ];
 
 
-const statusOptions: ControlStatus[] = ['Ongoing', 'Implemented', 'For Implementation'];
+const statusOptions: ControlStatus[] = ['Implemented', 'For Implementation'];
 const hazardClassOptions = ['Physical', 'Chemical', 'Biological', 'Mechanical', 'Electrical'];
 const taskTypeOptions: TaskType[] = ['Routine', 'Non-Routine'];
 
@@ -187,7 +187,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => append({ type: controlType, description: '', pic: '', status: 'Ongoing', completionDate: '' })}
+                        onClick={() => append({ type: controlType, description: '', pic: '', status: 'For Implementation', completionDate: '' })}
                     >
                         <PlusCircle className="mr-2 h-4 w-4" /> Add
                     </Button>
@@ -793,7 +793,7 @@ const ControlMeasuresDetails = ({ controls, type }: { controls: HiracEntry['cont
     }
 
     return (
-        <>
+        <React.Fragment>
             <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r p-0">
                 {filteredControls.map((c, i) => <div key={i} className={cn("p-2", i < filteredControls.length -1 && "border-b")}>{c.description}</div>)}
             </TableCell>
@@ -806,7 +806,7 @@ const ControlMeasuresDetails = ({ controls, type }: { controls: HiracEntry['cont
             <TableCell className="align-top border-r p-0">
                 {filteredControls.map((c, i) => <div key={i} className={cn("p-2", i < filteredControls.length -1 && "border-b")}>{c.completionDate ? format(new Date(c.completionDate), "P") : ''}</div>)}
             </TableCell>
-        </>
+        </React.Fragment>
     );
 };
 
