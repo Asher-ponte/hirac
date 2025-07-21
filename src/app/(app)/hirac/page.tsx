@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -43,18 +44,18 @@ import { Calendar } from '@/components/ui/calendar';
 
 const likelihoodOptions = [
   { value: 1, label: "🟢 Rare (Level 1)", description: "Hazard is highly unlikely to occur as all safety controls—including engineering, SOPs, and PPE—are active, effective, and fully implemented." },
-  { value: 2, label: "🟡 Unlikely (Level 2)", description: "Hazard may occur if there are lapses, but most key safety controls—especially engineering plus either SOPs or PPE—are consistently applied." },
-  { value: 3, label: "🟠 Possible (Level 3)", description: "Hazard could occur under normal conditions since only SOPs and PPE are present, with no engineering controls in place." },
+  { value: 2, label: "🟢 Unlikely (Level 2)", description: "Hazard may occur if there are lapses, but most key safety controls—especially engineering plus either SOPs or PPE—are consistently applied." },
+  { value: 3, label: "🟡 Possible (Level 3)", description: "Hazard could occur under normal conditions since only SOPs and PPE are present, with no engineering controls in place." },
   { value: 4, label: "🔴 Likely (Level 4)", description: "Hazard is expected unless immediate action is taken, as only one type of barrier (either SOPs or PPE) is active, and no engineering control is present." },
-  { value: 5, label: "⚠️ Almost Certain (Level 5)", description: "Hazard will almost certainly occur due to the complete absence of engineering controls, SOPs, and PPE." },
+  { value: 5, label: "🔴 Almost Certain (Level 5)", description: "Hazard will almost certainly occur due to the complete absence of engineering controls, SOPs, and PPE." },
 ];
 
 const severityOptions = [
     { value: 1, label: "🟢 Negligible / Near Miss (Level 1)", description: "No injuries or health effects expected. Incident leaves no physical impact and causes no interruption to work—everything resumes smoothly." },
-    { value: 2, label: "🟡 Minor – First Aid Required (Level 2)", description: "Injury is limited to surface-level effects like cuts or strains requiring only first aid. Health impact is temporary—minor discomfort such as headache, dizziness, or muscle pain." },
-    { value: 3, label: "🟠 Minor – Lost Time or Minor Property Damage (Level 3)", description: "Injury may result in short recovery time off work. Health effects include short-term conditions like fever or common infections. Damage to property is limited but noticeable." },
+    { value: 2, label: "🟢 Minor – First Aid Required (Level 2)", description: "Injury is limited to surface-level effects like cuts or strains requiring only first aid. Health impact is temporary—minor discomfort such as headache, dizziness, or muscle pain." },
+    { value: 3, label: "🟡 Minor – Lost Time or Minor Property Damage (Level 3)", description: "Injury may result in short recovery time off work. Health effects include short-term conditions like fever or common infections. Damage to property is limited but noticeable." },
     { value: 4, label: "🔴 Major – Permanent Disability or Major Damage (Level 4)", description: "Incident leads to life-altering injury (e.g., permanent hearing loss, limb damage) or chronic illness. Property damage is extensive, requiring major repair or replacement." },
-    { value: 5, label: "⚠️ Catastrophic – Fatality or Massive Damage (Level 5)", description: "Hazard results in fatal injury or major incident affecting multiple lives or assets. Damage disrupts operations completely and may have legal or reputational consequences." },
+    { value: 5, label: "🔴 Catastrophic – Fatality or Massive Damage (Level 5)", description: "Hazard results in fatal injury or major incident affecting multiple lives or assets. Damage disrupts operations completely and may have legal or reputational consequences." },
 ];
 
 
