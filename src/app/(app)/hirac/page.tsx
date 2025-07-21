@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -210,7 +211,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
     }
     
     const triggerStep2Validation = async () => {
-        const isValid = await form.trigger(['task', 'hazard', 'hazardClass', 'hazardousEvent', 'impact', 'initialLikelihood', 'initialSeverity']);
+        const isValid = await form.trigger(['task', 'hazard', 'hazardClass', 'hazardousEvent', 'impact']);
         if (isValid) {
             setStep(2);
         }
@@ -234,82 +235,61 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
             {step === 1 && (
                 <Card className="border-none shadow-none">
                     <CardHeader>
-                        <CardTitle>Step 1: Hazard Identification &amp; Initial Risk Assessment</CardTitle>
-                        <CardDescription>Identify the task, hazard, cause, and effect, then assess the initial risk.</CardDescription>
+                        <CardTitle>Step 1: Hazard Identification</CardTitle>
+                        <CardDescription>Identify the task, hazard, cause, and effect.</CardDescription>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                        <div className="space-y-4">
-                            <FormField control={form.control} name="task" render={({ field }) => (
-                                <FormItem><FormLabel>Task/Job</FormLabel><FormControl><Input placeholder="e.g., Transportation Services" {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
-                            
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField control={form.control} name="hazard" render={({ field }) => (
-                                        <FormItem><FormLabel>Hazard</FormLabel><FormControl><Input placeholder="e.g., Riding on the Shuttle" {...field} /></FormControl><FormMessage /></FormItem>
-                                    )} />
-                                <FormField control={form.control} name="hazardClass" render={({ field }) => (
-                                    <FormItem><FormLabel>Hazard Class</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value}>
-                                            <FormControl><SelectTrigger><SelectValue placeholder="Select class..." /></SelectTrigger></FormControl>
-                                            <SelectContent>{hazardClassOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                                        </Select>
-                                    <FormMessage /></FormItem>
+                    <CardContent className="space-y-4">
+                        <FormField control={form.control} name="task" render={({ field }) => (
+                            <FormItem><FormLabel>Task/Job</FormLabel><FormControl><Input placeholder="e.g., Transportation Services" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField control={form.control} name="hazard" render={({ field }) => (
+                                    <FormItem><FormLabel>Hazard</FormLabel><FormControl><Input placeholder="e.g., Riding on the Shuttle" {...field} /></FormControl><FormMessage /></FormItem>
                                 )} />
-                            </div>
-
-                             <FormItem>
-                                <FormLabel>Hazard Photo</FormLabel>
-                                    <FormControl>
-                                    <div className="relative">
-                                            <Input
-                                            id="hazard-photo-upload"
-                                            type="file"
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                            accept="image/*"
-                                            onChange={handleImageUpload}
-                                        />
-                                        <Button type="button" variant="outline" className="w-full" asChild>
-                                            <label htmlFor="hazard-photo-upload" className="cursor-pointer flex items-center justify-center">
-                                                <Upload className="mr-2 h-4 w-4" />
-                                                {hazardPhotoUrl ? 'Change Photo' : 'Upload Photo'}
-                                            </label>
-                                        </Button>
-                                    </div>
-                                </FormControl>
-                                {hazardPhotoUrl && (
-                                    <div className="mt-2 text-xs text-muted-foreground flex items-center gap-2">
-                                        <Image src={hazardPhotoUrl} alt="Hazard preview" width={40} height={30} className="rounded-md" data-ai-hint="hazard" />
-                                        <span>Image preview</span>
-                                    </div>
-                                )}
-                                </FormItem>
-
-                             <FormField control={form.control} name="hazardousEvent" render={({ field }) => (
-                                <FormItem><FormLabel>Hazardous Event</FormLabel><FormControl><Textarea placeholder="e.g., No Maintenance of shuttle service" rows={2} {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
-                            <FormField control={form.control} name="impact" render={({ field }) => (
-                                <FormItem><FormLabel>Impact</FormLabel><FormControl><Textarea placeholder="e.g., Car Accident, Death" rows={2} {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
-                        </div>
-                        <div className="space-y-4">
-                             <FormField control={form.control} name="initialLikelihood" render={({ field }) => (
-                                <FormItem><FormLabel>Probability of Occurrence (P)</FormLabel>
-                                    <Select onValueChange={(value) => field.onChange(parseInt(value))} value={String(field.value)}>
-                                        <FormControl><SelectTrigger><SelectValue placeholder="Select probability..." /></SelectTrigger></FormControl>
-                                        <SelectContent>{likelihoodOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
+                            <FormField control={form.control} name="hazardClass" render={({ field }) => (
+                                <FormItem><FormLabel>Hazard Class</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Select class..." /></SelectTrigger></FormControl>
+                                        <SelectContent>{hazardClassOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                                     </Select>
                                 <FormMessage /></FormItem>
                             )} />
-                           <FormField control={form.control} name="initialSeverity" render={({ field }) => (
-                                <FormItem><FormLabel>Severity of Hazard (S)</FormLabel>
-                                    <Select onValueChange={(value) => field.onChange(parseInt(value))} value={String(field.value)}>
-                                        <FormControl><SelectTrigger><SelectValue placeholder="Select severity..." /></SelectTrigger></FormControl>
-                                        <SelectContent>{severityOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
-                                    </Select>
-                                <FormMessage /></FormItem>
-                            )} />
-                            <RiskDisplay likelihood={initialLikelihood} severity={initialSeverity} title="Initial Risk Level" />
                         </div>
+
+                        <FormItem>
+                            <FormLabel>Hazard Photo</FormLabel>
+                                <FormControl>
+                                <div className="relative">
+                                        <Input
+                                        id="hazard-photo-upload"
+                                        type="file"
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                    />
+                                    <Button type="button" variant="outline" className="w-full" asChild>
+                                        <label htmlFor="hazard-photo-upload" className="cursor-pointer flex items-center justify-center">
+                                            <Upload className="mr-2 h-4 w-4" />
+                                            {hazardPhotoUrl ? 'Change Photo' : 'Upload Photo'}
+                                        </label>
+                                    </Button>
+                                </div>
+                            </FormControl>
+                            {hazardPhotoUrl && (
+                                <div className="mt-2 text-xs text-muted-foreground flex items-center gap-2">
+                                    <Image src={hazardPhotoUrl} alt="Hazard preview" width={40} height={30} className="rounded-md" data-ai-hint="hazard" />
+                                    <span>Image preview</span>
+                                </div>
+                            )}
+                        </FormItem>
+
+                        <FormField control={form.control} name="hazardousEvent" render={({ field }) => (
+                            <FormItem><FormLabel>Hazardous Event</FormLabel><FormControl><Textarea placeholder="e.g., No Maintenance of shuttle service" rows={2} {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField control={form.control} name="impact" render={({ field }) => (
+                            <FormItem><FormLabel>Impact</FormLabel><FormControl><Textarea placeholder="e.g., Car Accident, Death" rows={2} {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
                     </CardContent>
                 </Card>
             )}
@@ -317,10 +297,34 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
             {step === 2 && (
                  <Card className="border-none shadow-none">
                     <CardHeader>
-                        <CardTitle>Step 2: Control Measures</CardTitle>
-                        <CardDescription>Define control measures and assign responsibility.</CardDescription>
+                        <CardTitle>Step 2: Risk Assessment &amp; Control Measures</CardTitle>
+                        <CardDescription>Assess the initial risk, define control measures, and assign responsibility.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                             <div className="space-y-4">
+                                 <FormField control={form.control} name="initialLikelihood" render={({ field }) => (
+                                    <FormItem><FormLabel>Probability of Occurrence (P)</FormLabel>
+                                        <Select onValueChange={(value) => field.onChange(parseInt(value))} value={String(field.value)}>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Select probability..." /></SelectTrigger></FormControl>
+                                            <SelectContent>{likelihoodOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
+                                        </Select>
+                                    <FormMessage /></FormItem>
+                                )} />
+                                <FormField control={form.control} name="initialSeverity" render={({ field }) => (
+                                    <FormItem><FormLabel>Severity of Hazard (S)</FormLabel>
+                                        <Select onValueChange={(value) => field.onChange(parseInt(value))} value={String(field.value)}>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Select severity..." /></SelectTrigger></FormControl>
+                                            <SelectContent>{severityOptions.map(opt => <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
+                                        </Select>
+                                    <FormMessage /></FormItem>
+                                )} />
+                            </div>
+                            <RiskDisplay likelihood={initialLikelihood} severity={initialSeverity} title="Initial Risk Level" />
+                        </div>
+
+                        <Separator />
+                        
                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                              <FormField control={form.control} name="engineeringControls" render={({ field }) => (
                                 <FormItem><FormLabel>Engineering Controls</FormLabel><FormControl><Textarea placeholder="e.g., Isolation, guarding..." rows={4} {...field} /></FormControl><FormMessage /></FormItem>
