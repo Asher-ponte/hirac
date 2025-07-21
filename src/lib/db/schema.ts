@@ -7,6 +7,7 @@ const hazardClassEnum = ['Physical', 'Chemical', 'Biological', 'Mechanical', 'El
 
 export const hiracEntries = sqliteTable('hirac_entries', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  department: text('department').notNull(),
   task: text('task').notNull(),
   hazard: text('hazard').notNull(),
   hazardPhotoUrl: text('hazard_photo_url'),

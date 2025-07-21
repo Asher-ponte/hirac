@@ -33,6 +33,7 @@ export type ControlMeasure = {
 
 export type HiracEntry = {
   id: string;
+  department: string;
   task: string;
   hazard: string;
   hazardPhotoUrl?: string | null;

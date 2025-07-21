@@ -9,14 +9,18 @@ import { eq, inArray } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
 
 
-export async function getHiracEntries(): Promise<HiracEntry[]> {
+export async function getHiracEntries(department?: string): Promise<HiracEntry[]> {
   try {
-    const data = await db.query.hiracEntries.findMany({
+    const queryOptions = {
       with: {
         controlMeasures: true,
       },
-      orderBy: (hiracEntries, { desc }) => [desc(hiracEntries.id)],
-    });
+      orderBy: (hiracEntries: any, { desc }: any) => [desc(hiracEntries.id)],
+      where: department ? eq(hiracEntries.department, department) : undefined,
+    };
+
+    // @ts-ignore
+    const data = await db.query.hiracEntries.findMany(queryOptions);
 
     return data.map(entry => ({
       ...entry,
@@ -40,6 +44,7 @@ type HiracEntryPayload = Omit<HiracEntry, 'id' | 'controlMeasures' | 'status'> &
 export async function createHiracEntry(formData: HiracEntryPayload) {
   await db.transaction(async (tx) => {
     const [newHiracEntry] = await tx.insert(hiracEntries).values({
+      department: formData.department,
       task: formData.task,
       hazard: formData.hazard,
       hazardPhotoUrl: formData.hazardPhotoUrl,
@@ -83,6 +88,7 @@ export async function updateHiracEntry(id: number, formData: HiracEntryPayload) 
 
 
         await tx.update(hiracEntries).set({
+            department: formData.department,
             task: formData.task,
             hazard: formData.hazard,
             hazardPhotoUrl: formData.hazardPhotoUrl,

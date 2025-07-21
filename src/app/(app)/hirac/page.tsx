@@ -61,6 +61,8 @@ const severityOptions = [
 
 const statusOptions: ControlStatus[] = ['Ongoing', 'Implemented', 'For Implementation'];
 const hazardClassOptions = ['Physical', 'Chemical', 'Biological', 'Mechanical', 'Electrical'];
+const departmentOptions = ['Maintenance', 'Production', 'Logistics', 'Administration', 'Quality Assurance'];
+
 
 const controlMeasureSchema = z.object({
     id: z.number().optional(),
@@ -72,6 +74,7 @@ const controlMeasureSchema = z.object({
 });
 
 const hiracFormSchema = z.object({
+    department: z.string().min(1, "Department is required."),
     task: z.string().min(1, "Task is required."),
     hazard: z.string().min(1, "Hazard is required."),
     hazardPhotoUrl: z.string().url().optional().nullable(),
@@ -320,6 +323,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
     const numericId = entryToEdit ? parseInt(entryToEdit.id.replace('HIRAC-', ''), 10) : null;
     
     const getDefaultValues = (entry: HiracEntry | null | undefined): HiracFormValues => ({
+        department: entry?.department ?? '',
         task: entry?.task ?? '',
         hazard: entry?.hazard ?? '',
         hazardPhotoUrl: entry?.hazardPhotoUrl ?? null,
@@ -354,8 +358,6 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
         
         const payload = {
             ...data,
-            // In a real app, you'd upload the image file and get a URL.
-            // For now, we'll just use the placeholder or existing URL.
             hazardPhotoUrl: imagePreview,
             residualLikelihood: data.residualLikelihood ?? data.initialLikelihood,
             residualSeverity: data.residualSeverity ?? data.initialSeverity,
@@ -391,7 +393,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
     }
     
     const triggerStep2Validation = async () => {
-        const isValid = await form.trigger(['task', 'hazard', 'hazardClass', 'hazardousEvent', 'impact', 'initialLikelihood', 'initialSeverity']);
+        const isValid = await form.trigger(['department', 'task', 'hazard', 'hazardClass', 'hazardousEvent', 'impact']);
         if (isValid) {
             setStep(2);
         }
@@ -401,8 +403,6 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             const previewUrl = URL.createObjectURL(file);
-            // In a real app, you'd upload the file here and set the returned URL.
-            // For demonstration, we use a placeholder and the local preview.
             form.setValue('hazardPhotoUrl', `/images/hazard-placeholder.png`, { shouldValidate: true });
             setImagePreview(previewUrl);
              toast({
@@ -427,9 +427,18 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
                 <Card className="border-none shadow-none">
                     <CardHeader>
                         <CardTitle>Step 1: Hazard Identification</CardTitle>
-                        <CardDescription>Identify the task, hazard, cause, and effect.</CardDescription>
+                        <CardDescription>Identify the department, task, hazard, cause, and effect.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                        <FormField control={form.control} name="department" render={({ field }) => (
+                            <FormItem><FormLabel>Department</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl><SelectTrigger><SelectValue placeholder="Select department..." /></SelectTrigger></FormControl>
+                                    <SelectContent>{departmentOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                </Select>
+                            <FormMessage /></FormItem>
+                        )} />
+
                         <FormField control={form.control} name="task" render={({ field }) => (
                             <FormItem><FormLabel>Task/Job</FormLabel><FormControl><Input placeholder="e.g., Transportation Services" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
@@ -701,17 +710,19 @@ export default function HiracPage() {
   const [hiracData, setHiracData] = React.useState<HiracEntry[]>([]);
   const [loading, setLoading] = React.useState(true);
   const { toast } = useToast();
+  const [departmentFilter, setDepartmentFilter] = React.useState<string>('all');
 
   const loadData = React.useCallback(async () => {
     setLoading(true);
     try {
-        const data = await getHiracEntries();
+        const department = departmentFilter === 'all' ? undefined : departmentFilter;
+        const data = await getHiracEntries(department);
         setHiracData(data);
     } catch(e) {
         toast({ variant: 'destructive', title: "Error", description: "Failed to load HIRAC data. The database might be initializing." });
     }
     setLoading(false);
-  }, [toast]);
+  }, [toast, departmentFilter]);
   
   React.useEffect(() => {
     loadData();
@@ -755,21 +766,32 @@ export default function HiracPage() {
             <h1 className="text-2xl font-bold tracking-tight">HIRAC Register</h1>
             <p className="text-muted-foreground">Hazard Identification, Risk Assessment, and Control</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <Button onClick={handleNewEntry}>
-                <FilePlus2 className="mr-2 h-4 w-4" />
-                New HIRAC Entry
-            </Button>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>{entryToEdit ? 'Edit' : 'New'} HIRAC Entry</DialogTitle>
-                    <DialogDescription>
-                        {entryToEdit ? 'Update the details for this HIRAC entry.' : 'Follow the steps to add a new hazard identification and risk assessment.'}
-                    </DialogDescription>
-                </DialogHeader>
-                <HiracForm setOpen={setDialogOpen} entryToEdit={entryToEdit} onFormSubmit={handleFormSubmit} />
-            </DialogContent>
-        </Dialog>
+        <div className="flex items-center gap-4">
+            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Filter by Department" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">All Departments</SelectItem>
+                    {departmentOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                </SelectContent>
+            </Select>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <Button onClick={handleNewEntry}>
+                    <FilePlus2 className="mr-2 h-4 w-4" />
+                    New HIRAC Entry
+                </Button>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>{entryToEdit ? 'Edit' : 'New'} HIRAC Entry</DialogTitle>
+                        <DialogDescription>
+                            {entryToEdit ? 'Update the details for this HIRAC entry.' : 'Follow the steps to add a new hazard identification and risk assessment.'}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <HiracForm setOpen={setDialogOpen} entryToEdit={entryToEdit} onFormSubmit={handleFormSubmit} />
+                </DialogContent>
+            </Dialog>
+        </div>
         
         {entryToReassess && (
             <Dialog open={reassessDialogOpen} onOpenChange={setReassessDialogOpen}>
@@ -815,6 +837,7 @@ export default function HiracPage() {
                 <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                     <TableRow>
+                    <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Department</TableHead>
                     <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Task/Job</TableHead>
                     <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Hazard Class</TableHead>
                     <TableHead className="min-w-[250px] align-bottom border-r" rowSpan={2}>Hazard</TableHead>
@@ -861,6 +884,7 @@ export default function HiracPage() {
 
                     return (
                         <TableRow key={item.id} className={cn(index % 2 === 0 ? "bg-muted/30" : "")}>
+                            <TableCell className="font-medium align-top border-r">{item.department}</TableCell>
                             <TableCell className="font-medium align-top border-r">{item.task}</TableCell>
                             <TableCell className="align-top border-r">{item.hazardClass}</TableCell>
                             <TableCell className="align-top border-r">
@@ -871,7 +895,8 @@ export default function HiracPage() {
                                             <Image 
                                                 src={item.hazardPhotoUrl} 
                                                 alt={`Photo for ${item.hazard}`} 
-                                                fill
+                                                width={100}
+                                                height={75}
                                                 data-ai-hint="hazard"
                                                 className="rounded-md object-contain"
                                             />
@@ -880,7 +905,7 @@ export default function HiracPage() {
                                       <DialogContent className="max-w-2xl">
                                         <DialogHeader>
                                           <DialogTitle>{item.hazard}</DialogTitle>
-                                          <DialogDescription>{item.task}</DialogDescription>
+                                          <DialogDescription>{item.task} - {item.department}</DialogDescription>
                                         </DialogHeader>
                                         <div className="relative w-full aspect-video">
                                             <Image 
