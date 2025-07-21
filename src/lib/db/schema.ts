@@ -23,7 +23,7 @@ export const usersRelations = relations(users, ({ one }) => ({
 export const departments = sqliteTable('departments', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull().unique(),
-  supervisorId: integer('supervisor_id').references(() => users.id),
+  supervisorId: integer('supervisor_id').references(() => users.id, { onDelete: 'set null' }),
 });
 
 export const departmentsRelations = relations(departments, ({ one, many }) => ({
