@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from 'react';
@@ -39,10 +38,10 @@ import { Separator } from '@/components/ui/separator';
 
 
 const likelihoodOptions = [
-  { value: 1, label: "1 - IMPROBABLE: Presence of ALL CONTROLS" },
-  { value: 2, label: "2 - LESS PROBABLE" },
-  { value: 3, label: "3 - PROBABLE" },
-  { value: 4, label: "4 - ALMOST CERTAIN" },
+  { value: 1, label: "1 - IMPROBABLE: Presence of ALL CONTROLS (e.g., Guarding, Interlock, Procedures, Training, Supervision, PPEs)" },
+  { value: 2, label: "2 - LESS PROBABLE: Presence of MOST CONTROLS" },
+  { value: 3, label: "3 - PROBABLE: Presence of SOME CONTROLS" },
+  { value: 4, label: "4 - ALMOST CERTAIN: Presence of FEW CONTROLS" },
   { value: 5, label: "5 - CERTAIN: Absence of all CONTROLS" },
 ];
 
@@ -707,3 +706,5 @@ export default function HiracPage() {
     </div>
   );
 }
+
+    
