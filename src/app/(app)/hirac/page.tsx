@@ -40,10 +40,10 @@ import { Separator } from '@/components/ui/separator';
 
 
 const likelihoodOptions = [
-  { value: 1, label: "1 - IMPROBABLE", description: "Presence of ALL CONTROLS (e.g., Guarding, Interlock, Procedures, Training, Supervision, PPEs)" },
-  { value: 2, label: "2 - LESS PROBABLE", description: "Presence of MOST CONTROLS" },
-  { value: 3, label: "3 - PROBABLE", description: "Presence of SOME CONTROLS" },
-  { value: 4, label: "4 - ALMOST CERTAIN", description: "Presence of FEW CONTROLS" },
+  { value: 1, label: "1 - IMPROBABLE", description: "Presence of ALL CONTROLS: ADEQUATE engineering controls AND Standard operating procedures/administrative controls AND with provision for appropriate PPEs" },
+  { value: 2, label: "2 - LESS PROBABLE", description: "ADEQUATE engineering controls OR Standard operating procedures/administrative controls OR provision for appropriate PPEs" },
+  { value: 3, label: "3 - PROBABLE", description: "Absence of ADEQUATE engineering controls AND Presence of Standard operating procedures/administrative controls AND with provision for appropriate PPEs" },
+  { value: 4, label: "4 - ALMOST CERTAIN", description: "Absence of ADEQUATE engineering controls AND Presence of Standard operating procedures/administrative controls OR with provision for appropriate PPEs" },
   { value: 5, label: "5 - CERTAIN", description: "Absence of all CONTROLS" },
 ];
 
