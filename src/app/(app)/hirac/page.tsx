@@ -124,7 +124,7 @@ const RiskDisplay = ({ likelihood, severity, title = "Calculated Risk Level" }: 
             {riskDetails ? (
                 <>
                     <div className={cn("p-2 md:p-3 rounded-full", riskDetails.color)}>
-                        <AlertTriangle className="h-5 w-5 md:h-6 md:w-6" />
+                        <AlertTriangle className="h-4 w-4 md:h-6 md:w-6" />
                     </div>
                     <p className="text-xs text-muted-foreground">{title}</p>
                     <h3 className="text-lg md:text-xl font-bold">{riskLevel}</h3>
@@ -377,10 +377,18 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
         }
     }
     
-    const triggerStep2Validation = async () => {
-        const isValid = await form.trigger(['departmentId', 'task', 'hazard', 'hazardClass', 'hazardousEvent', 'impact']);
+    const triggerStepValidation = async (targetStep: number) => {
+        let fieldsToValidate: (keyof HiracFormValues)[] = [];
+        if (step === 1) {
+            fieldsToValidate = ['departmentId', 'task', 'hazard', 'hazardClass', 'hazardousEvent', 'impact'];
+        } else if (step === 2) {
+             fieldsToValidate = ['initialLikelihood', 'initialSeverity'];
+        }
+        
+        const isValid = await form.trigger(fieldsToValidate);
+
         if (isValid) {
-            setStep(2);
+            setStep(targetStep);
         }
     }
     
@@ -583,8 +591,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
             <div className={cn(step === 2 ? 'block' : 'hidden')}>
                  <Card className="border-none shadow-none">
                     <CardHeader>
-                        <CardTitle className="text-xl md:text-2xl">Step 2: Risk Assessment &amp; Control Measures</CardTitle>
-                        <CardDescription>Assess the initial risk, define control measures, and assign responsibility.</CardDescription>
+                        <CardTitle className="text-xl md:text-2xl">Step 2: Risk Assessment</CardTitle>
+                        <CardDescription>Assess the initial risk based on probability and severity.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
@@ -620,18 +628,24 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
                                 <RiskDisplay likelihood={initialLikelihood} severity={initialSeverity} title="Initial Risk Level" />
                             </div>
                         </div>
-
-                        <Separator />
-                        <h3 className="text-xl font-semibold tracking-tight">Control Measures</h3>
-                        
-                        <div className="space-y-6">
-                           <ControlMeasuresFieldArray form={form} controlType="Engineering" title="Engineering Controls" />
-                           <ControlMeasuresFieldArray form={form} controlType="Administrative" title="Administrative Controls" />
-                           <ControlMeasuresFieldArray form={form} controlType="PPE" title="Personal Protective Equipment (PPE)" />
-                        </div>
                     </CardContent>
                 </Card>
             </div>
+            
+            <div className={cn(step === 3 ? 'block' : 'hidden')}>
+                <Card className="border-none shadow-none">
+                    <CardHeader>
+                        <CardTitle className="text-xl md:text-2xl">Step 3: Control Measures</CardTitle>
+                        <CardDescription>Define control measures to mitigate the identified risk.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <ControlMeasuresFieldArray form={form} controlType="Engineering" title="Engineering Controls" />
+                        <ControlMeasuresFieldArray form={form} controlType="Administrative" title="Administrative Controls" />
+                        <ControlMeasuresFieldArray form={form} controlType="PPE" title="Personal Protective Equipment (PPE)" />
+                    </CardContent>
+                </Card>
+            </div>
+
 
             <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between pt-4 gap-2">
                 <div>
@@ -639,8 +653,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
                 </div>
                 <div className="flex flex-col-reverse sm:flex-row gap-2">
                     <DialogClose asChild><Button type="button" variant="secondary" className="w-full sm:w-auto">Cancel</Button></DialogClose>
-                     {step < 2 && <Button type="button" onClick={triggerStep2Validation} className="w-full sm:w-auto">Next <ArrowRight className="ml-2 h-4 w-4" /></Button>}
-                    {step === 2 && <Button type="submit" disabled={isSubmitting || isUploading} className="w-full sm:w-auto">
+                     {step < 3 && <Button type="button" onClick={() => triggerStepValidation(step + 1)} className="w-full sm:w-auto">Next <ArrowRight className="ml-2 h-4 w-4" /></Button>}
+                    {step === 3 && <Button type="submit" disabled={isSubmitting || isUploading} className="w-full sm:w-auto">
                         {(isSubmitting || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {numericId ? 'Update Entry' : 'Save Entry'}
                     </Button>}
