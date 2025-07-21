@@ -48,8 +48,8 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
       impact: formData.impact,
       initialLikelihood: formData.initialLikelihood,
       initialSeverity: formData.initialSeverity,
-      residualLikelihood: formData.residualLikelihood ?? formData.initialLikelihood,
-      residualSeverity: formData.residualSeverity ?? formData.initialSeverity,
+      residualLikelihood: formData.residualLikelihood,
+      residualSeverity: formData.residualSeverity,
       // Default status for new entries
       status: 'Ongoing'
     }).returning({ id: hiracEntries.id });
@@ -136,4 +136,14 @@ export async function deleteHiracEntry(id: number) {
     await db.delete(hiracEntries).where(eq(hiracEntries.id, id));
     revalidatePath('/hirac');
     revalidatePath('/dashboard');
+}
+
+export async function updateResidualRisk(id: number, data: { residualLikelihood: number; residualSeverity: number }) {
+  await db.update(hiracEntries).set({
+    residualLikelihood: data.residualLikelihood,
+    residualSeverity: data.residualSeverity,
+  }).where(eq(hiracEntries.id, id));
+
+  revalidatePath('/hirac');
+  revalidatePath('/dashboard');
 }

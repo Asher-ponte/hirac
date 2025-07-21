@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import type { HiracEntry, ControlStatus, ControlType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, BrainCircuit, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle } from 'lucide-react';
+import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, BrainCircuit, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle, BarChart } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -26,7 +26,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -35,7 +35,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry } from './actions';
+import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry, updateResidualRisk } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -98,6 +98,12 @@ const hiracFormSchema = z.object({
 });
 
 type HiracFormValues = z.infer<typeof hiracFormSchema>;
+
+const reassessmentSchema = z.object({
+  residualLikelihood: z.coerce.number().min(1, "Likelihood is required").max(5),
+  residualSeverity: z.coerce.number().min(1, "Severity is required").max(5),
+});
+type ReassessmentValues = z.infer<typeof reassessmentSchema>;
 
 const getRiskLevelDetails = (level: number) => {
   if (level <= 6) return { label: 'Low Risk', variant: 'secondary', color: 'bg-green-500 text-green-50' } as const;
@@ -307,8 +313,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
         initialLikelihood: entry?.initialLikelihood ?? 0,
         initialSeverity: entry?.initialSeverity ?? 0,
         controlMeasures: entry?.controlMeasures ?? [],
-        residualLikelihood: entry?.residualLikelihood,
-        residualSeverity: entry?.residualSeverity,
+        residualLikelihood: entry?.residualLikelihood ?? undefined,
+        residualSeverity: entry?.residualSeverity ?? undefined,
     });
 
 
@@ -519,6 +525,97 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
     );
 }
 
+function ReassessmentForm({ entry, setOpen, onFormSubmit }: { entry: HiracEntry, setOpen: (open: boolean) => void, onFormSubmit: () => void }) {
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const numericId = parseInt(entry.id.replace('HIRAC-', ''), 10);
+
+    const form = useForm<ReassessmentValues>({
+        resolver: zodResolver(reassessmentSchema),
+        defaultValues: {
+            residualLikelihood: entry.residualLikelihood ?? entry.initialLikelihood,
+            residualSeverity: entry.residualSeverity ?? entry.initialSeverity,
+        },
+    });
+
+    const residualLikelihood = form.watch('residualLikelihood');
+    const residualSeverity = form.watch('residualSeverity');
+
+    async function onSubmit(data: ReassessmentValues) {
+        setIsSubmitting(true);
+        try {
+            await updateResidualRisk(numericId, data);
+            toast({
+                title: "Success",
+                description: "Risk re-assessment saved successfully.",
+            });
+            onFormSubmit();
+            setOpen(false);
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: "Error",
+                description: "Failed to save re-assessment. Please try again.",
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
+    return (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <DialogHeader>
+                    <DialogTitle>Risk Re-assessment for {entry.id}</DialogTitle>
+                    <DialogDescription>
+                        After implementing control measures, re-assess the risk level.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                    <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                            control={form.control}
+                            name="residualLikelihood"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-base font-semibold">Residual Probability (P)</FormLabel>
+                                    <FormControl>
+                                        <RiskRadioGroup field={field} options={likelihoodOptions} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="residualSeverity"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-base font-semibold">Residual Severity (S)</FormLabel>
+                                    <FormControl>
+                                        <RiskRadioGroup field={field} options={severityOptions} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                    <div className="sticky top-4">
+                        <RiskDisplay likelihood={residualLikelihood} severity={residualSeverity} title="Residual Risk Level" />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
+                    <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Save Assessment
+                    </Button>
+                </DialogFooter>
+            </form>
+        </Form>
+    );
+}
+
 const ControlMeasuresDetails = ({ controls, type }: { controls: HiracEntry['controlMeasures'], type: ControlType }) => {
     const filteredControls = controls.filter(c => c.type === type);
     if (filteredControls.length === 0) return <TableCell colSpan={4} className="text-center text-muted-foreground border-r py-2">No {type.toLowerCase()} controls.</TableCell>;
@@ -544,7 +641,9 @@ const ControlMeasuresDetails = ({ controls, type }: { controls: HiracEntry['cont
 
 export default function HiracPage() {
   const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [reassessDialogOpen, setReassessDialogOpen] = React.useState(false);
   const [entryToEdit, setEntryToEdit] = React.useState<HiracEntry | null>(null);
+  const [entryToReassess, setEntryToReassess] = React.useState<HiracEntry | null>(null);
   const [hiracData, setHiracData] = React.useState<HiracEntry[]>([]);
   const [loading, setLoading] = React.useState(true);
   const { toast } = useToast();
@@ -578,6 +677,11 @@ export default function HiracPage() {
     setDialogOpen(true);
   }
   
+  const handleReassessEntry = (entry: HiracEntry) => {
+    setEntryToReassess(entry);
+    setReassessDialogOpen(true);
+  }
+
   const handleDeleteEntry = async (id: string) => {
     const numericId = parseInt(id.replace('HIRAC-', ''), 10);
     try {
@@ -612,6 +716,18 @@ export default function HiracPage() {
                 <HiracForm setOpen={setDialogOpen} entryToEdit={entryToEdit} onFormSubmit={handleFormSubmit} />
             </DialogContent>
         </Dialog>
+        
+        {entryToReassess && (
+            <Dialog open={reassessDialogOpen} onOpenChange={setReassessDialogOpen}>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <ReassessmentForm 
+                        entry={entryToReassess} 
+                        setOpen={setReassessDialogOpen}
+                        onFormSubmit={handleFormSubmit}
+                    />
+                </DialogContent>
+            </Dialog>
+        )}
       </div>
 
       <Card>
@@ -684,9 +800,10 @@ export default function HiracPage() {
                     {hiracData.map((item, index) => {
                     const initialRiskLevel = item.initialLikelihood * item.initialSeverity;
                     const initialRiskDetails = getRiskLevelDetails(initialRiskLevel);
-                    const residualRiskLevel = (item.residualLikelihood ?? item.initialLikelihood) * (item.residualSeverity ?? item.initialSeverity);
-                    const residualRiskDetails = getRiskLevelDetails(residualRiskLevel);
-                    const isReassessed = item.initialLikelihood !== item.residualLikelihood || item.initialSeverity !== item.residualSeverity;
+                    
+                    const isReassessed = item.residualLikelihood != null && item.residualSeverity != null;
+                    const residualRiskLevel = isReassessed ? (item.residualLikelihood!) * (item.residualSeverity!) : 0;
+                    const residualRiskDetails = isReassessed ? getRiskLevelDetails(residualRiskLevel) : null;
 
                     return (
                         <TableRow key={item.id} className={cn(index % 2 === 0 ? "bg-muted/30" : "")}>
@@ -735,7 +852,7 @@ export default function HiracPage() {
                                 {isReassessed ? `P:${item.residualLikelihood}, S:${item.residualSeverity}` : 'N/A'}
                             </TableCell>
                             <TableCell className="text-center align-top p-2 border-r">
-                                 {isReassessed ? (
+                                 {isReassessed && residualRiskDetails ? (
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger className="w-full">
@@ -762,14 +879,18 @@ export default function HiracPage() {
                                         </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={() => handleEditEntry(item)}>
-                                            <FilePenLine className="mr-2 h-4 w-4" /> Edit
-                                        </DropdownMenuItem>
-                                        <AlertDialogTrigger asChild>
-                                            <DropdownMenuItem className="text-destructive focus:text-destructive-foreground focus:bg-destructive">
-                                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                            <DropdownMenuItem onClick={() => handleEditEntry(item)}>
+                                                <FilePenLine className="mr-2 h-4 w-4" /> Edit
                                             </DropdownMenuItem>
-                                        </AlertDialogTrigger>
+                                            <DropdownMenuItem onClick={() => handleReassessEntry(item)}>
+                                                <BarChart className="mr-2 h-4 w-4" /> Re-assess Risk
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            <AlertDialogTrigger asChild>
+                                                <DropdownMenuItem className="text-destructive focus:text-destructive-foreground focus:bg-destructive">
+                                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                </DropdownMenuItem>
+                                            </AlertDialogTrigger>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                     <AlertDialogContent>
