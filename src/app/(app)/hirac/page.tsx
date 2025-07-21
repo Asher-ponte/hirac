@@ -75,7 +75,7 @@ const hiracFormSchema = z.object({
     departmentId: z.coerce.number().min(1, "Department is required."),
     task: z.string().min(1, "Task is required."),
     hazard: z.string().min(1, "Hazard is required."),
-    hazardPhotoUrl: z.string().optional().nullable(),
+    hazardPhotoUrl: z.string().nullable().optional(),
     hazardClass: z.string().min(1, "Hazard class is required."),
     hazardousEvent: z.string().min(1, "Hazardous event is required."),
     impact: z.string().min(1, "Impact is required."),
@@ -354,7 +354,10 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
     async function onSubmit(data: HiracFormValues) {
         setIsSubmitting(true);
         
-        const finalPhotoUrl = imagePreview ? (imagePreview.startsWith('blob:') ? '/images/hazard-placeholder.png' : imagePreview) : null;
+        let finalPhotoUrl = imagePreview;
+        if (imagePreview && imagePreview.startsWith('blob:')) {
+            finalPhotoUrl = '/images/hazard-placeholder.png';
+        }
 
         const payload = {
             ...data,
