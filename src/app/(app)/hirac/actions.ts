@@ -25,6 +25,8 @@ export async function getHiracEntries(): Promise<HiracEntry[]> {
         ...cm,
         id: cm.id,
       })),
+      // Ensure status is one of the allowed values, default to Not Implemented
+      status: entry.status === 'Ongoing' || entry.status === 'Implemented' ? entry.status : 'Not Implemented'
     }));
   } catch (error) {
     console.error("Failed to fetch HIRAC entries:", error);
@@ -32,7 +34,7 @@ export async function getHiracEntries(): Promise<HiracEntry[]> {
   }
 }
 
-type HiracEntryPayload = Omit<HiracEntry, 'id' | 'controlMeasures'> & {
+type HiracEntryPayload = Omit<HiracEntry, 'id' | 'controlMeasures' | 'status'> & {
   controlMeasures: (Omit<ControlMeasure, 'id'> & { id?: number })[];
 };
 
@@ -47,8 +49,10 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
       impact: formData.impact,
       initialLikelihood: formData.initialLikelihood,
       initialSeverity: formData.initialSeverity,
-      residualLikelihood: formData.residualLikelihood,
-      residualSeverity: formData.residualSeverity,
+      residualLikelihood: formData.residualLikelihood ?? formData.initialLikelihood,
+      residualSeverity: formData.residualSeverity ?? formData.initialSeverity,
+      // Default status for new entries
+      status: 'Ongoing'
     }).returning({ id: hiracEntries.id });
 
     if (formData.controlMeasures.length > 0) {
@@ -67,6 +71,18 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
 
 export async function updateHiracEntry(id: number, formData: HiracEntryPayload) {
     await db.transaction(async (tx) => {
+        // Recalculate status based on control measures
+        const allImplemented = formData.controlMeasures.length > 0 && formData.controlMeasures.every(cm => cm.status === 'Implemented');
+        const anyOngoing = formData.controlMeasures.some(cm => cm.status === 'Ongoing');
+        
+        let newStatus: HiracEntry['status'] = 'Not Implemented';
+        if (allImplemented) {
+            newStatus = 'Implemented';
+        } else if (anyOngoing) {
+            newStatus = 'Ongoing';
+        }
+
+
         await tx.update(hiracEntries).set({
             task: formData.task,
             hazard: formData.hazard,
@@ -78,6 +94,7 @@ export async function updateHiracEntry(id: number, formData: HiracEntryPayload) 
             initialSeverity: formData.initialSeverity,
             residualLikelihood: formData.residualLikelihood,
             residualSeverity: formData.residualSeverity,
+            status: newStatus,
         }).where(eq(hiracEntries.id, id));
 
         const existingControls = await tx.query.controlMeasures.findMany({
@@ -86,7 +103,7 @@ export async function updateHiracEntry(id: number, formData: HiracEntryPayload) 
 
         const controlsToUpdate = formData.controlMeasures.filter(cm => cm.id && existingControls.some(ec => ec.id === cm.id));
         const controlsToInsert = formData.controlMeasures.filter(cm => !cm.id);
-        const controlsToDelete = existingControls.filter(ec => !formData.controlMeasures.some(cm => cm.id === ec.id));
+        const controlsToDelete = existingControls.filter(ec => !formData.controlMeasures.some(cm => cm.id === cm.id));
 
         if (controlsToUpdate.length > 0) {
             for (const cm of controlsToUpdate) {
