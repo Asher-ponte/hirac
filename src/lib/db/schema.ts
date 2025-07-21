@@ -48,7 +48,7 @@ export const hiracEntries = sqliteTable('hirac_entries', {
   residualLikelihood: integer('residual_likelihood'),
   residualSeverity: integer('residual_severity'),
   status: text('status', { enum: ['Ongoing', 'Implemented', 'For Implementation'] }),
-  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`).notNull(),
   nextReviewDate: text('next_review_date'),
 });
 
