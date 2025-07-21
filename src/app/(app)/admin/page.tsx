@@ -132,7 +132,7 @@ function DepartmentForm({ department, users, onFinished }: { department?: Depart
                 )} />
                 <FormField control={form.control} name="supervisorId" render={({ field }) => (
                     <FormItem><FormLabel>Supervisor</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value ? String(field.value) : undefined}>
+                        <Select onValueChange={field.onChange} value={field.value !== null && field.value !== undefined ? String(field.value) : undefined}>
                             <FormControl><SelectTrigger><SelectValue placeholder="Select a supervisor" /></SelectTrigger></FormControl>
                             <SelectContent>
                                 <SelectItem value="null">None</SelectItem>
@@ -346,6 +346,9 @@ export default function AdminPage() {
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>{selectedUser ? 'Edit User' : 'Add New User'}</DialogTitle>
+                     <DialogDescription>
+                        Fill in the form below to {selectedUser ? 'update the' : 'add a new'} user.
+                    </DialogDescription>
                 </DialogHeader>
                 <UserForm user={selectedUser} users={users} onFinished={onFormFinished} />
             </DialogContent>
@@ -356,6 +359,9 @@ export default function AdminPage() {
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>{selectedDepartment ? 'Edit Department' : 'Add New Department'}</DialogTitle>
+                    <DialogDescription>
+                        Fill in the form below to {selectedDepartment ? 'update the' : 'add a new'} department.
+                    </DialogDescription>
                 </DialogHeader>
                 <DepartmentForm department={selectedDepartment} users={users} onFinished={onFormFinished} />
             </DialogContent>
@@ -364,3 +370,4 @@ export default function AdminPage() {
     );
 
     
+}
