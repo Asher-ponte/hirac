@@ -8,6 +8,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format, formatDistanceToNow } from "date-fns"
+import { v4 as uuidv4 } from 'uuid';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -915,7 +916,7 @@ export default function HiracPage() {
                               <TableHead colSpan={4} className="text-center border-b border-r">Engineering Controls</TableHead>
                               <TableHead colSpan={4} className="text-center border-b border-r">Administrative Controls</TableHead>
                               <TableHead colSpan={4} className="text-center border-b border-r">PPE Controls</TableHead>
-                              <TableHead colSpan={2} className="text-center border-b border-r">Residual Risk</TableHead>
+                              <TableHead colSpan={2} className="text-center border-b border-r">Risk Re-assessment</TableHead>
                               <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Created</TableHead>
                               <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Last Reviewed</TableHead>
                               <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Next Review</TableHead>
