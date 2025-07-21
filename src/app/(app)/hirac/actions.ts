@@ -7,7 +7,7 @@ import type { HiracEntry, ControlMeasure } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { eq, inArray } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
-import { writeFile } from 'fs/promises';
+import { writeFile, mkdir, stat } from 'fs/promises';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { addYears, formatISO } from 'date-fns';
@@ -24,8 +24,19 @@ export async function uploadHazardPhoto(formData: FormData): Promise<{ url?: str
         const fileExtension = file.name.split('.').pop();
         const uniqueFilename = `${uuidv4()}.${fileExtension}`;
         const uploadDir = join(process.cwd(), 'public', 'images');
-        const publicPath = join(uploadDir, uniqueFilename);
         
+        // Ensure the upload directory exists
+        try {
+            await stat(uploadDir);
+        } catch (e: any) {
+            if (e.code === 'ENOENT') {
+                await mkdir(uploadDir, { recursive: true });
+            } else {
+                throw e;
+            }
+        }
+        
+        const publicPath = join(uploadDir, uniqueFilename);
         await writeFile(publicPath, buffer);
 
         const publicUrl = `/images/${uniqueFilename}`;
