@@ -35,7 +35,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry, updateResidualRisk, getDepartments } from './actions';
+import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry, updateResidualRisk, getDepartments, uploadHazardPhoto } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -79,28 +79,14 @@ const hiracFormSchema = z.object({
     hazardClass: z.string().min(1, "Hazard class is required."),
     hazardousEvent: z.string().min(1, "Hazardous event is required."),
     impact: z.string().min(1, "Impact is required."),
-    initialLikelihood: z.coerce.number().min(0).max(5),
-    initialSeverity: z.coerce.number().min(0).max(5),
+    initialLikelihood: z.coerce.number().min(1).max(5),
+    initialSeverity: z.coerce.number().min(1).max(5),
     
     controlMeasures: z.array(controlMeasureSchema),
 
     residualLikelihood: z.coerce.number().min(1).max(5).optional(),
     residualSeverity: z.coerce.number().min(1).max(5).optional(),
 }).superRefine((data, ctx) => {
-    if (!data.initialLikelihood || data.initialLikelihood === 0) {
-        ctx.addIssue({
-            path: ['initialLikelihood'],
-            message: "Please select a probability level.",
-            code: z.ZodIssueCode.custom,
-        });
-    }
-    if (!data.initialSeverity || data.initialSeverity === 0) {
-        ctx.addIssue({
-            path: ['initialSeverity'],
-            message: "Please select a severity level.",
-            code: z.ZodIssueCode.custom,
-        });
-    }
     data.controlMeasures.forEach((control, index) => {
         if (control.status === 'For Implementation' && !control.completionDate) {
             ctx.addIssue({
@@ -315,6 +301,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
     const [step, setStep] = React.useState(1);
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [isUploading, setIsUploading] = React.useState(false);
     const [imagePreview, setImagePreview] = React.useState<string | null>(null);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -345,6 +332,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
         const defaultValues = getDefaultValues(entryToEdit);
         form.reset(defaultValues);
         setImagePreview(defaultValues.hazardPhotoUrl ?? null);
+        form.setValue('hazardPhotoUrl', defaultValues.hazardPhotoUrl, { shouldValidate: true });
         setStep(1);
     }, [entryToEdit, form]);
 
@@ -353,15 +341,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
 
     async function onSubmit(data: HiracFormValues) {
         setIsSubmitting(true);
-        
-        let finalPhotoUrl = imagePreview;
-        if (imagePreview && imagePreview.startsWith('blob:')) {
-            finalPhotoUrl = '/images/hazard-placeholder.png';
-        }
-
         const payload = {
             ...data,
-            hazardPhotoUrl: finalPhotoUrl,
             residualLikelihood: data.residualLikelihood ?? data.initialLikelihood,
             residualSeverity: data.residualSeverity ?? data.initialSeverity,
         };
@@ -402,16 +383,35 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
         }
     }
     
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            setIsUploading(true);
             const previewUrl = URL.createObjectURL(file);
-            form.setValue('hazardPhotoUrl', previewUrl, { shouldValidate: true });
             setImagePreview(previewUrl);
+
+            const result = await uploadHazardPhoto(formData);
+
+            setIsUploading(false);
+            if(result.error) {
+                toast({ variant: 'destructive', title: "Upload Failed", description: result.error });
+                setImagePreview(null);
+                 if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+            } else if (result.url) {
+                form.setValue('hazardPhotoUrl', result.url, { shouldValidate: true });
+                setImagePreview(result.url); // Show the final URL after upload
+                toast({ title: "Success", description: "Image uploaded." });
+            }
         }
     }
     
     const handleRemoveImage = () => {
+        const currentUrl = form.getValues('hazardPhotoUrl');
         setImagePreview(null);
         form.setValue('hazardPhotoUrl', null, { shouldValidate: true });
         if (fileInputRef.current) {
@@ -472,6 +472,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
                                             capture="environment"
                                             onChange={handleImageUpload}
                                             ref={fileInputRef}
+                                            disabled={isUploading}
                                         />
                                         {imagePreview ? (
                                             <div className="relative group w-full aspect-video rounded-md border border-dashed flex items-center justify-center">
@@ -483,21 +484,36 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
                                                     data-ai-hint="hazard"
                                                 />
                                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-opacity">
-                                                    <Button type="button" size="sm" asChild>
-                                                        <label htmlFor="hazard-photo-upload" className="cursor-pointer">Change</label>
-                                                    </Button>
-                                                    <Button type="button" size="sm" variant="destructive" onClick={handleRemoveImage}>
+                                                    <Button type="button" size="sm" variant="destructive" onClick={handleRemoveImage} disabled={isUploading}>
                                                         Remove
                                                     </Button>
                                                 </div>
+                                                 {isUploading && (
+                                                    <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white rounded-md">
+                                                        <Loader2 className="h-8 w-8 animate-spin mb-2" />
+                                                        <span>Uploading...</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         ) : (
                                             <label 
                                                 htmlFor="hazard-photo-upload" 
-                                                className="cursor-pointer w-full aspect-video rounded-md border-2 border-dashed border-muted-foreground/50 bg-muted/20 flex flex-col items-center justify-center text-muted-foreground hover:bg-muted/40 transition-colors"
+                                                className={cn(
+                                                    "cursor-pointer w-full aspect-video rounded-md border-2 border-dashed border-muted-foreground/50 bg-muted/20 flex flex-col items-center justify-center text-muted-foreground hover:bg-muted/40 transition-colors",
+                                                    isUploading && "cursor-not-allowed opacity-50"
+                                                )}
                                             >
-                                                <Camera className="h-10 w-10 mb-2" />
-                                                <span>Tap to upload or take a photo</span>
+                                                {isUploading ? (
+                                                    <>
+                                                        <Loader2 className="h-10 w-10 mb-2 animate-spin" />
+                                                        <span>Uploading...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Camera className="h-10 w-10 mb-2" />
+                                                        <span>Tap to upload or take a photo</span>
+                                                    </>
+                                                )}
                                             </label>
                                         )}
                                     </div>
@@ -576,8 +592,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
                 <div className="flex gap-2">
                     <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
                      {step < 2 && <Button type="button" onClick={triggerStep2Validation}>Next <ArrowRight className="ml-2 h-4 w-4" /></Button>}
-                    {step === 2 && <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {step === 2 && <Button type="submit" disabled={isSubmitting || isUploading}>
+                        {(isSubmitting || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {numericId ? 'Update Entry' : 'Save Entry'}
                     </Button>}
                 </div>

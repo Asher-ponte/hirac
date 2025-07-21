@@ -7,7 +7,32 @@ import type { HiracEntry, ControlMeasure } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { eq, inArray } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
+import { writeFile } from 'fs/promises';
+import { join } from 'path';
+import { v4 as uuidv4 } from 'uuid';
 
+
+export async function uploadHazardPhoto(formData: FormData): Promise<{ url?: string, error?: string }> {
+    const file = formData.get('file') as File;
+    if (!file) {
+        return { error: 'No file provided.' };
+    }
+
+    try {
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const fileExtension = file.name.split('.').pop();
+        const uniqueFilename = `${uuidv4()}.${fileExtension}`;
+        const publicPath = join(process.cwd(), 'public', 'images', uniqueFilename);
+        
+        await writeFile(publicPath, buffer);
+
+        const publicUrl = `/images/${uniqueFilename}`;
+        return { url: publicUrl };
+    } catch (e) {
+        console.error('Failed to upload image:', e);
+        return { error: 'Failed to upload image.' };
+    }
+}
 
 export async function getHiracEntries(departmentId?: number): Promise<HiracEntry[]> {
   try {
