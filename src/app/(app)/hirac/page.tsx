@@ -40,7 +40,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { analyzeHazard } from '@/ai/flows/analyze-hazard-flow';
 
 
 const likelihoodOptions = [
@@ -306,8 +305,6 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
     const [isUploading, setIsUploading] = React.useState(false);
     const [imagePreview, setImagePreview] = React.useState<string | null>(null);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
-    const [isAnalyzing, setIsAnalyzing] = React.useState(false);
-    const [uploadedFile, setUploadedFile] = React.useState<File | null>(null);
 
     const numericId = entryToEdit ? parseInt(entryToEdit.id.replace('HIRAC-', ''), 10) : null;
     
@@ -337,7 +334,6 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
         const defaultValues = getDefaultValues(entryToEdit);
         form.reset(defaultValues);
         setImagePreview(defaultValues.hazardPhotoUrl ?? null);
-        setUploadedFile(null);
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
         }
@@ -398,7 +394,6 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            setUploadedFile(file); // Keep the file object for AI analysis
             
             // Set preview
             const previewUrl = URL.createObjectURL(file);
@@ -428,64 +423,11 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
     
     const handleRemoveImage = () => {
         setImagePreview(null);
-        setUploadedFile(null);
         form.setValue('hazardPhotoUrl', null, { shouldValidate: true });
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
     }
-
-    const fileToDataUri = (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        });
-    };
-
-    const handleAnalyzeHazard = async () => {
-        if (!uploadedFile) {
-            toast({
-                variant: 'destructive',
-                title: 'No Photo Uploaded',
-                description: 'Please upload a photo of the hazard first to use the AI analysis.',
-            });
-            return;
-        }
-
-        const hazardDescription = form.getValues('hazard');
-        if (!hazardDescription) {
-             toast({
-                variant: 'destructive',
-                title: 'Hazard Description Missing',
-                description: 'Please describe the hazard before running the AI analysis.',
-            });
-            return;
-        }
-
-        setIsAnalyzing(true);
-        try {
-            const photoDataUri = await fileToDataUri(uploadedFile);
-            const result = await analyzeHazard({ photoDataUri, hazardDescription });
-            if (result.suggestedEvent) {
-                form.setValue('hazardousEvent', result.suggestedEvent, { shouldValidate: true });
-                toast({
-                    title: 'AI Analysis Complete',
-                    description: 'The hazardous event has been filled in.',
-                });
-            }
-        } catch (error) {
-             toast({
-                variant: 'destructive',
-                title: 'AI Analysis Failed',
-                description: (error as Error).message || 'An unexpected error occurred.',
-            });
-        } finally {
-            setIsAnalyzing(false);
-        }
-    };
-
 
     return (
       <Form {...form}>
@@ -633,13 +575,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
 
                         <FormField control={form.control} name="hazardousEvent" render={({ field }) => (
                             <FormItem>
-                                <div className="flex items-center justify-between">
-                                    <FormLabel>Hazardous Event</FormLabel>
-                                    <Button type="button" variant="outline" size="sm" onClick={handleAnalyzeHazard} disabled={isAnalyzing}>
-                                        {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BrainCircuit className="mr-2 h-4 w-4" />}
-                                        Analyze with AI
-                                    </Button>
-                                </div>
+                                <FormLabel>Hazardous Event</FormLabel>
                                 <FormControl><Textarea placeholder="e.g., No Maintenance of shuttle service" rows={2} {...field} /></FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -711,8 +647,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
                 <div className="flex gap-2">
                     <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
                      {step < 2 && <Button type="button" onClick={triggerStep2Validation}>Next <ArrowRight className="ml-2 h-4 w-4" /></Button>}
-                    {step === 2 && <Button type="submit" disabled={isSubmitting || isUploading || isAnalyzing}>
-                        {(isSubmitting || isUploading || isAnalyzing) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {step === 2 && <Button type="submit" disabled={isSubmitting || isUploading}>
+                        {(isSubmitting || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {numericId ? 'Update Entry' : 'Save Entry'}
                     </Button>}
                 </div>
