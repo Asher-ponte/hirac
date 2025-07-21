@@ -1,3 +1,4 @@
+
 'use server';
 
 import { db } from '@/lib/db';
@@ -5,9 +6,9 @@ import type { HiracEntry } from '@/lib/types';
 import { getHiracEntries } from '@/app/(app)/hirac/actions';
 
 const getRiskLevelDetails = (level: number) => {
-  if (level <= 6) return 'Low';
-  if (level <= 12) return 'Medium';
-  return 'High';
+  if (level <= 6) return { label: 'Low', color: 'var(--color-low)' };
+  if (level <= 12) return { label: 'Medium', color: 'var(--color-medium)' };
+  return { label: 'High', color: 'var(--color-high)' };
 };
 
 export async function getDashboardData() {
@@ -26,7 +27,7 @@ export async function getDashboardData() {
   ];
 
   const statusMap = hiracEntries.reduce((acc, entry) => {
-    const status = entry.status === 'For Implementation' ? 'Open' : entry.status;
+    const status = entry.status === 'For Implementation' ? 'Open' : (entry.status ?? 'Open');
     acc[status] = (acc[status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
@@ -38,8 +39,8 @@ export async function getDashboardData() {
   ];
   
   const riskMap = hiracEntries.reduce((acc, entry) => {
-    const riskLevel = getRiskLevelDetails(entry.initialLikelihood * entry.initialSeverity);
-    acc[riskLevel] = (acc[riskLevel] || 0) + 1;
+    const riskLevelLabel = getRiskLevelDetails(entry.initialLikelihood * entry.initialSeverity).label;
+    acc[riskLevelLabel] = (acc[riskLevelLabel] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
