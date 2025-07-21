@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import type { HiracEntry, ControlStatus, ControlType, Department } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle, BarChart, Camera, Search, ChevronDown, BrainCircuit } from 'lucide-react';
+import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle, BarChart, Camera, Search, ChevronDown } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -127,7 +127,7 @@ const RiskDisplay = ({ likelihood, severity, title = "Calculated Risk Level" }: 
                         <AlertTriangle className="h-5 w-5 md:h-6 md:w-6" />
                     </div>
                     <p className="text-xs text-muted-foreground">{title}</p>
-                    <h3 className="text-xl md:text-2xl font-bold">{riskLevel}</h3>
+                    <h3 className="text-lg md:text-xl font-bold">{riskLevel}</h3>
                     <Badge variant={riskDetails.variant}>{riskDetails.label}</Badge>
                 </>
             ) : (
@@ -1070,8 +1070,8 @@ function HiracCard({ item, onEdit, onReassess, onDelete }: { item: HiracEntry, o
             <CardHeader>
                 <div className="flex justify-between items-start">
                     <div>
-                        <CardTitle className="text-base font-semibold">{item.hazard}</CardTitle>
-                        <CardDescription>{item.department?.name} &bull; {item.task}</CardDescription>
+                        <CardTitle className="text-base font-semibold">{item.task}</CardTitle>
+                        <CardDescription>{item.department?.name}</CardDescription>
                     </div>
                     <AlertDialog>
                         <DropdownMenu>
@@ -1131,6 +1131,7 @@ function HiracCard({ item, onEdit, onReassess, onDelete }: { item: HiracEntry, o
 
                 <div className="space-y-2 border-t pt-4">
                     <h4 className="text-sm font-semibold tracking-tight">Identification Details</h4>
+                    <IdentificationDetail label="Hazard" value={item.hazard} />
                     <IdentificationDetail label="Hazard Class" value={item.hazardClass} />
                     <IdentificationDetail label="Hazardous Event" value={item.hazardousEvent} />
                     <IdentificationDetail label="Impact" value={item.impact} />
