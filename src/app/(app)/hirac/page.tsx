@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import type { HiracEntry, ControlStatus, ControlType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, BrainCircuit, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle, BarChart } from 'lucide-react';
+import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, BrainCircuit, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle, BarChart, Camera } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -86,6 +86,20 @@ const hiracFormSchema = z.object({
     residualLikelihood: z.coerce.number().min(1).max(5).optional(),
     residualSeverity: z.coerce.number().min(1).max(5).optional(),
 }).superRefine((data, ctx) => {
+    if (data.initialLikelihood === 0) {
+        ctx.addIssue({
+            path: ['initialLikelihood'],
+            message: "Please select a probability level.",
+            code: z.ZodIssueCode.custom,
+        });
+    }
+    if (data.initialSeverity === 0) {
+        ctx.addIssue({
+            path: ['initialSeverity'],
+            message: "Please select a severity level.",
+            code: z.ZodIssueCode.custom,
+        });
+    }
     data.controlMeasures.forEach((control, index) => {
         if (control.status === 'For Implementation' && !control.completionDate) {
             ctx.addIssue({
@@ -300,6 +314,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
     const [step, setStep] = React.useState(1);
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [imagePreview, setImagePreview] = React.useState<string | null>(null);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const numericId = entryToEdit ? parseInt(entryToEdit.id.replace('HIRAC-', ''), 10) : null;
     
@@ -324,19 +340,23 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
     });
     
     React.useEffect(() => {
-        form.reset(getDefaultValues(entryToEdit));
+        const defaultValues = getDefaultValues(entryToEdit);
+        form.reset(defaultValues);
+        setImagePreview(defaultValues.hazardPhotoUrl ?? null);
         setStep(1);
     }, [entryToEdit, form]);
 
     const initialLikelihood = form.watch('initialLikelihood');
     const initialSeverity = form.watch('initialSeverity');
-    const hazardPhotoUrl = form.watch('hazardPhotoUrl');
 
     async function onSubmit(data: HiracFormValues) {
         setIsSubmitting(true);
         
         const payload = {
             ...data,
+            // In a real app, you'd upload the image file and get a URL.
+            // For now, we'll just use the placeholder or existing URL.
+            hazardPhotoUrl: imagePreview,
             residualLikelihood: data.residualLikelihood ?? data.initialLikelihood,
             residualSeverity: data.residualSeverity ?? data.initialSeverity,
         };
@@ -379,15 +399,26 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
     
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            const localImageUrl = '/images/hazard-placeholder.png';
-            form.setValue('hazardPhotoUrl', localImageUrl, { shouldValidate: true });
+            const file = e.target.files[0];
+            const previewUrl = URL.createObjectURL(file);
+            // In a real app, you'd upload the file here and set the returned URL.
+            // For demonstration, we use a placeholder and the local preview.
+            form.setValue('hazardPhotoUrl', `https://placehold.co/400x300.png?text=Hazard`, { shouldValidate: true });
+            setImagePreview(previewUrl);
              toast({
                 title: "Image Added",
-                description: "A placeholder image has been linked.",
+                description: "A preview of your image has been generated.",
             });
         }
     }
-
+    
+    const handleRemoveImage = () => {
+        setImagePreview(null);
+        form.setValue('hazardPhotoUrl', null, { shouldValidate: true });
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    }
 
     return (
       <Form {...form}>
@@ -417,33 +448,55 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
                             )} />
                         </div>
 
-                        <FormItem>
-                            <FormLabel>Hazard Photo</FormLabel>
+                        <FormField
+                            control={form.control}
+                            name="hazardPhotoUrl"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Hazard Photo</FormLabel>
                                 <FormControl>
-                                <div className="relative">
+                                    <div className="w-full">
                                         <Input
-                                        id="hazard-photo-upload"
-                                        type="file"
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                        accept="image/*"
-                                        onChange={handleImageUpload}
-                                    />
-                                    <Button type="button" variant="outline" className="w-full" asChild>
-                                        <label htmlFor="hazard-photo-upload" className="cursor-pointer flex items-center justify-center">
-                                            <Upload className="mr-2 h-4 w-4" />
-                                            {hazardPhotoUrl ? 'Change Photo' : 'Upload Photo'}
-                                        </label>
-                                    </Button>
-                                </div>
-                            </FormControl>
-                            {hazardPhotoUrl && (
-                                <div className="mt-2 text-xs text-muted-foreground flex items-center gap-2">
-                                    <Image src={hazardPhotoUrl} alt="Hazard preview" width={40} height={30} className="rounded-md" data-ai-hint="hazard" />
-                                    <span>Image preview</span>
-                                </div>
-                            )}
-                             <FormMessage />
-                        </FormItem>
+                                            id="hazard-photo-upload"
+                                            type="file"
+                                            className="hidden"
+                                            accept="image/*"
+                                            capture="environment"
+                                            onChange={handleImageUpload}
+                                            ref={fileInputRef}
+                                        />
+                                        {imagePreview ? (
+                                            <div className="relative group w-full aspect-video rounded-md border border-dashed flex items-center justify-center">
+                                                <Image 
+                                                    src={imagePreview} 
+                                                    alt="Hazard preview" 
+                                                    fill 
+                                                    className="object-contain rounded-md"
+                                                    data-ai-hint="hazard"
+                                                />
+                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-opacity">
+                                                    <Button type="button" size="sm" asChild>
+                                                        <label htmlFor="hazard-photo-upload" className="cursor-pointer">Change</label>
+                                                    </Button>
+                                                    <Button type="button" size="sm" variant="destructive" onClick={handleRemoveImage}>
+                                                        Remove
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <label 
+                                                htmlFor="hazard-photo-upload" 
+                                                className="cursor-pointer w-full aspect-video rounded-md border-2 border-dashed border-muted-foreground/50 bg-muted/20 flex flex-col items-center justify-center text-muted-foreground hover:bg-muted/40 transition-colors"
+                                            >
+                                                <Camera className="h-10 w-10 mb-2" />
+                                                <span>Tap to upload or take a photo</span>
+                                            </label>
+                                        )}
+                                    </div>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
 
                         <FormField control={form.control} name="hazardousEvent" render={({ field }) => (
                             <FormItem><FormLabel>Hazardous Event</FormLabel><FormControl><Textarea placeholder="e.g., No Maintenance of shuttle service" rows={2} {...field} /></FormControl><FormMessage /></FormItem>
@@ -812,14 +865,13 @@ export default function HiracPage() {
                             <TableCell className="align-top border-r">{item.hazardClass}</TableCell>
                             <TableCell className="align-top border-r">
                                {item.hazardPhotoUrl && (
-                                    <div className="mb-2">
+                                    <div className="mb-2 relative w-full aspect-video">
                                         <Image 
                                             src={item.hazardPhotoUrl} 
                                             alt={`Photo for ${item.hazard}`} 
-                                            width={200} 
-                                            height={150}
+                                            fill
                                             data-ai-hint="hazard"
-                                            className="rounded-md object-cover"
+                                            className="rounded-md object-contain"
                                         />
                                     </div>
                                 )}
@@ -920,5 +972,3 @@ export default function HiracPage() {
     </div>
   );
 }
-
-    
