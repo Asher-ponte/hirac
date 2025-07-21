@@ -338,6 +338,9 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
         form.reset(defaultValues);
         setImagePreview(defaultValues.hazardPhotoUrl ?? null);
         setUploadedFile(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
         form.setValue('hazardPhotoUrl', defaultValues.hazardPhotoUrl, { shouldValidate: true });
         setStep(1);
     }, [entryToEdit, form]);
@@ -348,18 +351,9 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
     async function onSubmit(data: HiracFormValues) {
         setIsSubmitting(true);
         try {
-            // Handle file upload before submitting the rest of the data
-            if (uploadedFile) {
-                const formData = new FormData();
-                formData.append('file', uploadedFile);
-                const result = await uploadHazardPhoto(formData);
-
-                if (result.error) {
-                    throw new Error(result.error);
-                }
-                data.hazardPhotoUrl = result.url;
-            }
-
+            // File was already uploaded on selection, so we use the URL from the form
+            // No need to re-upload here.
+            
             const payload = {
                 ...data,
                 residualLikelihood: data.residualLikelihood ?? data.initialLikelihood,
@@ -404,9 +398,31 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            setUploadedFile(file);
+            setUploadedFile(file); // Keep the file object for AI analysis
+            
+            // Set preview
             const previewUrl = URL.createObjectURL(file);
             setImagePreview(previewUrl);
+
+            // Upload the file and get the URL
+            setIsUploading(true);
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                const result = await uploadHazardPhoto(formData);
+
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+                // Set the permanent URL in the form
+                form.setValue('hazardPhotoUrl', result.url, { shouldValidate: true });
+            } catch (error) {
+                toast({ variant: 'destructive', title: "Upload Failed", description: (error as Error).message });
+                // Reset on failure
+                handleRemoveImage();
+            } finally {
+                setIsUploading(false);
+            }
         }
     }
     
@@ -746,12 +762,6 @@ function ReassessmentForm({ entry, setOpen, onFormSubmit }: { entry: HiracEntry,
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <DialogHeader>
-                    <DialogTitle>Risk Re-assessment for {entry.id}</DialogTitle>
-                    <DialogDescription>
-                        After implementing control measures, re-assess the risk level. This will also update the 'Last Reviewed' date.
-                    </DialogDescription>
-                </DialogHeader>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                     <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField
@@ -895,7 +905,6 @@ export default function HiracPage() {
     }
   }
 
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -943,6 +952,12 @@ export default function HiracPage() {
       {entryToReassess && (
           <Dialog open={reassessDialogOpen} onOpenChange={setReassessDialogOpen}>
               <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Risk Re-assessment for {entryToReassess.id}</DialogTitle>
+                        <DialogDescription>
+                            After implementing control measures, re-assess the risk level. This will also update the 'Last Reviewed' date.
+                        </DialogDescription>
+                    </DialogHeader>
                     <ReassessmentForm 
                       entry={entryToReassess} 
                       setOpen={setReassessDialogOpen}
@@ -1051,7 +1066,7 @@ export default function HiracPage() {
                                       </DialogTrigger>
                                       <DialogContent className="max-w-2xl">
                                         <DialogHeader>
-                                          <DialogTitle>{item.hazard}</DialogTitle>
+                                          <DialogTitle>Hazard Photo: {item.hazard}</DialogTitle>
                                           <DialogDescription>{item.task} - {item.department?.name}</DialogDescription>
                                         </DialogHeader>
                                         <div className="relative w-full aspect-video">
