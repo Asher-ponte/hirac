@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from 'react';
@@ -197,7 +196,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                     <p className="text-sm text-muted-foreground text-center py-4">No {title.toLowerCase()} added.</p>
                 )}
                 {filteredFields.map((field, index) => (
-                    <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
+                    <div key={field.id} className="p-2 border rounded-lg space-y-2 relative">
                         <Button 
                             type="button" 
                             variant="ghost" 
@@ -751,7 +750,9 @@ function ReassessmentForm({ entry, setOpen, onFormSubmit }: { entry: HiracEntry,
 
 const ControlMeasuresDetails = ({ controls, type }: { controls: HiracEntry['controlMeasures'], type: ControlType }) => {
     const filteredControls = controls.filter(c => c.type === type);
-    if (filteredControls.length === 0) return <TableCell colSpan={4} className="text-center text-muted-foreground border-r py-2">No {type.toLowerCase()} controls.</TableCell>;
+    if (filteredControls.length === 0) {
+        return <TableCell colSpan={4} className="text-center text-muted-foreground border-r py-2">No {type.toLowerCase()} controls.</TableCell>;
+    }
 
     return (
         <React.Fragment>
@@ -1102,10 +1103,10 @@ export default function HiracPage() {
                           const residualRiskDetails = (isReassessed && residualRiskLevel !== null) ? getRiskLevelDetails(residualRiskLevel) : null;
                           return (
                               <TableRow key={item.id} className={cn(index % 2 === 0 ? "bg-muted/30" : "")}>
-                                  <TableCell className="font-medium align-top border-r">{item.department?.name}</TableCell>
-                                  <TableCell className="font-medium align-top border-r">{item.task}</TableCell>
-                                  <TableCell className="align-top border-r">{item.hazardClass}</TableCell>
-                                  <TableCell className="align-top border-r">
+                                  <TableCell className="font-medium align-top border-r p-2">{item.department?.name}</TableCell>
+                                  <TableCell className="font-medium align-top border-r p-2">{item.task}</TableCell>
+                                  <TableCell className="align-top border-r p-2">{item.hazardClass}</TableCell>
+                                  <TableCell className="align-top border-r p-2">
                                     {item.hazardPhotoUrl && (
                                           <Dialog>
                                             <DialogTrigger asChild>
@@ -1126,25 +1127,25 @@ export default function HiracPage() {
                                       )}
                                       {item.hazard}
                                   </TableCell>
-                                  <TableCell className="align-top border-r whitespace-pre-wrap">{item.hazardousEvent}</TableCell>
-                                  <TableCell className="align-top border-r whitespace-pre-wrap">{item.impact}</TableCell>
-                                  <TableCell className="text-center align-top font-mono text-xs border-r">P:{item.initialLikelihood}, S:{item.initialSeverity}</TableCell>
+                                  <TableCell className="align-top border-r whitespace-pre-wrap p-2">{item.hazardousEvent}</TableCell>
+                                  <TableCell className="align-top border-r whitespace-pre-wrap p-2">{item.impact}</TableCell>
+                                  <TableCell className="text-center align-top font-mono text-xs border-r p-2">P:{item.initialLikelihood}, S:{item.initialSeverity}</TableCell>
                                   <TableCell className="text-center align-top p-2 border-r">
                                       <TooltipProvider><Tooltip><TooltipTrigger className="w-full"><Badge variant={initialRiskDetails.variant} className={cn("cursor-pointer w-full justify-center p-2 text-base", initialRiskDetails.color)}>{initialRiskLevel}</Badge></TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
                                   </TableCell>
                                   <ControlMeasuresDetails controls={item.controlMeasures} type="Engineering" />
                                   <ControlMeasuresDetails controls={item.controlMeasures} type="Administrative" />
                                   <ControlMeasuresDetails controls={item.controlMeasures} type="PPE" />
-                                  <TableCell className="text-center align-top font-mono text-xs border-r">{isReassessed ? `P:${item.residualLikelihood}, S:${item.residualSeverity}` : 'N/A'}</TableCell>
+                                  <TableCell className="text-center align-top font-mono text-xs border-r p-2">{isReassessed ? `P:${item.residualLikelihood}, S:${item.residualSeverity}` : 'N/A'}</TableCell>
                                   <TableCell className="text-center align-top p-2 border-r">
                                       {isReassessed && residualRiskDetails && residualRiskLevel !== null ? (
                                           <TooltipProvider><Tooltip><TooltipTrigger className="w-full"><Badge variant={residualRiskDetails.variant} className={cn("cursor-pointer w-full justify-center p-2 text-base", residualRiskDetails.color)}>{residualRiskLevel}</Badge></TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {residualRiskLevel} ({residualRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
                                       ) : (<Badge variant="outline" className="w-full justify-center p-2 text-base">N/A</Badge>)}
                                   </TableCell>
-                                  <TableCell className="align-top border-r">{item.createdAt ? format(new Date(item.createdAt), "P") : ''}</TableCell>
-                                  <TableCell className="align-top border-r">{item.reviewedAt ? format(new Date(item.reviewedAt), "P") : <span className="text-muted-foreground">Not yet</span>}</TableCell>
-                                  <TableCell className="align-top border-r">{item.nextReviewDate ? format(new Date(item.nextReviewDate), "P") : <span className="text-muted-foreground">Not set</span>}</TableCell>
-                                  <TableCell className="align-top text-right">
+                                  <TableCell className="align-top border-r p-2">{item.createdAt ? format(new Date(item.createdAt), "P") : ''}</TableCell>
+                                  <TableCell className="align-top border-r p-2">{item.reviewedAt ? format(new Date(item.reviewedAt), "P") : <span className="text-muted-foreground">Not yet</span>}</TableCell>
+                                  <TableCell className="align-top border-r p-2">{item.nextReviewDate ? format(new Date(item.nextReviewDate), "P") : <span className="text-muted-foreground">Not set</span>}</TableCell>
+                                  <TableCell className="align-top text-right p-2">
                                       <AlertDialog>
                                           <DropdownMenu>
                                               <DropdownMenuTrigger asChild><Button variant="ghost" className="h-8 w-8 p-0"><span className="sr-only">Open menu</span><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
@@ -1217,4 +1218,3 @@ export default function HiracPage() {
     </div>
   );
 }
-
