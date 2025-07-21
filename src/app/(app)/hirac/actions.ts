@@ -97,8 +97,8 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
       impact: formData.impact,
       initialLikelihood: formData.initialLikelihood,
       initialSeverity: formData.initialSeverity,
-      residualLikelihood: formData.residualLikelihood,
-      residualSeverity: formData.residualSeverity,
+      residualLikelihood: null,
+      residualSeverity: null,
       nextReviewDate: nextReviewDate,
       // Default status for new entries
       status: 'Ongoing'
