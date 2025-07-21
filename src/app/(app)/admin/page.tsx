@@ -310,7 +310,7 @@ export default function AdminPage() {
     <>
         <Tabs defaultValue="users" className="space-y-6">
             <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tight">Admin Panel</h1>
+                <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Admin Panel</h1>
                 <p className="text-muted-foreground">Manage users, roles, and system-wide settings.</p>
             </div>
             <TabsList className="grid w-full grid-cols-2">
@@ -339,7 +339,7 @@ export default function AdminPage() {
                                             <CardHeader>
                                                 <div className="flex justify-between items-start">
                                                     <div>
-                                                        <CardTitle className="text-lg">{user.name}</CardTitle>
+                                                        <CardTitle className="text-base font-semibold">{user.name}</CardTitle>
                                                         <CardDescription>{user.email}</CardDescription>
                                                     </div>
                                                     <UserActions user={user} onEdit={handleEditUser} onDelete={handleDeleteUser} />
@@ -396,7 +396,7 @@ export default function AdminPage() {
                                             <CardHeader>
                                                  <div className="flex justify-between items-start">
                                                     <div>
-                                                        <CardTitle className="text-lg">{dept.name}</CardTitle>
+                                                        <CardTitle className="text-base font-semibold">{dept.name}</CardTitle>
                                                         <CardDescription>
                                                             Supervisor: {dept.supervisor?.name ?? <span className="text-muted-foreground italic">None</span>}
                                                         </CardDescription>

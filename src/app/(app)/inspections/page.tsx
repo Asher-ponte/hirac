@@ -32,7 +32,7 @@ export default function InspectionsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Inspections</h1>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Inspections</h1>
         <p className="text-muted-foreground">Manage and review all workplace safety inspections.</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
@@ -41,7 +41,7 @@ export default function InspectionsPage() {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex-1 pr-4">
-                  <CardTitle className="text-lg">{inspection.location}</CardTitle>
+                  <CardTitle className="text-base md:text-lg">{inspection.location}</CardTitle>
                   <CardDescription>{`ID: ${inspection.id} - ${inspection.inspection_date}`}</CardDescription>
                 </div>
                 <DropdownMenu>

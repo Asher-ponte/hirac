@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import type { HiracEntry, ControlStatus, ControlType, Department } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, BrainCircuit, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle, BarChart, Camera, Search, ChevronDown } from 'lucide-react';
+import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle, BarChart, Camera, Search, ChevronDown } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -120,20 +120,20 @@ const RiskDisplay = ({ likelihood, severity, title = "Calculated Risk Level" }: 
     const riskDetails = riskLevel !== undefined ? getRiskLevelDetails(riskLevel) : null;
 
     return (
-        <div className="flex flex-col items-center justify-center space-y-4 p-4 bg-muted rounded-lg h-full min-h-[180px] md:min-h-[220px]">
+        <div className="flex flex-col items-center justify-center space-y-2 p-4 bg-muted rounded-lg h-full min-h-[180px] md:min-h-[220px]">
             {riskDetails ? (
                 <>
-                    <div className={cn("p-4 rounded-full", riskDetails.color)}>
-                        <AlertTriangle className="h-8 w-8" />
+                    <div className={cn("p-3 md:p-4 rounded-full", riskDetails.color)}>
+                        <AlertTriangle className="h-6 w-6 md:h-8 md:w-8" />
                     </div>
-                    <p className="text-sm text-muted-foreground">{title}</p>
-                    <h3 className="text-3xl font-bold">{riskLevel}</h3>
+                    <p className="text-xs md:text-sm text-muted-foreground">{title}</p>
+                    <h3 className="text-2xl md:text-3xl font-bold">{riskLevel}</h3>
                     <Badge variant={riskDetails.variant}>{riskDetails.label}</Badge>
                 </>
             ) : (
-                <div className="text-center text-muted-foreground">
-                     <BrainCircuit className="h-10 w-10 mx-auto mb-2 text-muted-foreground/50"/>
-                    <p>Risk Level will be calculated here.</p>
+                <div className="text-center text-muted-foreground p-4">
+                     <AlertTriangle className="h-8 w-8 md:h-10 md:w-10 mx-auto mb-2 text-muted-foreground/50"/>
+                    <p className="text-sm">Risk Level will be calculated here.</p>
                 </div>
             )}
         </div>
@@ -161,8 +161,8 @@ const RiskRadioGroup = ({
           htmlFor={`${field.name}-${option.value}`}
           className="flex flex-col rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
         >
-          <span className="font-semibold mb-1">{option.label}</span>
-          <span className="text-sm text-muted-foreground whitespace-pre-line">{option.description}</span>
+          <span className="font-semibold mb-1 text-sm md:text-base">{option.label}</span>
+          <span className="text-xs md:text-sm text-muted-foreground whitespace-pre-line">{option.description}</span>
         </Label>
       </FormItem>
     ))}
@@ -349,23 +349,14 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
     async function onSubmit(data: HiracFormValues) {
         setIsSubmitting(true);
         try {
-            // File was already uploaded on selection, so we use the URL from the form
-            // No need to re-upload here.
-            
-            const payload = {
-                ...data,
-                residualLikelihood: data.residualLikelihood ?? data.initialLikelihood,
-                residualSeverity: data.residualSeverity ?? data.initialSeverity,
-            };
-
             if (numericId !== null && entryToEdit) {
-                await updateHiracEntry(numericId, payload);
+                await updateHiracEntry(numericId, data);
                 toast({
                     title: "Success",
                     description: "HIRAC entry updated successfully.",
                 });
             } else {
-                await createHiracEntry(payload);
+                await createHiracEntry(data);
                 toast({
                     title: "Success",
                     description: "New HIRAC entry created successfully.",
@@ -700,6 +691,12 @@ function ReassessmentForm({ entry, setOpen, onFormSubmit }: { entry: HiracEntry,
     return (
         <Form {...form}>
              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                 <DialogHeader>
+                    <DialogTitle>Risk Re-assessment for {entry.id}</DialogTitle>
+                    <DialogDescription>
+                        After implementing control measures, re-assess the risk level. This will also update the 'Last Reviewed' date.
+                    </DialogDescription>
+                </DialogHeader>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                     <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField
@@ -847,7 +844,7 @@ export default function HiracPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 className="text-3xl font-bold tracking-tight">HIRAC Register</h1>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">HIRAC Register</h1>
             <p className="text-muted-foreground">Hazard Identification, Risk Assessment, and Control</p>
         </div>
         <Button onClick={handleNewEntry} className="w-full md:w-auto">
@@ -962,13 +959,13 @@ export default function HiracPage() {
                                               </div>
                                             </DialogTrigger>
                                             <DialogContent className="max-w-2xl">
-                                              <DialogHeader>
-                                                <DialogTitle>Hazard Photo: {item.hazard}</DialogTitle>
-                                                <DialogDescription>{item.task} - {item.department?.name}</DialogDescription>
-                                              </DialogHeader>
-                                              <div className="relative w-full aspect-video">
-                                                  <Image src={item.hazardPhotoUrl} alt={`Photo for ${item.hazard}`} fill className="rounded-md object-contain" />
-                                              </div>
+                                                <DialogHeader>
+                                                    <DialogTitle>Hazard Photo: {item.hazard}</DialogTitle>
+                                                    <DialogDescription>{item.task} - {item.department?.name}</DialogDescription>
+                                                </DialogHeader>
+                                                <div className="relative w-full aspect-video">
+                                                    <Image src={item.hazardPhotoUrl} alt={`Photo for ${item.hazard}`} fill className="rounded-md object-contain" />
+                                                </div>
                                             </DialogContent>
                                           </Dialog>
                                       )}
@@ -983,7 +980,7 @@ export default function HiracPage() {
                                   <ControlMeasuresDetails controls={item.controlMeasures} type="PPE" />
                                   <TableCell className="text-center align-top font-mono text-xs border-r">{isReassessed ? `P:${item.residualLikelihood}, S:${item.residualSeverity}` : 'N/A'}</TableCell>
                                   <TableCell className="text-center align-top p-2 border-r">
-                                      {isReassessed && residualRiskDetails ? (
+                                      {isReassessed && residualRiskDetails && residualRiskLevel > 0 ? (
                                           <TooltipProvider><Tooltip><TooltipTrigger className="w-full"><Badge variant={residualRiskDetails.variant} className={cn("cursor-pointer w-full justify-center p-2 text-base", residualRiskDetails.color)}>{residualRiskLevel}</Badge></TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {residualRiskLevel} ({residualRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
                                       ) : (<Badge variant="outline" className="w-full justify-center p-2 text-base">N/A</Badge>)}
                                   </TableCell>
@@ -1039,12 +1036,6 @@ export default function HiracPage() {
       {entryToReassess && (
           <Dialog open={reassessDialogOpen} onOpenChange={setReassessDialogOpen}>
               <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>Risk Re-assessment for {entryToReassess.id}</DialogTitle>
-                        <DialogDescription>
-                            After implementing control measures, re-assess the risk level. This will also update the 'Last Reviewed' date.
-                        </DialogDescription>
-                    </DialogHeader>
                     <ReassessmentForm 
                       entry={entryToReassess} 
                       setOpen={setReassessDialogOpen}
@@ -1064,14 +1055,14 @@ function HiracCard({ item, onEdit, onReassess, onDelete }: { item: HiracEntry, o
     const initialRiskDetails = getRiskLevelDetails(initialRiskLevel);
     const isReassessed = item.residualLikelihood != null && item.residualSeverity != null;
     const residualRiskLevel = isReassessed ? (item.residualLikelihood!) * (item.residualSeverity!) : null;
-    const residualRiskDetails = residualRiskLevel ? getRiskLevelDetails(residualRiskLevel) : null;
+    const residualRiskDetails = (isReassessed && residualRiskLevel) ? getRiskLevelDetails(residualRiskLevel) : null;
     
     return (
         <Card className="w-full">
             <CardHeader>
                 <div className="flex justify-between items-start">
                     <div>
-                        <CardTitle className="text-lg">{item.hazard}</CardTitle>
+                        <CardTitle className="text-base font-semibold">{item.hazard}</CardTitle>
                         <CardDescription>{item.department?.name} &bull; {item.task}</CardDescription>
                     </div>
                     <AlertDialog>
