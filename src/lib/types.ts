@@ -20,6 +20,16 @@ export type User = {
 };
 
 export type ControlStatus = 'Ongoing' | 'Implemented' | 'Not Implemented';
+export type ControlType = 'Engineering' | 'Administrative' | 'PPE';
+
+export type ControlMeasure = {
+  id?: number;
+  type: ControlType;
+  description: string;
+  pic?: string | null;
+  status?: ControlStatus | null;
+  completionDate?: string | null;
+};
 
 export type HiracEntry = {
   id: string;
@@ -31,22 +41,7 @@ export type HiracEntry = {
   impact: string;
   initialLikelihood: number;
   initialSeverity: number;
-  
-  engineeringControls?: string | null;
-  engineeringControlsPic?: string | null;
-  engineeringControlsStatus?: ControlStatus | null;
-  engineeringControlsCompletionDate?: string | null;
-
-  administrativeControls?: string | null;
-  administrativeControlsPic?: string | null;
-  administrativeControlsStatus?: ControlStatus | null;
-  administrativeControlsCompletionDate?: string | null;
-
-  ppe?: string | null;
-  ppePic?: string | null;
-  ppeStatus?: ControlStatus | null;
-  ppeCompletionDate?: string | null;
-
   residualLikelihood: number;
   residualSeverity: number;
+  controlMeasures: ControlMeasure[];
 };

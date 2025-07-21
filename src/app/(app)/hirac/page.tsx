@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from "date-fns"
@@ -11,9 +11,9 @@ import { format } from "date-fns"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import type { HiracEntry, ControlStatus } from '@/lib/types';
+import type { HiracEntry, ControlStatus, ControlType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, BrainCircuit, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon } from 'lucide-react';
+import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, BrainCircuit, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -61,8 +61,10 @@ const severityOptions = [
 const statusOptions: ControlStatus[] = ['Ongoing', 'Implemented', 'Not Implemented'];
 const hazardClassOptions = ['Physical', 'Chemical', 'Biological', 'Mechanical', 'Electrical'];
 
-const controlSchema = z.object({
-    description: z.string().optional().nullable(),
+const controlMeasureSchema = z.object({
+    id: z.number().optional(),
+    type: z.enum(['Engineering', 'Administrative', 'PPE']),
+    description: z.string().min(1, 'Description is required.'),
     pic: z.string().optional().nullable(),
     status: z.enum(statusOptions).optional().nullable(),
     completionDate: z.string().optional().nullable(),
@@ -78,18 +80,15 @@ const hiracFormSchema = z.object({
     initialLikelihood: z.coerce.number().min(1).max(5),
     initialSeverity: z.coerce.number().min(1).max(5),
     
-    engineeringControls: controlSchema,
-    administrativeControls: controlSchema,
-    ppe: controlSchema,
+    controlMeasures: z.array(controlMeasureSchema),
 
     residualLikelihood: z.coerce.number().min(1).max(5).optional(),
     residualSeverity: z.coerce.number().min(1).max(5).optional(),
 }).superRefine((data, ctx) => {
-    const controls = ['engineeringControls', 'administrativeControls', 'ppe'] as const;
-    controls.forEach(control => {
-        if (data[control].status === 'Not Implemented' && !data[control].completionDate) {
+    data.controlMeasures.forEach((control, index) => {
+        if (control.status === 'Not Implemented' && !control.completionDate) {
             ctx.addIssue({
-                path: [`${control}.completionDate`],
+                path: [`controlMeasures.${index}.completionDate`],
                 message: "Completion date is required when status is 'Not Implemented'",
                 code: z.ZodIssueCode.custom,
             });
@@ -159,100 +158,136 @@ const RiskRadioGroup = ({
   </RadioGroup>
 );
 
-const ControlMeasureGroup = ({ form, controlType, title }: { form: any, controlType: 'engineeringControls' | 'administrativeControls' | 'ppe', title: string }) => (
-    <Card>
-        <CardHeader><CardTitle>{title}</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-            <FormField
-                control={form.control}
-                name={`${controlType}.description`}
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                            <Textarea placeholder="Describe the control measure..." {...field} value={field.value ?? ''} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
+const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, controlType: ControlType, title: string }) => {
+    const { fields, append, remove } = useFieldArray({
+        control: form.control,
+        name: "controlMeasures"
+    });
+
+    const filteredFields = fields.map((field, index) => ({...field, originalIndex: index})).filter(field => (field as any).type === controlType);
+    
+    return (
+        <Card>
+            <CardHeader>
+                <div className="flex justify-between items-center">
+                    <CardTitle>{title}</CardTitle>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => append({ type: controlType, description: '', pic: '', status: 'Ongoing', completionDate: '' })}
+                    >
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add Control
+                    </Button>
+                </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                {filteredFields.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">No {title.toLowerCase()} added.</p>
                 )}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                    control={form.control}
-                    name={`${controlType}.pic`}
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Person-in-Charge</FormLabel>
-                            <FormControl>
-                                <Input placeholder="e.g., A. Exparas, HR" {...field} value={field.value ?? ''} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                 <FormField
-                    control={form.control}
-                    name={`${controlType}.status`}
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Status</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value ?? ''}>
-                                <FormControl>
-                                    <SelectTrigger><SelectValue placeholder="Select status..." /></SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {statusOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-            </div>
-             <FormField
-                control={form.control}
-                name={`${controlType}.completionDate`}
-                render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                        <FormLabel>Completion Date</FormLabel>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <FormControl>
-                                    <Button
-                                        variant={"outline"}
-                                        className={cn(
-                                            "w-full pl-3 text-left font-normal",
-                                            !field.value && "text-muted-foreground"
-                                        )}
-                                    >
-                                        {field.value ? (
-                                            format(new Date(field.value), "PPP")
-                                        ) : (
-                                            <span>Pick a date</span>
-                                        )}
-                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                    </Button>
-                                </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                    mode="single"
-                                    selected={field.value ? new Date(field.value) : undefined}
-                                    onSelect={(date) => field.onChange(date?.toISOString())}
-                                    initialFocus
-                                />
-                            </PopoverContent>
-                        </Popover>
-                         <FormDescription>
-                           Required if status is 'Not Implemented'.
-                        </FormDescription>
-                        <FormMessage />
-                    </FormItem>
-                )}
-            />
-        </CardContent>
-    </Card>
-);
+                {filteredFields.map((field, index) => (
+                    <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
+                        <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            className="absolute top-2 right-2 h-6 w-6" 
+                            onClick={() => remove(field.originalIndex)}
+                        >
+                            <XCircle className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                        <FormField
+                            control={form.control}
+                            name={`controlMeasures.${field.originalIndex}.description`}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Description</FormLabel>
+                                    <FormControl>
+                                        <Textarea placeholder="Describe the control measure..." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name={`controlMeasures.${field.originalIndex}.pic`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Person-in-Charge</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="e.g., A. Exparas, HR" {...field} value={field.value ?? ''} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name={`controlMeasures.${field.originalIndex}.status`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Status</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                                            <FormControl>
+                                                <SelectTrigger><SelectValue placeholder="Select status..." /></SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {statusOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                        <FormField
+                            control={form.control}
+                            name={`controlMeasures.${field.originalIndex}.completionDate`}
+                            render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                    <FormLabel>Completion Date</FormLabel>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <FormControl>
+                                                <Button
+                                                    variant={"outline"}
+                                                    className={cn(
+                                                        "w-full pl-3 text-left font-normal",
+                                                        !field.value && "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    {field.value ? (
+                                                        format(new Date(field.value), "PPP")
+                                                    ) : (
+                                                        <span>Pick a date</span>
+                                                    )}
+                                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                </Button>
+                                            </FormControl>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="start">
+                                            <Calendar
+                                                mode="single"
+                                                selected={field.value ? new Date(field.value) : undefined}
+                                                onSelect={(date) => field.onChange(date?.toISOString())}
+                                                initialFocus
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                    <FormDescription>Required if status is 'Not Implemented'.</FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                ))}
+            </CardContent>
+        </Card>
+    );
+};
+
 
 function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boolean) => void, entryToEdit?: HiracEntry | null, onFormSubmit: () => void }) {
     const [step, setStep] = React.useState(1);
@@ -270,24 +305,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
         impact: entry?.impact ?? '',
         initialLikelihood: entry?.initialLikelihood ?? 0,
         initialSeverity: entry?.initialSeverity ?? 0,
-        engineeringControls: {
-            description: entry?.engineeringControls ?? '',
-            pic: entry?.engineeringControlsPic ?? '',
-            status: entry?.engineeringControlsStatus ?? 'Ongoing',
-            completionDate: entry?.engineeringControlsCompletionDate ?? '',
-        },
-        administrativeControls: {
-            description: entry?.administrativeControls ?? '',
-            pic: entry?.administrativeControlsPic ?? '',
-            status: entry?.administrativeControlsStatus ?? 'Ongoing',
-            completionDate: entry?.administrativeControlsCompletionDate ?? '',
-        },
-        ppe: {
-            description: entry?.ppe ?? '',
-            pic: entry?.ppePic ?? '',
-            status: entry?.ppeStatus ?? 'Ongoing',
-            completionDate: entry?.ppeCompletionDate ?? '',
-        },
+        controlMeasures: entry?.controlMeasures ?? [],
         residualLikelihood: entry?.residualLikelihood,
         residualSeverity: entry?.residualSeverity,
     });
@@ -309,32 +327,9 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
 
     async function onSubmit(data: HiracFormValues) {
         setIsSubmitting(true);
-
+        
         const payload = {
-            task: data.task,
-            hazard: data.hazard,
-            hazardPhotoUrl: data.hazardPhotoUrl,
-            hazardClass: data.hazardClass,
-            hazardousEvent: data.hazardousEvent,
-            impact: data.impact,
-            initialLikelihood: data.initialLikelihood,
-            initialSeverity: data.initialSeverity,
-            
-            engineeringControls: data.engineeringControls.description,
-            engineeringControlsPic: data.engineeringControls.pic,
-            engineeringControlsStatus: data.engineeringControls.status,
-            engineeringControlsCompletionDate: data.engineeringControls.completionDate,
-            
-            administrativeControls: data.administrativeControls.description,
-            administrativeControlsPic: data.administrativeControls.pic,
-            administrativeControlsStatus: data.administrativeControls.status,
-            administrativeControlsCompletionDate: data.administrativeControls.completionDate,
-
-            ppe: data.ppe.description,
-            ppePic: data.ppe.pic,
-            ppeStatus: data.ppe.status,
-            ppeCompletionDate: data.ppe.completionDate,
-            
+            ...data,
             residualLikelihood: data.residualLikelihood ?? data.initialLikelihood,
             residualSeverity: data.residualSeverity ?? data.initialSeverity,
         };
@@ -497,9 +492,9 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
                         <h3 className="text-xl font-semibold tracking-tight">Control Measures</h3>
                         
                         <div className="space-y-6">
-                           <ControlMeasureGroup form={form} controlType="engineeringControls" title="Engineering Controls" />
-                           <ControlMeasureGroup form={form} controlType="administrativeControls" title="Administrative Controls" />
-                           <ControlMeasureGroup form={form} controlType="ppe" title="Personal Protective Equipment (PPE)" />
+                           <ControlMeasuresFieldArray form={form} controlType="Engineering" title="Engineering Controls" />
+                           <ControlMeasuresFieldArray form={form} controlType="Administrative" title="Administrative Controls" />
+                           <ControlMeasuresFieldArray form={form} controlType="PPE" title="Personal Protective Equipment (PPE)" />
                         </div>
                     </CardContent>
                 </Card>
@@ -522,6 +517,28 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
       </Form>
     );
 }
+
+const ControlMeasuresDetails = ({ controls, type }: { controls: HiracEntry['controlMeasures'], type: ControlType }) => {
+    const filteredControls = controls.filter(c => c.type === type);
+    if (filteredControls.length === 0) return <TableCell colSpan={4} className="text-center text-muted-foreground border-r py-2">No {type.toLowerCase()} controls.</TableCell>;
+
+    return (
+        <React.Fragment>
+            <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r p-0">
+                {filteredControls.map((c, i) => <div key={i} className={cn("p-2", i < filteredControls.length -1 && "border-b")}>{c.description}</div>)}
+            </TableCell>
+            <TableCell className="align-top border-r p-0">
+                {filteredControls.map((c, i) => <div key={i} className={cn("p-2", i < filteredControls.length -1 && "border-b")}>{c.pic}</div>)}
+            </TableCell>
+            <TableCell className="align-top border-r p-0">
+                {filteredControls.map((c, i) => <div key={i} className={cn("p-2", i < filteredControls.length -1 && "border-b")}>{c.status && <Badge variant={c.status === 'Implemented' ? 'secondary' : 'default'}>{c.status}</Badge>}</div>)}
+            </TableCell>
+            <TableCell className="align-top border-r p-0">
+                {filteredControls.map((c, i) => <div key={i} className={cn("p-2", i < filteredControls.length -1 && "border-b")}>{c.completionDate ? format(new Date(c.completionDate), "P") : ''}</div>)}
+            </TableCell>
+        </React.Fragment>
+    );
+};
 
 
 export default function HiracPage() {
@@ -704,25 +721,11 @@ export default function HiracPage() {
                                     </Tooltip>
                                 </TooltipProvider>
                             </TableCell>
-
-                            {/* Engineering Controls */}
-                            <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r">{item.engineeringControls}</TableCell>
-                            <TableCell className="align-top border-r">{item.engineeringControlsPic}</TableCell>
-                            <TableCell className="align-top border-r">{item.engineeringControlsStatus && <Badge variant={item.engineeringControlsStatus === 'Implemented' ? 'secondary' : 'default'}>{item.engineeringControlsStatus}</Badge>}</TableCell>
-                            <TableCell className="align-top border-r">{item.engineeringControlsCompletionDate ? format(new Date(item.engineeringControlsCompletionDate), "P") : ''}</TableCell>
                             
-                            {/* Administrative Controls */}
-                            <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r">{item.administrativeControls}</TableCell>
-                            <TableCell className="align-top border-r">{item.administrativeControlsPic}</TableCell>
-                            <TableCell className="align-top border-r">{item.administrativeControlsStatus && <Badge variant={item.administrativeControlsStatus === 'Implemented' ? 'secondary' : 'default'}>{item.administrativeControlsStatus}</Badge>}</TableCell>
-                            <TableCell className="align-top border-r">{item.administrativeControlsCompletionDate ? format(new Date(item.administrativeControlsCompletionDate), "P") : ''}</TableCell>
-
-                            {/* PPE Controls */}
-                            <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r">{item.ppe}</TableCell>
-                            <TableCell className="align-top border-r">{item.ppePic}</TableCell>
-                            <TableCell className="align-top border-r">{item.ppeStatus && <Badge variant={item.ppeStatus === 'Implemented' ? 'secondary' : 'default'}>{item.ppeStatus}</Badge>}</TableCell>
-                            <TableCell className="align-top border-r">{item.ppeCompletionDate ? format(new Date(item.ppeCompletionDate), "P") : ''}</TableCell>
-
+                            <ControlMeasuresDetails controls={item.controlMeasures} type="Engineering" />
+                            <ControlMeasuresDetails controls={item.controlMeasures} type="Administrative" />
+                            <ControlMeasuresDetails controls={item.controlMeasures} type="PPE" />
+                            
                             <TableCell className="text-center align-top font-mono text-xs border-r">
                                 {isReassessed ? `P:${item.residualLikelihood}, S:${item.residualSeverity}` : 'N/A'}
                             </TableCell>
@@ -790,5 +793,3 @@ export default function HiracPage() {
     </div>
   );
 }
-
-    
