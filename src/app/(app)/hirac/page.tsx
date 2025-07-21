@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from 'react';
@@ -484,8 +485,26 @@ export default function HiracPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>HIRAC Table</CardTitle>
-          <CardDescription>A register of all identified hazards, their risks, and control measures.</CardDescription>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle>HIRAC Table</CardTitle>
+              <CardDescription>A register of all identified hazards, their risks, and control measures.</CardDescription>
+            </div>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground pt-1">
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-3 rounded-full bg-red-500"></div>
+                <span>High Risk</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
+                <span>Medium Risk</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                <span>Low Risk</span>
+              </div>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="relative max-h-[600px] overflow-x-auto border rounded-lg">
