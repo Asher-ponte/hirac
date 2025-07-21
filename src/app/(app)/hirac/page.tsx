@@ -87,8 +87,8 @@ const hiracFormSchema = z.object({
     
     controlMeasures: z.array(controlMeasureSchema),
 
-    residualLikelihood: z.coerce.number().min(1).max(5).optional(),
-    residualSeverity: z.coerce.number().min(1).max(5).optional(),
+    residualLikelihood: z.coerce.number().min(1).max(5).optional().nullable(),
+    residualSeverity: z.coerce.number().min(1).max(5).optional().nullable(),
 }).superRefine((data, ctx) => {
     data.controlMeasures.forEach((control, index) => {
         if (control.status === 'For Implementation' && !control.completionDate) {
@@ -1091,9 +1091,14 @@ function HiracCard({ item, onEdit, onReassess, onDelete }: { item: HiracEntry, o
     const residualRiskLevel = isReassessed ? (item.residualLikelihood!) * (item.residualSeverity!) : null;
     const residualRiskDetails = (isReassessed && residualRiskLevel !== null) ? getRiskLevelDetails(residualRiskLevel) : null;
     
-    const IdentificationDetail = ({ label, value }: { label: string, value: string | undefined | null }) => (
-        value ? <p className="text-sm"><span className="font-semibold">{label}:</span> <span className="text-muted-foreground">{value}</span></p> : null
-    );
+    const IdentificationDetail = ({ label, value }: { label: string, value: string | undefined | null }) => {
+        if (!value) return null;
+        return (
+            <p className="text-sm">
+                <span className="font-semibold">{label}:</span> <span className="text-muted-foreground">{value}</span>
+            </p>
+        );
+    }
     
     return (
         <Card className="w-full">
@@ -1161,7 +1166,7 @@ function HiracCard({ item, onEdit, onReassess, onDelete }: { item: HiracEntry, o
 
                 <div className="space-y-2 border-t pt-4">
                     <h4 className="text-sm font-semibold tracking-tight">Identification Details</h4>
-                     <IdentificationDetail label="Hazard" value={item.hazard} />
+                    <IdentificationDetail label="Hazard" value={item.hazard} />
                     <IdentificationDetail label="Hazard Class" value={item.hazardClass} />
                     <IdentificationDetail label="Hazardous Event" value={item.hazardousEvent} />
                     <IdentificationDetail label="Impact" value={item.impact} />
@@ -1222,5 +1227,3 @@ function HiracCard({ item, onEdit, onReassess, onDelete }: { item: HiracEntry, o
         </Card>
     );
 }
-
-    
