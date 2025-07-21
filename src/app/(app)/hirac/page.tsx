@@ -39,11 +39,11 @@ import { Separator } from '@/components/ui/separator';
 
 
 const likelihoodOptions = [
-  { value: 5, label: "5 - It may happen every day / week" },
-  { value: 4, label: "4 - It may happen every month" },
-  { value: 3, label: "3 - It may happen every three months" },
-  { value: 2, label: "2 - It may happen every year" },
-  { value: 1, label: "1 - It may happen every year" },
+  { value: 1, label: "1 - IMPROBABLE: Presence of ALL CONTROLS" },
+  { value: 2, label: "2 - LESS PROBABLE" },
+  { value: 3, label: "3 - PROBABLE" },
+  { value: 4, label: "4 - ALMOST CERTAIN" },
+  { value: 5, label: "5 - CERTAIN: Absence of all CONTROLS" },
 ];
 
 const severityOptions = [
