@@ -184,6 +184,7 @@ export async function updateResidualRisk(id: number, data: { residualLikelihood:
   await db.update(hiracEntries).set({
     residualLikelihood: data.residualLikelihood,
     residualSeverity: data.residualSeverity,
+    reviewedAt: formatISO(new Date()),
   }).where(eq(hiracEntries.id, id));
 
   revalidatePath('/hirac');

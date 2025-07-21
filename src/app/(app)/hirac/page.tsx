@@ -694,7 +694,7 @@ function ReassessmentForm({ entry, setOpen, onFormSubmit }: { entry: HiracEntry,
                 <DialogHeader>
                     <DialogTitle>Risk Re-assessment for {entry.id}</DialogTitle>
                     <DialogDescription>
-                        After implementing control measures, re-assess the risk level.
+                        After implementing control measures, re-assess the risk level. This will also update the 'Last Reviewed' date.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
@@ -853,7 +853,7 @@ export default function HiracPage() {
                     <DialogHeader>
                         <DialogTitle>{entryToEdit ? 'Edit' : 'New'} HIRAC Entry</DialogTitle>
                         <DialogDescription>
-                            {entryToEdit ? 'Update the details for this HIRAC entry.' : 'Follow the steps to add a new hazard identification and risk assessment.'}
+                            {entryToEdit ? "Update the details for this HIRAC entry. This will also update the 'Last Reviewed' date." : 'Follow the steps to add a new hazard identification and risk assessment.'}
                         </DialogDescription>
                     </DialogHeader>
                     <HiracForm setOpen={setDialogOpen} entryToEdit={entryToEdit} onFormSubmit={handleFormSubmit} departments={departments} />
