@@ -524,6 +524,8 @@ export default function HiracPage() {
                     const residualRiskLevel = item.residualLikelihood * item.residualSeverity;
                     const residualRiskDetails = getRiskLevelDetails(residualRiskLevel);
 
+                    const isReassessed = item.initialLikelihood !== item.residualLikelihood || item.initialSeverity !== item.residualSeverity;
+
                     return (
                         <TableRow key={item.id} className={cn(index % 2 === 0 ? "bg-muted/30" : "")}>
                         <TableCell className="font-medium align-top">{item.task}</TableCell>
@@ -553,21 +555,25 @@ export default function HiracPage() {
                         <TableCell className="max-w-xs align-top whitespace-pre-wrap">{item.ppe}</TableCell>
                         <TableCell className="align-top">{item.responsiblePerson}</TableCell>
                         <TableCell className="text-center align-top font-mono text-xs">
-                            P:{item.residualLikelihood}, S:{item.residualSeverity}
+                            {isReassessed ? `P:${item.residualLikelihood}, S:${item.residualSeverity}` : 'N/A'}
                         </TableCell>
                         <TableCell className="text-center align-top p-2">
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger className="w-full">
-                                        <Badge variant={residualRiskDetails.variant} className={cn("cursor-pointer w-full justify-center p-2 text-base", residualRiskDetails.color)}>
-                                            {residualRiskLevel}
-                                        </Badge>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p className="font-bold">Risk Level: {residualRiskLevel} ({residualRiskDetails.label})</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                             {isReassessed ? (
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger className="w-full">
+                                            <Badge variant={residualRiskDetails.variant} className={cn("cursor-pointer w-full justify-center p-2 text-base", residualRiskDetails.color)}>
+                                                {residualRiskLevel}
+                                            </Badge>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p className="font-bold">Risk Level: {residualRiskLevel} ({residualRiskDetails.label})</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                             ) : (
+                                 <Badge variant="outline" className="w-full justify-center p-2 text-base">N/A</Badge>
+                             )}
                         </TableCell>
                         <TableCell className="align-top">
                             <Badge variant={item.status === 'Implemented' ? 'secondary' : 'default'}>{item.status}</Badge>
