@@ -15,15 +15,31 @@ export async function getDashboardData() {
   const hiracEntries = await getHiracEntries();
 
   const totalHazards = hiracEntries.length;
-  const implemented = hiracEntries.filter(e => e.status === 'Implemented').length;
-  const forImplementation = hiracEntries.filter(e => e.status === 'For Implementation').length;
-  const highRiskHazards = hiracEntries.filter(e => (e.initialLikelihood * e.initialSeverity) > 12).length;
+
+  let lowRiskCount = 0;
+  let mediumRiskCount = 0;
+  let highRiskCount = 0;
+
+  hiracEntries.forEach(entry => {
+    const hasResidual = entry.residualLikelihood != null && entry.residualSeverity != null;
+    const likelihood = hasResidual ? entry.residualLikelihood! : entry.initialLikelihood;
+    const severity = hasResidual ? entry.residualSeverity! : entry.initialSeverity;
+    const riskLevel = likelihood * severity;
+
+    if (riskLevel <= 6) {
+      lowRiskCount++;
+    } else if (riskLevel <= 12) {
+      mediumRiskCount++;
+    } else {
+      highRiskCount++;
+    }
+  });
 
   const kpiData = [
-    { title: 'Total Hazards', value: totalHazards.toString(), description: '' },
-    { title: 'For Implementation', value: forImplementation.toString(), description: '' },
-    { title: 'Implemented', value: implemented.toString(), description: '' },
-    { title: 'High-Risk Hazards', value: highRiskHazards.toString(), description: 'Based on initial assessment' },
+    { title: 'Total Hazards', value: totalHazards.toString(), description: `${totalHazards} risks identified` },
+    { title: 'Low Risk', value: lowRiskCount.toString(), description: 'Currently low-risk hazards' },
+    { title: 'Medium Risk', value: mediumRiskCount.toString(), description: 'Currently medium-risk hazards' },
+    { title: 'High Risk', value: highRiskCount.toString(), description: 'Currently high-risk hazards' },
   ];
 
   const statusMap = hiracEntries.reduce((acc, entry) => {

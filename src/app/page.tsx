@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { Sigma, ShieldAlert, ShieldCheck, Flame } from 'lucide-react';
+import { Sigma, ShieldAlert, ShieldCheck, Flame, Shield, ShieldQuestion } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Pie, PieChart, Cell } from 'recharts';
 import { ChartContainer, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
@@ -40,9 +40,9 @@ const riskChartConfig = {
 
 const kpiIcons = {
     'Total Hazards': Sigma,
-    'For Implementation': ShieldAlert,
-    'Implemented': ShieldCheck,
-    'High-Risk Hazards': Flame,
+    'Low Risk': ShieldCheck,
+    'Medium Risk': ShieldQuestion,
+    'High Risk': ShieldAlert,
 } as const;
 
 export default function DashboardPage() {
