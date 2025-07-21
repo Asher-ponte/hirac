@@ -81,6 +81,7 @@ const hiracFormSchema = z.object({
     impact: z.string().min(1, "Impact is required."),
     initialLikelihood: z.coerce.number().min(1).max(5),
     initialSeverity: z.coerce.number().min(1).max(5),
+    nextReviewDate: z.string().optional().nullable(),
     
     controlMeasures: z.array(controlMeasureSchema),
 
@@ -315,8 +316,9 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
         hazardClass: entry?.hazardClass ?? '',
         hazardousEvent: entry?.hazardousEvent ?? '',
         impact: entry?.impact ?? '',
-        initialLikelihood: entry?.initialLikelihood ?? undefined,
-        initialSeverity: entry?.initialSeverity ?? undefined,
+        initialLikelihood: entry?.initialLikelihood,
+        initialSeverity: entry?.initialSeverity,
+        nextReviewDate: entry?.nextReviewDate ?? null,
         controlMeasures: entry?.controlMeasures ?? [],
         residualLikelihood: entry?.residualLikelihood ?? undefined,
         residualSeverity: entry?.residualSeverity ?? undefined,
@@ -393,25 +395,30 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
             const previewUrl = URL.createObjectURL(file);
             setImagePreview(previewUrl);
 
-            const result = await uploadHazardPhoto(formData);
+            try {
+                const result = await uploadHazardPhoto(formData);
 
-            setIsUploading(false);
-            if(result.error) {
-                toast({ variant: 'destructive', title: "Upload Failed", description: result.error });
-                setImagePreview(null);
-                 if (fileInputRef.current) {
-                    fileInputRef.current.value = '';
+                if(result.error) {
+                    toast({ variant: 'destructive', title: "Upload Failed", description: result.error });
+                    setImagePreview(form.getValues('hazardPhotoUrl')); // Revert to original photo on failure
+                     if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                    }
+                } else if (result.url) {
+                    form.setValue('hazardPhotoUrl', result.url, { shouldValidate: true });
+                    setImagePreview(result.url); // Show the final URL after upload
+                    toast({ title: "Success", description: "Image uploaded." });
                 }
-            } else if (result.url) {
-                form.setValue('hazardPhotoUrl', result.url, { shouldValidate: true });
-                setImagePreview(result.url); // Show the final URL after upload
-                toast({ title: "Success", description: "Image uploaded." });
+            } catch (error) {
+                toast({ variant: 'destructive', title: "Upload Failed", description: "An unexpected error occurred." });
+                setImagePreview(form.getValues('hazardPhotoUrl'));
+            } finally {
+                setIsUploading(false);
             }
         }
     }
     
     const handleRemoveImage = () => {
-        const currentUrl = form.getValues('hazardPhotoUrl');
         setImagePreview(null);
         form.setValue('hazardPhotoUrl', null, { shouldValidate: true });
         if (fileInputRef.current) {
@@ -429,14 +436,55 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
                         <CardDescription>Identify the department, task, hazard, cause, and effect.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <FormField control={form.control} name="departmentId" render={({ field }) => (
-                            <FormItem><FormLabel>Department</FormLabel>
-                                <Select onValueChange={field.onChange} value={String(field.value)}>
-                                    <FormControl><SelectTrigger><SelectValue placeholder="Select department..." /></SelectTrigger></FormControl>
-                                    <SelectContent>{departments.map(opt => <SelectItem key={opt.id} value={String(opt.id)}>{opt.name}</SelectItem>)}</SelectContent>
-                                </Select>
-                            <FormMessage /></FormItem>
-                        )} />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField control={form.control} name="departmentId" render={({ field }) => (
+                                <FormItem><FormLabel>Department</FormLabel>
+                                    <Select onValueChange={field.onChange} value={String(field.value)}>
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Select department..." /></SelectTrigger></FormControl>
+                                        <SelectContent>{departments.map(opt => <SelectItem key={opt.id} value={String(opt.id)}>{opt.name}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                <FormMessage /></FormItem>
+                            )} />
+                             <FormField
+                                control={form.control}
+                                name="nextReviewDate"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-col">
+                                        <FormLabel>Next Review Date</FormLabel>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <FormControl>
+                                                    <Button
+                                                        variant={"outline"}
+                                                        className={cn(
+                                                            "w-full pl-3 text-left font-normal",
+                                                            !field.value && "text-muted-foreground"
+                                                        )}
+                                                    >
+                                                        {field.value ? (
+                                                            format(new Date(field.value), "PPP")
+                                                        ) : (
+                                                            <span>Pick a date</span>
+                                                        )}
+                                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                    </Button>
+                                                </FormControl>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={field.value ? new Date(field.value) : undefined}
+                                                    onSelect={(date) => field.onChange(date?.toISOString())}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                        <FormDescription>Optional: Schedule the next review.</FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
 
                         <FormField control={form.control} name="task" render={({ field }) => (
                             <FormItem><FormLabel>Task/Job</FormLabel><FormControl><Input placeholder="e.g., Transportation Services" {...field} /></FormControl><FormMessage /></FormItem>
@@ -861,8 +909,8 @@ export default function HiracPage() {
                     <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Task/Job</TableHead>
                     <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Hazard Class</TableHead>
                     <TableHead className="min-w-[250px] align-bottom border-r" rowSpan={2}>Hazard</TableHead>
-                    <TableHead className="min-w-[200px] align-bottom border-r" rowSpan={2}>Hazardous Event</TableHead>
-                    <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Impact</TableHead>
+                    <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Created</TableHead>
+                    <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Next Review</TableHead>
                     <TableHead colSpan={2} className="text-center border-b border-r">Initial Risk Assessment</TableHead>
                     <TableHead colSpan={4} className="text-center border-b border-r">Engineering Controls</TableHead>
                     <TableHead colSpan={4} className="text-center border-b border-r">Administrative Controls</TableHead>
@@ -940,8 +988,8 @@ export default function HiracPage() {
                                 )}
                                 {item.hazard}
                             </TableCell>
-                            <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r">{item.hazardousEvent}</TableCell>
-                            <TableCell className="align-top border-r">{item.impact}</TableCell>
+                            <TableCell className="align-top border-r">{item.createdAt ? format(new Date(item.createdAt), "P") : ''}</TableCell>
+                            <TableCell className="align-top border-r">{item.nextReviewDate ? format(new Date(item.nextReviewDate), "P") : <span className="text-muted-foreground">Not set</span>}</TableCell>
                             <TableCell className="text-center align-top font-mono text-xs border-r">
                                 P:{item.initialLikelihood}, S:{item.initialSeverity}
                             </TableCell>
@@ -1012,9 +1060,9 @@ export default function HiracPage() {
                                     <AlertDialogContent>
                                         <AlertDialogHeader>
                                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                            <AlertDialogDescription>
+                                            <DialogDescription>
                                                 This action cannot be undone. This will permanently delete the HIRAC entry.
-                                            </AlertDialogDescription>
+                                            </DialogDescription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
                                             <AlertDialogCancel>Cancel</AlertDialogCancel>

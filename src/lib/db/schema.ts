@@ -1,5 +1,5 @@
 import { integer, text, sqliteTable } from 'drizzle-orm/sqlite-core';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 
 const controlStatusEnum = ['Ongoing', 'Implemented', 'For Implementation'] as const;
 const controlTypeEnum = ['Engineering', 'Administrative', 'PPE'] as const;
@@ -48,6 +48,8 @@ export const hiracEntries = sqliteTable('hirac_entries', {
   residualLikelihood: integer('residual_likelihood'),
   residualSeverity: integer('residual_severity'),
   status: text('status', { enum: ['Ongoing', 'Implemented', 'For Implementation'] }),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`).notNull(),
+  nextReviewDate: text('next_review_date'),
 });
 
 export const hiracEntriesRelations = relations(hiracEntries, ({ many, one }) => ({

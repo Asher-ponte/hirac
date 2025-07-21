@@ -56,4 +56,6 @@ export type HiracEntry = {
   residualSeverity?: number | null;
   controlMeasures: ControlMeasure[];
   status?: 'Ongoing' | 'Implemented' | 'For Implementation' | null;
+  createdAt: string;
+  nextReviewDate?: string | null;
 };
