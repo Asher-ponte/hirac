@@ -781,6 +781,149 @@ const ControlMeasuresDetails = ({ controls, type }: { controls: HiracEntry['cont
     );
 };
 
+const IdentificationDetail = ({ label, value }: { label: string, value: string | undefined | null }) => {
+    if (!value) return null;
+    return (
+        <p className="text-sm">
+            <span className="font-semibold">{label}:</span> <span className="text-muted-foreground">{value}</span>
+        </p>
+    );
+};
+
+function HiracCard({ item, onEdit, onReassess, onDelete }: { item: HiracEntry, onEdit: (item: HiracEntry) => void, onReassess: (item: HiracEntry) => void, onDelete: (id: string) => void }) {
+    const initialRiskLevel = item.initialLikelihood * item.initialSeverity;
+    const initialRiskDetails = getRiskLevelDetails(initialRiskLevel);
+    const isReassessed = item.residualLikelihood != null && item.residualSeverity != null;
+    const residualRiskLevel = isReassessed ? (item.residualLikelihood!) * (item.residualSeverity!) : null;
+    const residualRiskDetails = (isReassessed && residualRiskLevel !== null) ? getRiskLevelDetails(residualRiskLevel) : null;
+    
+    return (
+        <Card className="w-full">
+            <CardHeader>
+                <div className="flex justify-between items-start">
+                    <div>
+                        <CardTitle className="text-base font-semibold">{item.task}</CardTitle>
+                        <CardDescription>{item.department?.name}</CardDescription>
+                    </div>
+                    <AlertDialog>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="-mt-2 -mr-2">
+                                    <MoreHorizontal className="h-5 w-5" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => onEdit(item)}>
+                                    <FilePenLine className="mr-2 h-4 w-4" /> Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => onReassess(item)}>
+                                    <BarChart className="mr-2 h-4 w-4" /> Re-assess Risk
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem className="text-destructive focus:text-destructive">
+                                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                    </DropdownMenuItem>
+                                </AlertDialogTrigger>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete the HIRAC entry.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => onDelete(item.id)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                 {item.hazardPhotoUrl && (
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <div className="relative w-full aspect-video cursor-pointer hover:opacity-80 transition-opacity rounded-md overflow-hidden">
+                                <Image src={item.hazardPhotoUrl} alt={`Photo for ${item.hazard}`} fill data-ai-hint="hazard" className="object-cover"/>
+                            </div>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Hazard Photo: {item.hazard}</DialogTitle>
+                            </DialogHeader>
+                            <div className="relative w-full aspect-video">
+                                <Image src={item.hazardPhotoUrl} alt={`Photo for ${item.hazard}`} fill className="rounded-md object-contain"/>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+                )}
+
+                <div className="space-y-2 border-t pt-4">
+                    <h4 className="text-sm font-semibold tracking-tight">Identification Details</h4>
+                    <IdentificationDetail label="Hazard" value={item.hazard} />
+                    <IdentificationDetail label="Hazard Class" value={item.hazardClass} />
+                    <IdentificationDetail label="Hazardous Event" value={item.hazardousEvent} />
+                    <IdentificationDetail label="Impact" value={item.impact} />
+                </div>
+
+
+                <div className="flex justify-around gap-4 text-center border-t pt-4">
+                    <div>
+                        <p className="text-sm text-muted-foreground">Initial Risk</p>
+                        <Badge variant={initialRiskDetails.variant} className={cn("mt-1 text-base px-3", initialRiskDetails.color)}>
+                            {initialRiskLevel}
+                        </Badge>
+                    </div>
+                     <div>
+                        <p className="text-sm text-muted-foreground">Residual Risk</p>
+                         {residualRiskDetails && residualRiskLevel !== null ? (
+                            <Badge variant={residualRiskDetails.variant} className={cn("mt-1 text-base px-3", residualRiskDetails.color)}>
+                                {residualRiskLevel}
+                            </Badge>
+                         ) : (
+                             <Badge variant="outline" className="mt-1 text-base px-3">N/A</Badge>
+                         )}
+                    </div>
+                </div>
+
+                <Collapsible>
+                    <CollapsibleTrigger asChild>
+                        <Button variant="ghost" className="w-full justify-center">
+                            Show Controls <ChevronDown className="ml-2 h-4 w-4" />
+                        </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="space-y-3 pt-2">
+                        {(['Engineering', 'Administrative', 'PPE'] as ControlType[]).map(type => {
+                            const controls = item.controlMeasures.filter(c => c.type === type);
+                            if (controls.length === 0) return null;
+                            return (
+                                <div key={type}>
+                                    <h4 className="font-semibold text-sm">{type} Controls</h4>
+                                    <div className="text-sm text-muted-foreground space-y-1 mt-1">
+                                        {controls.map((c, i) => <p key={i}>- {c.description}</p>)}
+                                    </div>
+                                </div>
+                            )
+                        })}
+                        {item.controlMeasures.length === 0 && <p className="text-sm text-muted-foreground text-center">No control measures defined.</p>}
+                    </CollapsibleContent>
+                </Collapsible>
+                
+            </CardContent>
+            <CardFooter className="flex justify-between text-xs text-muted-foreground">
+                <span>
+                    Next Review: {item.nextReviewDate ? format(new Date(item.nextReviewDate), "P") : 'N/A'}
+                </span>
+                <span>
+                    Updated: {item.reviewedAt ? formatDistanceToNow(new Date(item.reviewedAt), { addSuffix: true }) : 'Never'}
+                </span>
+            </CardFooter>
+        </Card>
+    );
+}
 
 export default function HiracPage() {
   const [dialogOpen, setDialogOpen] = React.useState(false);
@@ -1023,7 +1166,7 @@ export default function HiracPage() {
                                           <AlertDialogContent>
                                               <AlertDialogHeader>
                                                   <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                  <AlertDialogDescription>This action cannot be undone. This will permanently delete the HIRAC entry.</AlertDialogHeader>
+                                                  <AlertDialogDescription>This action cannot be undone. This will permanently delete the HIRAC entry.</AlertDialogDescription>
                                               </AlertDialogHeader>
                                               <AlertDialogFooter>
                                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -1081,149 +1224,4 @@ export default function HiracPage() {
 
     </div>
   );
-}
-
-
-function HiracCard({ item, onEdit, onReassess, onDelete }: { item: HiracEntry, onEdit: (item: HiracEntry) => void, onReassess: (item: HiracEntry) => void, onDelete: (id: string) => void }) {
-    const initialRiskLevel = item.initialLikelihood * item.initialSeverity;
-    const initialRiskDetails = getRiskLevelDetails(initialRiskLevel);
-    const isReassessed = item.residualLikelihood != null && item.residualSeverity != null;
-    const residualRiskLevel = isReassessed ? (item.residualLikelihood!) * (item.residualSeverity!) : null;
-    const residualRiskDetails = (isReassessed && residualRiskLevel !== null) ? getRiskLevelDetails(residualRiskLevel) : null;
-    
-    const IdentificationDetail = ({ label, value }: { label: string, value: string | undefined | null }) => {
-        if (!value) return null;
-        return (
-            <p className="text-sm">
-                <span className="font-semibold">{label}:</span> <span className="text-muted-foreground">{value}</span>
-            </p>
-        );
-    }
-    
-    return (
-        <Card className="w-full">
-            <CardHeader>
-                <div className="flex justify-between items-start">
-                    <div>
-                        <CardTitle className="text-base font-semibold">{item.task}</CardTitle>
-                        <CardDescription>{item.department?.name}</CardDescription>
-                    </div>
-                    <AlertDialog>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="-mt-2 -mr-2">
-                                    <MoreHorizontal className="h-5 w-5" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => onEdit(item)}>
-                                    <FilePenLine className="mr-2 h-4 w-4" /> Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => onReassess(item)}>
-                                    <BarChart className="mr-2 h-4 w-4" /> Re-assess Risk
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <AlertDialogTrigger asChild>
-                                    <DropdownMenuItem className="text-destructive focus:text-destructive">
-                                        <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                    </DropdownMenuItem>
-                                </AlertDialogTrigger>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete the HIRAC entry.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => onDelete(item.id)}>Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                 {item.hazardPhotoUrl && (
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <div className="relative w-full aspect-video cursor-pointer hover:opacity-80 transition-opacity rounded-md overflow-hidden">
-                                <Image src={item.hazardPhotoUrl} alt={`Photo for ${item.hazard}`} fill data-ai-hint="hazard" className="object-cover"/>
-                            </div>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Hazard Photo: {item.hazard}</DialogTitle>
-                            </DialogHeader>
-                            <div className="relative w-full aspect-video">
-                                <Image src={item.hazardPhotoUrl} alt={`Photo for ${item.hazard}`} fill className="rounded-md object-contain"/>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
-                )}
-
-                <div className="space-y-2 border-t pt-4">
-                    <h4 className="text-sm font-semibold tracking-tight">Identification Details</h4>
-                    <IdentificationDetail label="Hazard" value={item.hazard} />
-                    <IdentificationDetail label="Hazard Class" value={item.hazardClass} />
-                    <IdentificationDetail label="Hazardous Event" value={item.hazardousEvent} />
-                    <IdentificationDetail label="Impact" value={item.impact} />
-                </div>
-
-
-                <div className="flex justify-around gap-4 text-center border-t pt-4">
-                    <div>
-                        <p className="text-sm text-muted-foreground">Initial Risk</p>
-                        <Badge variant={initialRiskDetails.variant} className={cn("mt-1 text-base px-3", initialRiskDetails.color)}>
-                            {initialRiskLevel}
-                        </Badge>
-                    </div>
-                     <div>
-                        <p className="text-sm text-muted-foreground">Residual Risk</p>
-                         {residualRiskDetails && residualRiskLevel !== null ? (
-                            <Badge variant={residualRiskDetails.variant} className={cn("mt-1 text-base px-3", residualRiskDetails.color)}>
-                                {residualRiskLevel}
-                            </Badge>
-                         ) : (
-                             <Badge variant="outline" className="mt-1 text-base px-3">N/A</Badge>
-                         )}
-                    </div>
-                </div>
-
-                <Collapsible>
-                    <CollapsibleTrigger asChild>
-                        <Button variant="ghost" className="w-full justify-center">
-                            Show Controls <ChevronDown className="ml-2 h-4 w-4" />
-                        </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="space-y-3 pt-2">
-                        {(['Engineering', 'Administrative', 'PPE'] as ControlType[]).map(type => {
-                            const controls = item.controlMeasures.filter(c => c.type === type);
-                            if (controls.length === 0) return null;
-                            return (
-                                <div key={type}>
-                                    <h4 className="font-semibold text-sm">{type} Controls</h4>
-                                    <div className="text-sm text-muted-foreground space-y-1 mt-1">
-                                        {controls.map((c, i) => <p key={i}>- {c.description}</p>)}
-                                    </div>
-                                </div>
-                            )
-                        })}
-                        {item.controlMeasures.length === 0 && <p className="text-sm text-muted-foreground text-center">No control measures defined.</p>}
-                    </CollapsibleContent>
-                </Collapsible>
-                
-            </CardContent>
-            <CardFooter className="flex justify-between text-xs text-muted-foreground">
-                <span>
-                    Next Review: {item.nextReviewDate ? format(new Date(item.nextReviewDate), "P") : 'N/A'}
-                </span>
-                <span>
-                    Updated: {item.reviewedAt ? formatDistanceToNow(new Date(item.reviewedAt), { addSuffix: true }) : 'Never'}
-                </span>
-            </CardFooter>
-        </Card>
-    );
 }
