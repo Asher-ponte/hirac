@@ -4,6 +4,7 @@ export const hiracEntries = sqliteTable('hirac_entries', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   task: text('task').notNull(),
   hazard: text('hazard').notNull(),
+  hazardPhotoUrl: text('hazard_photo_url'),
   hazardClass: text('hazard_class', { enum: ['Physical', 'Chemical', 'Biological', 'Mechanical', 'Electrical'] }).notNull(),
   hazardousEvent: text('hazardous_event').notNull(),
   impact: text('impact').notNull(),

@@ -23,6 +23,7 @@ export type HiracEntry = {
   id: string;
   task: string;
   hazard: string;
+  hazardPhotoUrl?: string | null;
   hazardClass: 'Physical' | 'Chemical' | 'Biological' | 'Mechanical' | 'Electrical';
   hazardousEvent: string;
   impact: string;

@@ -28,6 +28,7 @@ export async function createHiracEntry(formData: Omit<HiracEntry, 'id'>) {
     await db.insert(hiracEntries).values({
         task: formData.task,
         hazard: formData.hazard,
+        hazardPhotoUrl: formData.hazardPhotoUrl,
         hazardClass: formData.hazardClass,
         hazardousEvent: formData.hazardousEvent,
         impact: formData.impact,

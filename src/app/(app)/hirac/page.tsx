@@ -2,6 +2,7 @@
 "use client";
 
 import * as React from 'react';
+import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import type { HiracEntry } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, BrainCircuit, Loader2, MoreHorizontal, FilePenLine, Trash2, ClipboardCheck } from 'lucide-react';
+import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, BrainCircuit, Loader2, MoreHorizontal, FilePenLine, Trash2, ClipboardCheck, Upload } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -58,6 +59,7 @@ const hazardClassOptions = ['Physical', 'Chemical', 'Biological', 'Mechanical', 
 const hiracFormSchema = z.object({
     task: z.string().min(1, "Task is required."),
     hazard: z.string().min(1, "Hazard is required."),
+    hazardPhotoUrl: z.string().url().optional().nullable(),
     hazardClass: z.string().min(1, "Hazard class is required."),
     hazardousEvent: z.string().min(1, "Hazardous event is required."),
     impact: z.string().min(1, "Impact is required."),
@@ -126,6 +128,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
         } : {
             task: '',
             hazard: '',
+            hazardPhotoUrl: null,
             hazardClass: '',
             hazardousEvent: '',
             impact: '',
@@ -147,6 +150,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
             form.reset({
                 task: '',
                 hazard: '',
+                hazardPhotoUrl: null,
                 hazardClass: '',
                 hazardousEvent: '',
                 impact: '',
@@ -162,6 +166,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
 
     const initialLikelihood = form.watch('initialLikelihood');
     const initialSeverity = form.watch('initialSeverity');
+    const hazardPhotoUrl = form.watch('hazardPhotoUrl');
 
     async function onSubmit(data: HiracFormValues) {
         setIsSubmitting(true);
@@ -210,6 +215,21 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
             setStep(2);
         }
     }
+    
+    // In a real app, this would involve uploading to a service like Cloud Storage
+    // and getting back a URL. For this prototype, we'll simulate it.
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            // Using a placeholder service for the prototype
+            const placeholderUrl = `https://placehold.co/400x300.png?text=Hazard`;
+            form.setValue('hazardPhotoUrl', placeholderUrl);
+             toast({
+                title: "Image Added",
+                description: "A placeholder image has been linked.",
+            });
+        }
+    }
+
 
     return (
       <Form {...form}>
@@ -225,10 +245,12 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
                             <FormField control={form.control} name="task" render={({ field }) => (
                                 <FormItem><FormLabel>Task/Job</FormLabel><FormControl><Input placeholder="e.g., Transportation Services" {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField control={form.control} name="hazard" render={({ field }) => (
+                            
+                             <FormField control={form.control} name="hazard" render={({ field }) => (
                                     <FormItem><FormLabel>Hazard</FormLabel><FormControl><Input placeholder="e.g., Riding on the Shuttle" {...field} /></FormControl><FormMessage /></FormItem>
                                 )} />
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField control={form.control} name="hazardClass" render={({ field }) => (
                                     <FormItem><FormLabel>Hazard Class</FormLabel>
                                         <Select onValueChange={field.onChange} value={field.value}>
@@ -237,7 +259,34 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
                                         </Select>
                                     <FormMessage /></FormItem>
                                 )} />
+                                 <FormItem>
+                                    <FormLabel>Hazard Photo</FormLabel>
+                                     <FormControl>
+                                        <div className="relative">
+                                             <Input
+                                                id="hazard-photo-upload"
+                                                type="file"
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                accept="image/*"
+                                                onChange={handleImageUpload}
+                                            />
+                                            <Button type="button" variant="outline" className="w-full" asChild>
+                                                <label htmlFor="hazard-photo-upload" className="cursor-pointer flex items-center justify-center">
+                                                    <Upload className="mr-2 h-4 w-4" />
+                                                    {hazardPhotoUrl ? 'Change Photo' : 'Upload Photo'}
+                                                </label>
+                                            </Button>
+                                        </div>
+                                    </FormControl>
+                                    {hazardPhotoUrl && (
+                                        <div className="mt-2 text-xs text-muted-foreground flex items-center gap-2">
+                                            <Image src={hazardPhotoUrl} alt="Hazard preview" width={40} height={30} className="rounded-md" data-ai-hint="hazard" />
+                                            <span>Image preview</span>
+                                        </div>
+                                    )}
+                                 </FormItem>
                             </div>
+
                              <FormField control={form.control} name="hazardousEvent" render={({ field }) => (
                                 <FormItem><FormLabel>Hazardous Event</FormLabel><FormControl><Textarea placeholder="e.g., No Maintenance of shuttle service" rows={2} {...field} /></FormControl><FormMessage /></FormItem>
                             )} />
@@ -516,7 +565,7 @@ export default function HiracPage() {
                     <TableRow>
                     <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Task/Job</TableHead>
                     <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Hazard Class</TableHead>
-                    <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Hazard</TableHead>
+                    <TableHead className="min-w-[250px] align-bottom border-r" rowSpan={2}>Hazard</TableHead>
                     <TableHead className="min-w-[200px] align-bottom border-r" rowSpan={2}>Hazardous Event</TableHead>
                     <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Impact</TableHead>
                     <TableHead colSpan={2} className="text-center border-b border-r">Initial Risk Assessment</TableHead>
@@ -549,7 +598,21 @@ export default function HiracPage() {
                         <TableRow key={item.id} className={cn(index % 2 === 0 ? "bg-muted/30" : "")}>
                         <TableCell className="font-medium align-top border-r">{item.task}</TableCell>
                         <TableCell className="align-top border-r">{item.hazardClass}</TableCell>
-                        <TableCell className="align-top border-r">{item.hazard}</TableCell>
+                        <TableCell className="align-top border-r">
+                           {item.hazardPhotoUrl && (
+                                <div className="mb-2">
+                                    <Image 
+                                        src={item.hazardPhotoUrl} 
+                                        alt={`Photo for ${item.hazard}`} 
+                                        width={200} 
+                                        height={150}
+                                        data-ai-hint="hazard"
+                                        className="rounded-md object-cover"
+                                    />
+                                </div>
+                            )}
+                            {item.hazard}
+                        </TableCell>
                         <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r">{item.hazardousEvent}</TableCell>
                         <TableCell className="align-top border-r">{item.impact}</TableCell>
                         <TableCell className="text-center align-top font-mono text-xs border-r">
@@ -625,7 +688,7 @@ export default function HiracPage() {
                                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                         <AlertDialogDescription>
                                             This action cannot be undone. This will permanently delete the HIRAC entry.
-                                        </AlertDialogDescription>
+                                        </description>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
