@@ -379,8 +379,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
     
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            const placeholderUrl = `https://placehold.co/400x300.png`;
-            form.setValue('hazardPhotoUrl', placeholderUrl);
+            const localImageUrl = '/images/hazard-placeholder.png';
+            form.setValue('hazardPhotoUrl', localImageUrl, { shouldValidate: true });
              toast({
                 title: "Image Added",
                 description: "A placeholder image has been linked.",
@@ -442,6 +442,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
                                     <span>Image preview</span>
                                 </div>
                             )}
+                             <FormMessage />
                         </FormItem>
 
                         <FormField control={form.control} name="hazardousEvent" render={({ field }) => (
