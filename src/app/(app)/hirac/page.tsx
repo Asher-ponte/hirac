@@ -75,7 +75,7 @@ const hiracFormSchema = z.object({
     departmentId: z.coerce.number().min(1, "Department is required."),
     task: z.string().min(1, "Task is required."),
     hazard: z.string().min(1, "Hazard is required."),
-    hazardPhotoUrl: z.string().url().optional().nullable(),
+    hazardPhotoUrl: z.string().optional().nullable(),
     hazardClass: z.string().min(1, "Hazard class is required."),
     hazardousEvent: z.string().min(1, "Hazardous event is required."),
     impact: z.string().min(1, "Impact is required."),
@@ -87,14 +87,14 @@ const hiracFormSchema = z.object({
     residualLikelihood: z.coerce.number().min(1).max(5).optional(),
     residualSeverity: z.coerce.number().min(1).max(5).optional(),
 }).superRefine((data, ctx) => {
-    if (data.initialLikelihood === 0) {
+    if (!data.initialLikelihood || data.initialLikelihood === 0) {
         ctx.addIssue({
             path: ['initialLikelihood'],
             message: "Please select a probability level.",
             code: z.ZodIssueCode.custom,
         });
     }
-    if (data.initialSeverity === 0) {
+    if (!data.initialSeverity || data.initialSeverity === 0) {
         ctx.addIssue({
             path: ['initialSeverity'],
             message: "Please select a severity level.",
@@ -328,8 +328,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
         hazardClass: entry?.hazardClass ?? '',
         hazardousEvent: entry?.hazardousEvent ?? '',
         impact: entry?.impact ?? '',
-        initialLikelihood: entry?.initialLikelihood ?? 0,
-        initialSeverity: entry?.initialSeverity ?? 0,
+        initialLikelihood: entry?.initialLikelihood ?? undefined,
+        initialSeverity: entry?.initialSeverity ?? undefined,
         controlMeasures: entry?.controlMeasures ?? [],
         residualLikelihood: entry?.residualLikelihood ?? undefined,
         residualSeverity: entry?.residualSeverity ?? undefined,
@@ -354,9 +354,13 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
     async function onSubmit(data: HiracFormValues) {
         setIsSubmitting(true);
         
+        // This is where you would handle actual file upload to a service like S3 or Firebase Storage
+        // For now, we'll use a placeholder URL if a preview exists.
+        const finalPhotoUrl = imagePreview ? (imagePreview.startsWith('blob:') ? '/images/hazard-placeholder.png' : imagePreview) : null;
+
         const payload = {
             ...data,
-            hazardPhotoUrl: imagePreview,
+            hazardPhotoUrl: finalPhotoUrl,
             residualLikelihood: data.residualLikelihood ?? data.initialLikelihood,
             residualSeverity: data.residualSeverity ?? data.initialSeverity,
         };
@@ -401,12 +405,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             const previewUrl = URL.createObjectURL(file);
-            form.setValue('hazardPhotoUrl', `/images/hazard-placeholder.png`, { shouldValidate: true });
+            form.setValue('hazardPhotoUrl', previewUrl, { shouldValidate: true });
             setImagePreview(previewUrl);
-             toast({
-                title: "Image Added",
-                description: "A preview of your image has been generated.",
-            });
         }
     }
     
