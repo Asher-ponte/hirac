@@ -12,7 +12,7 @@ import { format } from "date-fns"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import type { HiracEntry, ControlStatus, ControlType } from '@/lib/types';
+import type { HiracEntry, ControlStatus, ControlType, Department } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, BrainCircuit, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle, BarChart, Camera } from 'lucide-react';
 import {
@@ -35,7 +35,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry, updateResidualRisk } from './actions';
+import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry, updateResidualRisk, getDepartments } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -61,8 +61,6 @@ const severityOptions = [
 
 const statusOptions: ControlStatus[] = ['Ongoing', 'Implemented', 'For Implementation'];
 const hazardClassOptions = ['Physical', 'Chemical', 'Biological', 'Mechanical', 'Electrical'];
-const departmentOptions = ['Maintenance', 'Production', 'Logistics', 'Administration', 'Quality Assurance'];
-
 
 const controlMeasureSchema = z.object({
     id: z.number().optional(),
@@ -74,7 +72,7 @@ const controlMeasureSchema = z.object({
 });
 
 const hiracFormSchema = z.object({
-    department: z.string().min(1, "Department is required."),
+    departmentId: z.coerce.number().min(1, "Department is required."),
     task: z.string().min(1, "Task is required."),
     hazard: z.string().min(1, "Hazard is required."),
     hazardPhotoUrl: z.string().url().optional().nullable(),
@@ -313,7 +311,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
 };
 
 
-function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boolean) => void, entryToEdit?: HiracEntry | null, onFormSubmit: () => void }) {
+function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpen: (open: boolean) => void, entryToEdit?: HiracEntry | null, onFormSubmit: () => void, departments: Department[] }) {
     const [step, setStep] = React.useState(1);
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -323,7 +321,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
     const numericId = entryToEdit ? parseInt(entryToEdit.id.replace('HIRAC-', ''), 10) : null;
     
     const getDefaultValues = (entry: HiracEntry | null | undefined): HiracFormValues => ({
-        department: entry?.department ?? '',
+        departmentId: entry?.departmentId ?? 0,
         task: entry?.task ?? '',
         hazard: entry?.hazard ?? '',
         hazardPhotoUrl: entry?.hazardPhotoUrl ?? null,
@@ -393,7 +391,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
     }
     
     const triggerStep2Validation = async () => {
-        const isValid = await form.trigger(['department', 'task', 'hazard', 'hazardClass', 'hazardousEvent', 'impact']);
+        const isValid = await form.trigger(['departmentId', 'task', 'hazard', 'hazardClass', 'hazardousEvent', 'impact']);
         if (isValid) {
             setStep(2);
         }
@@ -430,11 +428,11 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
                         <CardDescription>Identify the department, task, hazard, cause, and effect.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <FormField control={form.control} name="department" render={({ field }) => (
+                        <FormField control={form.control} name="departmentId" render={({ field }) => (
                             <FormItem><FormLabel>Department</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
+                                <Select onValueChange={field.onChange} value={String(field.value)}>
                                     <FormControl><SelectTrigger><SelectValue placeholder="Select department..." /></SelectTrigger></FormControl>
-                                    <SelectContent>{departmentOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                    <SelectContent>{departments.map(opt => <SelectItem key={opt.id} value={String(opt.id)}>{opt.name}</SelectItem>)}</SelectContent>
                                 </Select>
                             <FormMessage /></FormItem>
                         )} />
@@ -708,6 +706,7 @@ export default function HiracPage() {
   const [entryToEdit, setEntryToEdit] = React.useState<HiracEntry | null>(null);
   const [entryToReassess, setEntryToReassess] = React.useState<HiracEntry | null>(null);
   const [hiracData, setHiracData] = React.useState<HiracEntry[]>([]);
+  const [departments, setDepartments] = React.useState<Department[]>([]);
   const [loading, setLoading] = React.useState(true);
   const { toast } = useToast();
   const [departmentFilter, setDepartmentFilter] = React.useState<string>('all');
@@ -715,9 +714,13 @@ export default function HiracPage() {
   const loadData = React.useCallback(async () => {
     setLoading(true);
     try {
-        const department = departmentFilter === 'all' ? undefined : departmentFilter;
-        const data = await getHiracEntries(department);
+        const departmentId = departmentFilter === 'all' ? undefined : parseInt(departmentFilter, 10);
+        const [data, deptData] = await Promise.all([
+            getHiracEntries(departmentId),
+            getDepartments()
+        ]);
         setHiracData(data);
+        setDepartments(deptData);
     } catch(e) {
         toast({ variant: 'destructive', title: "Error", description: "Failed to load HIRAC data. The database might be initializing." });
     }
@@ -773,7 +776,7 @@ export default function HiracPage() {
                 </SelectTrigger>
                 <SelectContent>
                     <SelectItem value="all">All Departments</SelectItem>
-                    {departmentOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                    {departments.map(opt => <SelectItem key={opt.id} value={String(opt.id)}>{opt.name}</SelectItem>)}
                 </SelectContent>
             </Select>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -788,7 +791,7 @@ export default function HiracPage() {
                             {entryToEdit ? 'Update the details for this HIRAC entry.' : 'Follow the steps to add a new hazard identification and risk assessment.'}
                         </DialogDescription>
                     </DialogHeader>
-                    <HiracForm setOpen={setDialogOpen} entryToEdit={entryToEdit} onFormSubmit={handleFormSubmit} />
+                    <HiracForm setOpen={setDialogOpen} entryToEdit={entryToEdit} onFormSubmit={handleFormSubmit} departments={departments} />
                 </DialogContent>
             </Dialog>
         </div>
@@ -884,7 +887,7 @@ export default function HiracPage() {
 
                     return (
                         <TableRow key={item.id} className={cn(index % 2 === 0 ? "bg-muted/30" : "")}>
-                            <TableCell className="font-medium align-top border-r">{item.department}</TableCell>
+                            <TableCell className="font-medium align-top border-r">{item.department?.name}</TableCell>
                             <TableCell className="font-medium align-top border-r">{item.task}</TableCell>
                             <TableCell className="align-top border-r">{item.hazardClass}</TableCell>
                             <TableCell className="align-top border-r">
@@ -905,7 +908,7 @@ export default function HiracPage() {
                                       <DialogContent className="max-w-2xl">
                                         <DialogHeader>
                                           <DialogTitle>{item.hazard}</DialogTitle>
-                                          <DialogDescription>{item.task} - {item.department}</DialogDescription>
+                                          <DialogDescription>{item.task} - {item.department?.name}</DialogDescription>
                                         </DialogHeader>
                                         <div className="relative w-full aspect-video">
                                             <Image 

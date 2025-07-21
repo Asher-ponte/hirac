@@ -2,21 +2,22 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { hiracEntries, controlMeasures } from '@/lib/db/schema';
+import { hiracEntries, controlMeasures, departments } from '@/lib/db/schema';
 import type { HiracEntry, ControlMeasure } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { eq, inArray } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
 
 
-export async function getHiracEntries(department?: string): Promise<HiracEntry[]> {
+export async function getHiracEntries(departmentId?: number): Promise<HiracEntry[]> {
   try {
     const queryOptions = {
       with: {
         controlMeasures: true,
+        department: true,
       },
       orderBy: (hiracEntries: any, { desc }: any) => [desc(hiracEntries.id)],
-      where: department ? eq(hiracEntries.department, department) : undefined,
+      where: departmentId ? eq(hiracEntries.departmentId, departmentId) : undefined,
     };
 
     // @ts-ignore
@@ -37,14 +38,14 @@ export async function getHiracEntries(department?: string): Promise<HiracEntry[]
   }
 }
 
-type HiracEntryPayload = Omit<HiracEntry, 'id' | 'controlMeasures' | 'status'> & {
+type HiracEntryPayload = Omit<HiracEntry, 'id' | 'controlMeasures' | 'status' | 'department'> & {
   controlMeasures: (Omit<ControlMeasure, 'id'> & { id?: number })[];
 };
 
 export async function createHiracEntry(formData: HiracEntryPayload) {
   await db.transaction(async (tx) => {
     const [newHiracEntry] = await tx.insert(hiracEntries).values({
-      department: formData.department,
+      departmentId: formData.departmentId,
       task: formData.task,
       hazard: formData.hazard,
       hazardPhotoUrl: formData.hazardPhotoUrl,
@@ -88,7 +89,7 @@ export async function updateHiracEntry(id: number, formData: HiracEntryPayload) 
 
 
         await tx.update(hiracEntries).set({
-            department: formData.department,
+            departmentId: formData.departmentId,
             task: formData.task,
             hazard: formData.hazard,
             hazardPhotoUrl: formData.hazardPhotoUrl,
@@ -152,4 +153,8 @@ export async function updateResidualRisk(id: number, data: { residualLikelihood:
 
   revalidatePath('/hirac');
   revalidatePath('/dashboard');
+}
+
+export async function getDepartments() {
+    return await db.query.departments.findMany();
 }

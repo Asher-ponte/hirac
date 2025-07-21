@@ -11,12 +11,21 @@ export type Inspection = {
   assigned_user: string;
 };
 
+export type UserRole = 'Admin' | 'Safety Officer' | 'Viewer';
+
 export type User = {
-    id: string;
+    id: number;
     name: string;
     email: string;
-    role: 'Admin' | 'Safety Officer' | 'Viewer';
-    last_login: string;
+    role: UserRole;
+    last_login?: string; // This is mock data for now
+};
+
+export type Department = {
+    id: number;
+    name: string;
+    supervisorId?: number | null;
+    supervisor?: User | null;
 };
 
 export type ControlStatus = 'Ongoing' | 'Implemented' | 'For Implementation';
@@ -33,7 +42,8 @@ export type ControlMeasure = {
 
 export type HiracEntry = {
   id: string;
-  department: string;
+  departmentId: number;
+  department?: Department; // Added for relation
   task: string;
   hazard: string;
   hazardPhotoUrl?: string | null;
