@@ -19,6 +19,8 @@ export type User = {
     last_login: string;
 };
 
+export type ControlStatus = 'Ongoing' | 'Implemented' | 'Not Implemented';
+
 export type HiracEntry = {
   id: string;
   task: string;
@@ -29,11 +31,22 @@ export type HiracEntry = {
   impact: string;
   initialLikelihood: number;
   initialSeverity: number;
-  engineeringControls: string;
-  administrativeControls: string;
-  ppe: string;
-  responsiblePerson: string;
+  
+  engineeringControls?: string | null;
+  engineeringControlsPic?: string | null;
+  engineeringControlsStatus?: ControlStatus | null;
+  engineeringControlsCompletionDate?: string | null;
+
+  administrativeControls?: string | null;
+  administrativeControlsPic?: string | null;
+  administrativeControlsStatus?: ControlStatus | null;
+  administrativeControlsCompletionDate?: string | null;
+
+  ppe?: string | null;
+  ppePic?: string | null;
+  ppeStatus?: ControlStatus | null;
+  ppeCompletionDate?: string | null;
+
   residualLikelihood: number;
   residualSeverity: number;
-  status: 'Ongoing' | 'Implemented' | 'Not Implemented';
 };

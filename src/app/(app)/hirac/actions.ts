@@ -26,21 +26,7 @@ export async function getHiracEntries(): Promise<HiracEntry[]> {
 
 export async function createHiracEntry(formData: Omit<HiracEntry, 'id'>) {
     await db.insert(hiracEntries).values({
-        task: formData.task,
-        hazard: formData.hazard,
-        hazardPhotoUrl: formData.hazardPhotoUrl,
-        hazardClass: formData.hazardClass,
-        hazardousEvent: formData.hazardousEvent,
-        impact: formData.impact,
-        initialLikelihood: formData.initialLikelihood,
-        initialSeverity: formData.initialSeverity,
-        engineeringControls: formData.engineeringControls,
-        administrativeControls: formData.administrativeControls,
-        ppe: formData.ppe,
-        responsiblePerson: formData.responsiblePerson,
-        residualLikelihood: formData.residualLikelihood,
-        residualSeverity: formData.residualSeverity,
-        status: formData.status,
+        ...formData
     });
     revalidatePath('/hirac');
     revalidatePath('/dashboard');
@@ -54,16 +40,6 @@ export async function updateHiracEntry(id: number, formData: Omit<HiracEntry, 'i
 
 export async function deleteHiracEntry(id: number) {
     await db.delete(hiracEntries).where(eq(hiracEntries.id, id));
-    revalidatePath('/hirac');
-    revalidatePath('/dashboard');
-}
-
-export async function reassessHiracEntry(id: number, data: { residualLikelihood: number; residualSeverity: number; status: 'Ongoing' | 'Implemented' | 'Not Implemented' }) {
-    await db.update(hiracEntries).set({
-        residualLikelihood: data.residualLikelihood,
-        residualSeverity: data.residualSeverity,
-        status: data.status,
-    }).where(eq(hiracEntries.id, id));
     revalidatePath('/hirac');
     revalidatePath('/dashboard');
 }

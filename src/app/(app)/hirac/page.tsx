@@ -7,13 +7,14 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { format } from "date-fns"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import type { HiracEntry } from '@/lib/types';
+import type { HiracEntry, ControlStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, BrainCircuit, Loader2, MoreHorizontal, FilePenLine, Trash2, ClipboardCheck, Upload } from 'lucide-react';
+import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, BrainCircuit, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -33,10 +34,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry, reassessHiracEntry } from './actions';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 
 
 const likelihoodOptions = [
@@ -56,8 +59,15 @@ const severityOptions = [
 ];
 
 
-const statusOptions = ['Ongoing', 'Implemented', 'Not Implemented'];
+const statusOptions: ControlStatus[] = ['Ongoing', 'Implemented', 'Not Implemented'];
 const hazardClassOptions = ['Physical', 'Chemical', 'Biological', 'Mechanical', 'Electrical'];
+
+const controlSchema = z.object({
+    description: z.string().optional().nullable(),
+    pic: z.string().optional().nullable(),
+    status: z.enum(statusOptions).optional().nullable(),
+    completionDate: z.string().optional().nullable(),
+});
 
 const hiracFormSchema = z.object({
     task: z.string().min(1, "Task is required."),
@@ -66,24 +76,29 @@ const hiracFormSchema = z.object({
     hazardClass: z.string().min(1, "Hazard class is required."),
     hazardousEvent: z.string().min(1, "Hazardous event is required."),
     impact: z.string().min(1, "Impact is required."),
-    initialLikelihood: z.coerce.number().min(1, "Probability is required."),
-    initialSeverity: z.coerce.number().min(1, "Severity is required."),
-    engineeringControls: z.string().min(1, "Engineering controls are required."),
-    administrativeControls: z.string().min(1, "Administrative controls are required."),
-    ppe: z.string().min(1, "PPE is required."),
-    responsiblePerson: z.string().min(1, "Responsible person is required."),
-    status: z.enum(['Ongoing', 'Implemented', 'Not Implemented']),
+    initialLikelihood: z.coerce.number().min(1).max(5),
+    initialSeverity: z.coerce.number().min(1).max(5),
+    
+    engineeringControls: controlSchema,
+    administrativeControls: controlSchema,
+    ppe: controlSchema,
+
+    residualLikelihood: z.coerce.number().min(1).max(5).optional(),
+    residualSeverity: z.coerce.number().min(1).max(5).optional(),
+}).superRefine((data, ctx) => {
+    const controls = ['engineeringControls', 'administrativeControls', 'ppe'] as const;
+    controls.forEach(control => {
+        if (data[control].status === 'Not Implemented' && !data[control].completionDate) {
+            ctx.addIssue({
+                path: [`${control}.completionDate`],
+                message: "Completion date is required when status is 'Not Implemented'",
+                code: z.ZodIssueCode.custom,
+            });
+        }
+    });
 });
 
 type HiracFormValues = z.infer<typeof hiracFormSchema>;
-
-const reassessmentFormSchema = z.object({
-    status: z.enum(['Ongoing', 'Implemented', 'Not Implemented']),
-    residualLikelihood: z.coerce.number().min(1, "Residual probability is required."),
-    residualSeverity: z.coerce.number().min(1, "Residual severity is required."),
-});
-type ReassessmentFormValues = z.infer<typeof reassessmentFormSchema>;
-
 
 const getRiskLevelDetails = (level: number) => {
   if (level <= 6) return { label: 'Low Risk', variant: 'secondary', color: 'bg-green-500 text-green-50' } as const;
@@ -138,13 +153,107 @@ const RiskRadioGroup = ({
           className="flex flex-col rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
         >
           <span className="font-semibold mb-1">{option.label}</span>
-          <span className="text-sm text-muted-foreground">{option.description}</span>
+          <span className="text-sm text-muted-foreground whitespace-pre-line">{option.description}</span>
         </Label>
       </FormItem>
     ))}
   </RadioGroup>
 );
 
+const ControlMeasureGroup = ({ form, controlType, title }: { form: any, controlType: 'engineeringControls' | 'administrativeControls' | 'ppe', title: string }) => (
+    <Card>
+        <CardHeader><CardTitle>{title}</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+            <FormField
+                control={form.control}
+                name={`${controlType}.description`}
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                            <Textarea placeholder="Describe the control measure..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                    control={form.control}
+                    name={`${controlType}.pic`}
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Person-in-Charge</FormLabel>
+                            <FormControl>
+                                <Input placeholder="e.g., A. Exparas, HR" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                 <FormField
+                    control={form.control}
+                    name={`${controlType}.status`}
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Status</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                                <FormControl>
+                                    <SelectTrigger><SelectValue placeholder="Select status..." /></SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {statusOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
+             <FormField
+                control={form.control}
+                name={`${controlType}.completionDate`}
+                render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                        <FormLabel>Completion Date</FormLabel>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <FormControl>
+                                    <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                            "w-full pl-3 text-left font-normal",
+                                            !field.value && "text-muted-foreground"
+                                        )}
+                                    >
+                                        {field.value ? (
+                                            format(new Date(field.value), "PPP")
+                                        ) : (
+                                            <span>Pick a date</span>
+                                        )}
+                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    selected={field.value ? new Date(field.value) : undefined}
+                                    onSelect={(date) => field.onChange(date?.toISOString())}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                         <FormDescription>
+                           Required if status is 'Not Implemented'.
+                        </FormDescription>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+        </CardContent>
+    </Card>
+);
 
 function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boolean) => void, entryToEdit?: HiracEntry | null, onFormSubmit: () => void }) {
     const [step, setStep] = React.useState(1);
@@ -152,52 +261,47 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
     const [isSubmitting, setIsSubmitting] = React.useState(false);
 
     const numericId = entryToEdit ? parseInt(entryToEdit.id.replace('HIRAC-', ''), 10) : null;
+    
+    const getDefaultValues = (entry: HiracEntry | null) => ({
+        task: entry?.task ?? '',
+        hazard: entry?.hazard ?? '',
+        hazardPhotoUrl: entry?.hazardPhotoUrl ?? null,
+        hazardClass: entry?.hazardClass ?? '',
+        hazardousEvent: entry?.hazardousEvent ?? '',
+        impact: entry?.impact ?? '',
+        initialLikelihood: entry?.initialLikelihood,
+        initialSeverity: entry?.initialSeverity,
+        engineeringControls: {
+            description: entry?.engineeringControls ?? '',
+            pic: entry?.engineeringControlsPic ?? '',
+            status: entry?.engineeringControlsStatus ?? 'Ongoing',
+            completionDate: entry?.engineeringControlsCompletionDate ?? '',
+        },
+        administrativeControls: {
+            description: entry?.administrativeControls ?? '',
+            pic: entry?.administrativeControlsPic ?? '',
+            status: entry?.administrativeControlsStatus ?? 'Ongoing',
+            completionDate: entry?.administrativeControlsCompletionDate ?? '',
+        },
+        ppe: {
+            description: entry?.ppe ?? '',
+            pic: entry?.ppePic ?? '',
+            status: entry?.ppeStatus ?? 'Ongoing',
+            completionDate: entry?.ppeCompletionDate ?? '',
+        },
+        residualLikelihood: entry?.residualLikelihood,
+        residualSeverity: entry?.residualSeverity,
+    });
+
 
     const form = useForm<HiracFormValues>({
         resolver: zodResolver(hiracFormSchema),
-        defaultValues: entryToEdit ? {
-            ...entryToEdit,
-        } : {
-            task: '',
-            hazard: '',
-            hazardPhotoUrl: null,
-            hazardClass: '',
-            hazardousEvent: '',
-            impact: '',
-            engineeringControls: '',
-            administrativeControls: '',
-            ppe: '',
-            responsiblePerson: '',
-            status: 'Ongoing',
-            initialLikelihood: undefined,
-            initialSeverity: undefined,
-        }
+        defaultValues: getDefaultValues(entryToEdit)
     });
     
     React.useEffect(() => {
-        if (entryToEdit) {
-            form.reset({
-                ...entryToEdit,
-            });
-            setStep(1);
-        } else {
-            form.reset({
-                task: '',
-                hazard: '',
-                hazardPhotoUrl: null,
-                hazardClass: '',
-                hazardousEvent: '',
-                impact: '',
-                engineeringControls: '',
-                administrativeControls: '',
-                ppe: '',
-                responsiblePerson: '',
-                status: 'Ongoing',
-                initialLikelihood: undefined,
-                initialSeverity: undefined,
-            });
-            setStep(1);
-        }
+        form.reset(getDefaultValues(entryToEdit));
+        setStep(1);
     }, [entryToEdit, form]);
 
     const initialLikelihood = form.watch('initialLikelihood');
@@ -206,25 +310,46 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
 
     async function onSubmit(data: HiracFormValues) {
         setIsSubmitting(true);
+
+        const payload = {
+            task: data.task,
+            hazard: data.hazard,
+            hazardPhotoUrl: data.hazardPhotoUrl,
+            hazardClass: data.hazardClass,
+            hazardousEvent: data.hazardousEvent,
+            impact: data.impact,
+            initialLikelihood: data.initialLikelihood,
+            initialSeverity: data.initialSeverity,
+            
+            engineeringControls: data.engineeringControls.description,
+            engineeringControlsPic: data.engineeringControls.pic,
+            engineeringControlsStatus: data.engineeringControls.status,
+            engineeringControlsCompletionDate: data.engineeringControls.completionDate,
+            
+            administrativeControls: data.administrativeControls.description,
+            administrativeControlsPic: data.administrativeControls.pic,
+            administrativeControlsStatus: data.administrativeControls.status,
+            administrativeControlsCompletionDate: data.administrativeControls.completionDate,
+
+            ppe: data.ppe.description,
+            ppePic: data.ppe.pic,
+            ppeStatus: data.ppe.status,
+            ppeCompletionDate: data.ppe.completionDate,
+            
+            // Set residual to initial if not provided
+            residualLikelihood: data.residualLikelihood ?? data.initialLikelihood,
+            residualSeverity: data.residualSeverity ?? data.initialSeverity,
+        };
+
         try {
             if (numericId !== null && entryToEdit) {
-                const updateData = {
-                    ...data,
-                    residualLikelihood: entryToEdit.residualLikelihood,
-                    residualSeverity: entryToEdit.residualSeverity,
-                };
-                await updateHiracEntry(numericId, updateData);
+                await updateHiracEntry(numericId, payload);
                 toast({
                     title: "Success",
                     description: "HIRAC entry updated successfully.",
                 });
             } else {
-                const createData = {
-                    ...data,
-                    residualLikelihood: data.initialLikelihood,
-                    residualSeverity: data.initialSeverity,
-                };
-                await createHiracEntry(createData);
+                await createHiracEntry(payload);
                 toast({
                     title: "Success",
                     description: "New HIRAC entry created successfully.",
@@ -371,30 +496,12 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
                         </div>
 
                         <Separator />
+                        <h3 className="text-xl font-semibold tracking-tight">Control Measures</h3>
                         
-                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                             <FormField control={form.control} name="engineeringControls" render={({ field }) => (
-                                <FormItem><FormLabel>Engineering Controls</FormLabel><FormControl><Textarea placeholder="e.g., Isolation, guarding..." rows={4} {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
-                             <FormField control={form.control} name="administrativeControls" render={({ field }) => (
-                                <FormItem><FormLabel>Administrative Controls</FormLabel><FormControl><Textarea placeholder="e.g., Procedures, training..." rows={4} {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
-                             <FormField control={form.control} name="ppe" render={({ field }) => (
-                                <FormItem><FormLabel>PPE</FormLabel><FormControl><Textarea placeholder="e.g., Hard hats, gloves..." rows={4} {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
-                         </div>
-                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                             <FormField control={form.control} name="responsiblePerson" render={({ field }) => (
-                                <FormItem><FormLabel>Responsible / Target</FormLabel><FormControl><Input placeholder="e.g., A. Exparas, HR" {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
-                           <FormField control={form.control} name="status" render={({ field }) => (
-                                <FormItem><FormLabel>Status</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl><SelectTrigger><SelectValue placeholder="Select status..." /></SelectTrigger></FormControl>
-                                        <SelectContent>{statusOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                                    </Select>
-                                <FormMessage /></FormItem>
-                            )} />
+                        <div className="space-y-6">
+                           <ControlMeasureGroup form={form} controlType="engineeringControls" title="Engineering Controls" />
+                           <ControlMeasureGroup form={form} controlType="administrativeControls" title="Administrative Controls" />
+                           <ControlMeasureGroup form={form} controlType="ppe" title="Personal Protective Equipment (PPE)" />
                         </div>
                     </CardContent>
                 </Card>
@@ -418,99 +525,10 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit }: { setOpen: (open: boo
     );
 }
 
-function ReassessmentForm({ setOpen, entry, onFormSubmit }: { setOpen: (open: boolean) => void, entry: HiracEntry, onFormSubmit: () => void }) {
-    const { toast } = useToast();
-    const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const numericId = parseInt(entry.id.replace('HIRAC-', ''), 10);
-
-    const form = useForm<ReassessmentFormValues>({
-        resolver: zodResolver(reassessmentFormSchema),
-        defaultValues: {
-            residualLikelihood: entry.residualLikelihood,
-            residualSeverity: entry.residualSeverity,
-            status: entry.status,
-        },
-    });
-
-    const residualLikelihood = form.watch('residualLikelihood');
-    const residualSeverity = form.watch('residualSeverity');
-
-    async function onSubmit(data: ReassessmentFormValues) {
-        setIsSubmitting(true);
-        try {
-            await reassessHiracEntry(numericId, data);
-            toast({ title: "Success", description: "HIRAC entry re-assessed successfully." });
-            setOpen(false);
-            onFormSubmit();
-        } catch (error) {
-            toast({ variant: 'destructive', title: "Error", description: "Failed to re-assess HIRAC entry." });
-        } finally {
-            setIsSubmitting(false);
-        }
-    }
-
-    return (
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-                     <div className="lg:col-span-2 space-y-6">
-                        <FormField
-                            control={form.control}
-                            name="residualLikelihood"
-                            render={({ field }) => (
-                                <FormItem className="space-y-3">
-                                    <FormLabel className="text-base font-semibold">Residual Probability (P)</FormLabel>
-                                    <FormControl>
-                                        <RiskRadioGroup field={field} options={likelihoodOptions} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                         <FormField
-                            control={form.control}
-                            name="residualSeverity"
-                            render={({ field }) => (
-                                <FormItem className="space-y-3">
-                                    <FormLabel className="text-base font-semibold">Residual Severity (S)</FormLabel>
-                                    <FormControl>
-                                        <RiskRadioGroup field={field} options={severityOptions} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-                    <div className="sticky top-4">
-                        <RiskDisplay likelihood={residualLikelihood} severity={residualSeverity} title="Residual Risk Level" />
-                    </div>
-                </div>
-                 <FormField control={form.control} name="status" render={({ field }) => (
-                    <FormItem className="pt-4"><FormLabel>Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger><SelectValue placeholder="Select status..." /></SelectTrigger></FormControl>
-                            <SelectContent>{statusOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                        </Select>
-                    <FormMessage /></FormItem>
-                )} />
-
-                 <DialogFooter>
-                    <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
-                    <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Save Re-assessment
-                    </Button>
-                </DialogFooter>
-            </form>
-        </Form>
-    );
-}
 
 export default function HiracPage() {
   const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [reassessmentDialogOpen, setReassessmentDialogOpen] = React.useState(false);
   const [entryToEdit, setEntryToEdit] = React.useState<HiracEntry | null>(null);
-  const [entryToReassess, setEntryToReassess] = React.useState<HiracEntry | null>(null);
   const [hiracData, setHiracData] = React.useState<HiracEntry[]>([]);
   const [loading, setLoading] = React.useState(true);
   const { toast } = useToast();
@@ -540,11 +558,6 @@ export default function HiracPage() {
     setDialogOpen(true);
   }
   
-  const handleReassessEntry = (entry: HiracEntry) => {
-    setEntryToReassess(entry);
-    setReassessmentDialogOpen(true);
-  }
-
   const handleDeleteEntry = async (id: string) => {
     const numericId = parseInt(id.replace('HIRAC-', ''), 10);
     try {
@@ -578,18 +591,6 @@ export default function HiracPage() {
                 </DialogHeader>
                 <HiracForm setOpen={setDialogOpen} entryToEdit={entryToEdit} onFormSubmit={handleFormSubmit} />
             </DialogContent>
-        </Dialog>
-
-        <Dialog open={reassessmentDialogOpen} onOpenChange={setReassessmentDialogOpen}>
-            {entryToReassess && (
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>Re-assess Risk for HIRAC-{entryToReassess.id.replace('HIRAC-', '')}</DialogTitle>
-                         <DialogDescription>Update the residual risk level and status after implementing control measures.</DialogDescription>
-                    </DialogHeader>
-                    <ReassessmentForm setOpen={setReassessmentDialogOpen} entry={entryToReassess} onFormSubmit={handleFormSubmit} />
-                </DialogContent>
-            )}
         </Dialog>
       </div>
 
@@ -630,18 +631,31 @@ export default function HiracPage() {
                     <TableHead className="min-w-[200px] align-bottom border-r" rowSpan={2}>Hazardous Event</TableHead>
                     <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Impact</TableHead>
                     <TableHead colSpan={2} className="text-center border-b border-r">Initial Risk Assessment</TableHead>
-                    <TableHead colSpan={3} className="text-center border-b border-r">Control Measures</TableHead>
-                    <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Responsible</TableHead>
+                    <TableHead colSpan={4} className="text-center border-b border-r">Engineering Controls</TableHead>
+                    <TableHead colSpan={4} className="text-center border-b border-r">Administrative Controls</TableHead>
+                    <TableHead colSpan={4} className="text-center border-b border-r">PPE Controls</TableHead>
                     <TableHead colSpan={2} className="text-center border-b border-r">Risk Re-assessment</TableHead>
-                    <TableHead className="align-bottom border-r" rowSpan={2}>Status</TableHead>
                     <TableHead className="align-bottom" rowSpan={2}><span className="sr-only">Actions</span></TableHead>
                     </TableRow>
                     <TableRow>
                         <TableHead className="text-center border-r">P,S</TableHead>
                         <TableHead className="text-center border-r">RL</TableHead>
-                        <TableHead className="min-w-[200px] text-center border-r">Engineering</TableHead>
-                        <TableHead className="min-w-[200px] text-center border-r">Administrative</TableHead>
-                        <TableHead className="min-w-[200px] text-center border-r">PPE</TableHead>
+                        
+                        <TableHead className="min-w-[200px] text-center border-r">Description</TableHead>
+                        <TableHead className="text-center border-r">PIC</TableHead>
+                        <TableHead className="text-center border-r">Status</TableHead>
+                        <TableHead className="text-center border-r">Completion</TableHead>
+
+                        <TableHead className="min-w-[200px] text-center border-r">Description</TableHead>
+                        <TableHead className="text-center border-r">PIC</TableHead>
+                        <TableHead className="text-center border-r">Status</TableHead>
+                        <TableHead className="text-center border-r">Completion</TableHead>
+                        
+                        <TableHead className="min-w-[200px] text-center border-r">Description</TableHead>
+                        <TableHead className="text-center border-r">PIC</TableHead>
+                        <TableHead className="text-center border-r">Status</TableHead>
+                        <TableHead className="text-center border-r">Completion</TableHead>
+
                         <TableHead className="text-center border-r">P,S</TableHead>
                         <TableHead className="text-center border-r">RL</TableHead>
                     </TableRow>
@@ -652,112 +666,120 @@ export default function HiracPage() {
                     const initialRiskDetails = getRiskLevelDetails(initialRiskLevel);
                     const residualRiskLevel = item.residualLikelihood * item.residualSeverity;
                     const residualRiskDetails = getRiskLevelDetails(residualRiskLevel);
-
                     const isReassessed = item.initialLikelihood !== item.residualLikelihood || item.initialSeverity !== item.residualSeverity;
 
                     return (
                         <TableRow key={item.id} className={cn(index % 2 === 0 ? "bg-muted/30" : "")}>
-                        <TableCell className="font-medium align-top border-r">{item.task}</TableCell>
-                        <TableCell className="align-top border-r">{item.hazardClass}</TableCell>
-                        <TableCell className="align-top border-r">
-                           {item.hazardPhotoUrl && (
-                                <div className="mb-2">
-                                    <Image 
-                                        src={item.hazardPhotoUrl} 
-                                        alt={`Photo for ${item.hazard}`} 
-                                        width={200} 
-                                        height={150}
-                                        data-ai-hint="hazard"
-                                        className="rounded-md object-cover"
-                                    />
-                                </div>
-                            )}
-                            {item.hazard}
-                        </TableCell>
-                        <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r">{item.hazardousEvent}</TableCell>
-                        <TableCell className="align-top border-r">{item.impact}</TableCell>
-                        <TableCell className="text-center align-top font-mono text-xs border-r">
-                            P:{item.initialLikelihood}, S:{item.initialSeverity}
-                        </TableCell>
-                        <TableCell className="text-center align-top p-2 border-r">
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger className="w-full">
-                                        <Badge variant={initialRiskDetails.variant} className={cn("cursor-pointer w-full justify-center p-2 text-base", initialRiskDetails.color)}>
-                                            {initialRiskLevel}
-                                        </Badge>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </TableCell>
-                        <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r">{item.engineeringControls}</TableCell>
-                        <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r">{item.administrativeControls}</TableCell>
-                        <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r">{item.ppe}</TableCell>
-                        <TableCell className="align-top border-r">{item.responsiblePerson}</TableCell>
-                        <TableCell className="text-center align-top font-mono text-xs border-r">
-                            {isReassessed ? `P:${item.residualLikelihood}, S:${item.residualSeverity}` : 'N/A'}
-                        </TableCell>
-                        <TableCell className="text-center align-top p-2 border-r">
-                             {isReassessed ? (
+                            <TableCell className="font-medium align-top border-r">{item.task}</TableCell>
+                            <TableCell className="align-top border-r">{item.hazardClass}</TableCell>
+                            <TableCell className="align-top border-r">
+                               {item.hazardPhotoUrl && (
+                                    <div className="mb-2">
+                                        <Image 
+                                            src={item.hazardPhotoUrl} 
+                                            alt={`Photo for ${item.hazard}`} 
+                                            width={200} 
+                                            height={150}
+                                            data-ai-hint="hazard"
+                                            className="rounded-md object-cover"
+                                        />
+                                    </div>
+                                )}
+                                {item.hazard}
+                            </TableCell>
+                            <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r">{item.hazardousEvent}</TableCell>
+                            <TableCell className="align-top border-r">{item.impact}</TableCell>
+                            <TableCell className="text-center align-top font-mono text-xs border-r">
+                                P:{item.initialLikelihood}, S:{item.initialSeverity}
+                            </TableCell>
+                            <TableCell className="text-center align-top p-2 border-r">
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger className="w-full">
-                                            <Badge variant={residualRiskDetails.variant} className={cn("cursor-pointer w-full justify-center p-2 text-base", residualRiskDetails.color)}>
-                                                {residualRiskLevel}
+                                            <Badge variant={initialRiskDetails.variant} className={cn("cursor-pointer w-full justify-center p-2 text-base", initialRiskDetails.color)}>
+                                                {initialRiskLevel}
                                             </Badge>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p className="font-bold">Risk Level: {residualRiskLevel} ({residualRiskDetails.label})</p>
+                                            <p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p>
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                             ) : (
-                                 <Badge variant="outline" className="w-full justify-center p-2 text-base">N/A</Badge>
-                             )}
-                        </TableCell>
-                        <TableCell className="align-top border-r">
-                            <Badge variant={item.status === 'Implemented' ? 'secondary' : 'default'}>{item.status}</Badge>
-                        </TableCell>
-                         <TableCell className="align-top text-right">
-                             <AlertDialog>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                        <span className="sr-only">Open menu</span>
-                                        <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => handleEditEntry(item)}>
-                                        <FilePenLine className="mr-2 h-4 w-4" /> Edit
-                                    </DropdownMenuItem>
-                                     <DropdownMenuItem onClick={() => handleReassessEntry(item)}>
-                                        <ClipboardCheck className="mr-2 h-4 w-4" /> Re-assess Risk
-                                    </DropdownMenuItem>
-                                    <AlertDialogTrigger asChild>
-                                        <DropdownMenuItem className="text-destructive focus:text-destructive-foreground focus:bg-destructive">
-                                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            </TableCell>
+
+                            {/* Engineering Controls */}
+                            <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r">{item.engineeringControls}</TableCell>
+                            <TableCell className="align-top border-r">{item.engineeringControlsPic}</TableCell>
+                            <TableCell className="align-top border-r">{item.engineeringControlsStatus && <Badge variant={item.engineeringControlsStatus === 'Implemented' ? 'secondary' : 'default'}>{item.engineeringControlsStatus}</Badge>}</TableCell>
+                            <TableCell className="align-top border-r">{item.engineeringControlsCompletionDate ? format(new Date(item.engineeringControlsCompletionDate), "P") : ''}</TableCell>
+                            
+                            {/* Administrative Controls */}
+                            <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r">{item.administrativeControls}</TableCell>
+                            <TableCell className="align-top border-r">{item.administrativeControlsPic}</TableCell>
+                            <TableCell className="align-top border-r">{item.administrativeControlsStatus && <Badge variant={item.administrativeControlsStatus === 'Implemented' ? 'secondary' : 'default'}>{item.administrativeControlsStatus}</Badge>}</TableCell>
+                            <TableCell className="align-top border-r">{item.administrativeControlsCompletionDate ? format(new Date(item.administrativeControlsCompletionDate), "P") : ''}</TableCell>
+
+                            {/* PPE Controls */}
+                            <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r">{item.ppe}</TableCell>
+                            <TableCell className="align-top border-r">{item.ppePic}</TableCell>
+                            <TableCell className="align-top border-r">{item.ppeStatus && <Badge variant={item.ppeStatus === 'Implemented' ? 'secondary' : 'default'}>{item.ppeStatus}</Badge>}</TableCell>
+                            <TableCell className="align-top border-r">{item.ppeCompletionDate ? format(new Date(item.ppeCompletionDate), "P") : ''}</TableCell>
+
+                            <TableCell className="text-center align-top font-mono text-xs border-r">
+                                {isReassessed ? `P:${item.residualLikelihood}, S:${item.residualSeverity}` : 'N/A'}
+                            </TableCell>
+                            <TableCell className="text-center align-top p-2 border-r">
+                                 {isReassessed ? (
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger className="w-full">
+                                                <Badge variant={residualRiskDetails.variant} className={cn("cursor-pointer w-full justify-center p-2 text-base", residualRiskDetails.color)}>
+                                                    {residualRiskLevel}
+                                                </Badge>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p className="font-bold">Risk Level: {residualRiskLevel} ({residualRiskDetails.label})</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                 ) : (
+                                     <Badge variant="outline" className="w-full justify-center p-2 text-base">N/A</Badge>
+                                 )}
+                            </TableCell>
+                             <TableCell className="align-top text-right">
+                                 <AlertDialog>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                            <span className="sr-only">Open menu</span>
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => handleEditEntry(item)}>
+                                            <FilePenLine className="mr-2 h-4 w-4" /> Edit
                                         </DropdownMenuItem>
-                                    </AlertDialogTrigger>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            This action cannot be undone. This will permanently delete the HIRAC entry.
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDeleteEntry(item.id)}>Delete</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                        </TableCell>
+                                        <AlertDialogTrigger asChild>
+                                            <DropdownMenuItem className="text-destructive focus:text-destructive-foreground focus:bg-destructive">
+                                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                            </DropdownMenuItem>
+                                        </AlertDialogTrigger>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This action cannot be undone. This will permanently delete the HIRAC entry.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDeleteEntry(item.id)}>Delete</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </TableCell>
                         </TableRow>
                     );
                     })}
