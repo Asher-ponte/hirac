@@ -50,11 +50,11 @@ const likelihoodOptions = [
 ];
 
 const severityOptions = [
-  { value: 1, label: "1 - NEGLIGIBLE/NEAR-MISS", description: "Impact will not result to any personnel injury or ill-health. Impact will have no short-term effect." },
-  { value: 2, label: "2 - MINOR REQUIRING FIRST AID OR CAUSE MINOR PROPERTY DAMAGE", description: "Impact will cause minor personnel injury requiring first aid. Impact will cause temporary ill health discomfort (headache, dizziness, nausea, muscle pain, etc.)" },
-  { value: 3, label: "3 - MINOR RESULTING TO LOST TIME OR CAUSE MINOR PROPERTY DAMAGE", description: "Impact will cause minor personnel injury resulting to lost time. Impact will have short-term health effect (fever, upper respiratory infection, allergies, diarrhea)." },
-  { value: 4, label: "4 - MAJOR RESULTING TO PERMANENT DISABILITY AND MAJOR PROPERTY DAMAGE", description: "Impact will cause major personnel injury resulting to permanent disability. Impact will have long-term or chronic health effect (permanent hearing loss, cancer, hypertension, etc.)." },
-  { value: 5, label: "5 - MAJOR RESULTING TO FATALITY AND CATASTROPHE", description: "Impact will cause major personnel injury or illness resulting to fatality. Impact will cause major damage resulting to catastrophe." },
+    { value: 1, label: "🟢 Negligible / Near Miss (Level 1)", description: "No injuries or health effects expected. Incident leaves no physical impact and causes no interruption to work—everything resumes smoothly." },
+    { value: 2, label: "🟡 Minor – First Aid Required (Level 2)", description: "Injury is limited to surface-level effects like cuts or strains requiring only first aid. Health impact is temporary—minor discomfort such as headache, dizziness, or muscle pain." },
+    { value: 3, label: "🟠 Minor – Lost Time or Minor Property Damage (Level 3)", description: "Injury may result in short recovery time off work. Health effects include short-term conditions like fever or common infections. Damage to property is limited but noticeable." },
+    { value: 4, label: "🔴 Major – Permanent Disability or Major Damage (Level 4)", description: "Incident leads to life-altering injury (e.g., permanent hearing loss, limb damage) or chronic illness. Property damage is extensive, requiring major repair or replacement." },
+    { value: 5, label: "⚠️ Catastrophic – Fatality or Massive Damage (Level 5)", description: "Hazard results in fatal injury or major incident affecting multiple lives or assets. Damage disrupts operations completely and may have legal or reputational consequences." },
 ];
 
 
