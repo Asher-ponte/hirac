@@ -65,7 +65,7 @@ export async function getHiracEntries(departmentId?: number): Promise<HiracEntry
   }
 }
 
-type HiracEntryPayload = Omit<HiracEntry, 'id' | 'controlMeasures' | 'status' | 'department' | 'createdAt'> & {
+type HiracEntryPayload = Omit<HiracEntry, 'id' | 'controlMeasures' | 'status' | 'department' | 'createdAt' | 'reviewedAt'> & {
   controlMeasures: (Omit<ControlMeasure, 'id'> & { id?: number })[];
 };
 
@@ -134,6 +134,7 @@ export async function updateHiracEntry(id: number, formData: HiracEntryPayload) 
             residualLikelihood: formData.residualLikelihood,
             residualSeverity: formData.residualSeverity,
             nextReviewDate: formData.nextReviewDate,
+            reviewedAt: formatISO(new Date()),
             status: newStatus,
         }).where(eq(hiracEntries.id, id));
 

@@ -57,5 +57,6 @@ export type HiracEntry = {
   controlMeasures: ControlMeasure[];
   status?: 'Ongoing' | 'Implemented' | 'For Implementation' | null;
   createdAt: string;
+  reviewedAt?: string | null;
   nextReviewDate?: string | null;
 };

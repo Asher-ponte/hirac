@@ -316,8 +316,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
         hazardClass: entry?.hazardClass ?? '',
         hazardousEvent: entry?.hazardousEvent ?? '',
         impact: entry?.impact ?? '',
-        initialLikelihood: entry?.initialLikelihood ?? 0,
-        initialSeverity: entry?.initialSeverity ?? 0,
+        initialLikelihood: entry?.initialLikelihood ?? undefined,
+        initialSeverity: entry?.initialSeverity ?? undefined,
         nextReviewDate: entry?.nextReviewDate ?? null,
         controlMeasures: entry?.controlMeasures ?? [],
         residualLikelihood: entry?.residualLikelihood ?? undefined,
@@ -905,18 +905,19 @@ export default function HiracPage() {
                 <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                     <TableRow>
-                    <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Department</TableHead>
-                    <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Task/Job</TableHead>
-                    <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Hazard Class</TableHead>
-                    <TableHead className="min-w-[250px] align-bottom border-r" rowSpan={2}>Hazard</TableHead>
-                    <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Created</TableHead>
-                    <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Next Review</TableHead>
-                    <TableHead colSpan={2} className="text-center border-b border-r">Initial Risk Assessment</TableHead>
-                    <TableHead colSpan={4} className="text-center border-b border-r">Engineering Controls</TableHead>
-                    <TableHead colSpan={4} className="text-center border-b border-r">Administrative Controls</TableHead>
-                    <TableHead colSpan={4} className="text-center border-b border-r">PPE Controls</TableHead>
-                    <TableHead colSpan={2} className="text-center border-b border-r">Risk Re-assessment</TableHead>
-                    <TableHead className="align-bottom" rowSpan={2}><span className="sr-only">Actions</span></TableHead>
+                        <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Department</TableHead>
+                        <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Task/Job</TableHead>
+                        <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Hazard Class</TableHead>
+                        <TableHead className="min-w-[250px] align-bottom border-r" rowSpan={2}>Hazard</TableHead>
+                        <TableHead colSpan={2} className="text-center border-b border-r">Initial Risk Assessment</TableHead>
+                        <TableHead colSpan={4} className="text-center border-b border-r">Engineering Controls</TableHead>
+                        <TableHead colSpan={4} className="text-center border-b border-r">Administrative Controls</TableHead>
+                        <TableHead colSpan={4} className="text-center border-b border-r">PPE Controls</TableHead>
+                        <TableHead colSpan={2} className="text-center border-b border-r">Risk Re-assessment</TableHead>
+                        <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Created</TableHead>
+                        <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Last Reviewed</TableHead>
+                        <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Next Review</TableHead>
+                        <TableHead className="align-bottom" rowSpan={2}><span className="sr-only">Actions</span></TableHead>
                     </TableRow>
                     <TableRow>
                         <TableHead className="text-center border-r">P,S</TableHead>
@@ -988,8 +989,7 @@ export default function HiracPage() {
                                 )}
                                 {item.hazard}
                             </TableCell>
-                            <TableCell className="align-top border-r">{item.createdAt ? format(new Date(item.createdAt), "P") : ''}</TableCell>
-                            <TableCell className="align-top border-r">{item.nextReviewDate ? format(new Date(item.nextReviewDate), "P") : <span className="text-muted-foreground">Not set</span>}</TableCell>
+                            
                             <TableCell className="text-center align-top font-mono text-xs border-r">
                                 P:{item.initialLikelihood}, S:{item.initialSeverity}
                             </TableCell>
@@ -1033,6 +1033,9 @@ export default function HiracPage() {
                                      <Badge variant="outline" className="w-full justify-center p-2 text-base">N/A</Badge>
                                  )}
                             </TableCell>
+                             <TableCell className="align-top border-r">{item.createdAt ? format(new Date(item.createdAt), "P") : ''}</TableCell>
+                            <TableCell className="align-top border-r">{item.reviewedAt ? format(new Date(item.reviewedAt), "P") : <span className="text-muted-foreground">Not yet</span>}</TableCell>
+                            <TableCell className="align-top border-r">{item.nextReviewDate ? format(new Date(item.nextReviewDate), "P") : <span className="text-muted-foreground">Not set</span>}</TableCell>
                              <TableCell className="align-top text-right">
                                  <AlertDialog>
                                     <DropdownMenu>
