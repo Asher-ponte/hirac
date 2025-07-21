@@ -354,8 +354,6 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments }: { setOpe
     async function onSubmit(data: HiracFormValues) {
         setIsSubmitting(true);
         
-        // This is where you would handle actual file upload to a service like S3 or Firebase Storage
-        // For now, we'll use a placeholder URL if a preview exists.
         const finalPhotoUrl = imagePreview ? (imagePreview.startsWith('blob:') ? '/images/hazard-placeholder.png' : imagePreview) : null;
 
         const payload = {
@@ -799,7 +797,7 @@ export default function HiracPage() {
         {entryToReassess && (
             <Dialog open={reassessDialogOpen} onOpenChange={setReassessDialogOpen}>
                 <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <ReassessmentForm 
+                     <ReassessmentForm 
                         entry={entryToReassess} 
                         setOpen={setReassessDialogOpen}
                         onFormSubmit={handleFormSubmit}
@@ -1018,4 +1016,3 @@ export default function HiracPage() {
     </div>
   );
 }
-
