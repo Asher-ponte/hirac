@@ -7,9 +7,6 @@ import type { HiracEntry, ControlMeasure } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { eq, inArray } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
-import { writeFile, mkdir, stat } from 'fs/promises';
-import { join } from 'path';
-import { v4 as uuidv4 } from 'uuid';
 import { addYears, formatISO } from 'date-fns';
 
 
@@ -21,29 +18,13 @@ export async function uploadHazardPhoto(formData: FormData): Promise<{ url?: str
 
     try {
         const buffer = Buffer.from(await file.arrayBuffer());
-        const fileExtension = file.name.split('.').pop();
-        const uniqueFilename = `${uuidv4()}.${fileExtension}`;
-        const uploadDir = join(process.cwd(), 'public', 'images');
+        const base64 = buffer.toString('base64');
+        const dataUri = `data:${file.type};base64,${base64}`;
         
-        // Ensure the upload directory exists
-        try {
-            await stat(uploadDir);
-        } catch (e: any) {
-            if (e.code === 'ENOENT') {
-                await mkdir(uploadDir, { recursive: true });
-            } else {
-                throw e;
-            }
-        }
-        
-        const publicPath = join(uploadDir, uniqueFilename);
-        await writeFile(publicPath, buffer);
-
-        const publicUrl = `/images/${uniqueFilename}`;
-        return { url: publicUrl };
+        return { url: dataUri };
     } catch (e) {
-        console.error('Failed to upload image:', e);
-        return { error: 'Failed to upload image.' };
+        console.error('Failed to process image:', e);
+        return { error: 'Failed to process image.' };
     }
 }
 
