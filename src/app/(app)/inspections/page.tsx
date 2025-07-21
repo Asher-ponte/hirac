@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,18 +32,21 @@ export default function InspectionsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Inspections</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Inspections</h1>
         <p className="text-muted-foreground">Manage and review all workplace safety inspections.</p>
       </div>
-      <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {inspectionsData.map((inspection) => (
           <Card key={inspection.id} className="flex flex-col">
             <CardHeader>
               <div className="flex items-start justify-between">
-                <CardTitle className="text-lg">{inspection.location}</CardTitle>
+                <div className="flex-1 pr-4">
+                  <CardTitle className="text-lg">{inspection.location}</CardTitle>
+                  <CardDescription>{`ID: ${inspection.id} - ${inspection.inspection_date}`}</CardDescription>
+                </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 -mt-1 -mr-2">
                       <MoreHorizontal className="h-4 w-4" />
                        <span className="sr-only">More options</span>
                     </Button>
@@ -53,12 +57,11 @@ export default function InspectionsPage() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <CardDescription>{`ID: ${inspection.id} - ${inspection.inspection_date}`}</CardDescription>
             </CardHeader>
             <CardContent className="flex-grow space-y-4">
               <p className="text-sm text-foreground">{inspection.hazard_description}</p>
               <div>
-                <h4 className="mb-2 text-sm font-semibold">Control Measures</h4>
+                <h4 className="mb-1 text-sm font-semibold">Control Measures</h4>
                 <p className="text-sm text-muted-foreground">{inspection.control_measures}</p>
               </div>
             </CardContent>
