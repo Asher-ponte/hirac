@@ -132,7 +132,7 @@ function DepartmentForm({ department, users, onFinished }: { department?: Depart
                 )} />
                 <FormField control={form.control} name="supervisorId" render={({ field }) => (
                     <FormItem><FormLabel>Supervisor</FormLabel>
-                        <Select onValueChange={field.onChange} value={String(field.value)}>
+                        <Select onValueChange={field.onChange} value={field.value ? String(field.value) : undefined}>
                             <FormControl><SelectTrigger><SelectValue placeholder="Select a supervisor" /></SelectTrigger></FormControl>
                             <SelectContent>
                                 <SelectItem value="null">None</SelectItem>
@@ -362,4 +362,5 @@ export default function AdminPage() {
         </Dialog>
     </>
     );
-}
+
+    
