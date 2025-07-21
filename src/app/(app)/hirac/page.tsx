@@ -515,8 +515,8 @@ export default function HiracPage() {
                 <TableHeader className="sticky top-0 bg-background z-10">
                     <TableRow>
                     <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Task/Job</TableHead>
-                    <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Hazard</TableHead>
                     <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Hazard Class</TableHead>
+                    <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Hazard</TableHead>
                     <TableHead className="min-w-[200px] align-bottom border-r" rowSpan={2}>Hazardous Event</TableHead>
                     <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Impact</TableHead>
                     <TableHead colSpan={2} className="text-center border-b border-r">Initial Risk Assessment</TableHead>
@@ -548,8 +548,8 @@ export default function HiracPage() {
                     return (
                         <TableRow key={item.id} className={cn(index % 2 === 0 ? "bg-muted/30" : "")}>
                         <TableCell className="font-medium align-top border-r">{item.task}</TableCell>
-                        <TableCell className="align-top border-r">{item.hazard}</TableCell>
                         <TableCell className="align-top border-r">{item.hazardClass}</TableCell>
+                        <TableCell className="align-top border-r">{item.hazard}</TableCell>
                         <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r">{item.hazardousEvent}</TableCell>
                         <TableCell className="align-top border-r">{item.impact}</TableCell>
                         <TableCell className="text-center align-top font-mono text-xs border-r">
