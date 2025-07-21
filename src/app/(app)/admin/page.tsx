@@ -281,8 +281,14 @@ export default function AdminPage() {
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                                 <AlertDialogContent>
-                                                    <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone and will permanently delete the user.</AlertDialogDescription></AlertDialogHeader>
-                                                    <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Delete</AlertDialogAction></AlertDialogFooter>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                        <AlertDialogDescription>This action cannot be undone and will permanently delete the user.</AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Delete</AlertDialogAction>
+                                                    </AlertDialogFooter>
                                                 </AlertDialogContent>
                                             </AlertDialog>
                                         </TableCell>
@@ -326,8 +332,14 @@ export default function AdminPage() {
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                                 <AlertDialogContent>
-                                                    <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone and will permanently delete the department.</AlertDialogDescription></AlertDialogHeader>
-                                                    <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteDepartment(dept.id)}>Delete</AlertDialogAction></AlertDialogFooter>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                        <AlertDialogDescription>This action cannot be undone and will permanently delete the department.</AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={() => handleDeleteDepartment(dept.id)}>Delete</AlertDialogAction>
+                                                    </AlertDialogFooter>
                                                 </AlertDialogContent>
                                             </AlertDialog>
                                         </TableCell>
