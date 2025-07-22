@@ -116,12 +116,12 @@ const getRiskLevelDetails = (level: number) => {
   return { label: 'High Risk', variant: 'destructive', color: 'bg-red-600/80 text-white' } as const;
 };
 
-const getScoreColor = (score: number | null | undefined) => {
-    if (!score) return 'text-muted-foreground';
-    if (score <= 2) return 'text-green-500';
-    if (score === 3) return 'text-yellow-500';
-    if (score >= 4) return 'text-red-500';
-    return 'text-muted-foreground';
+const getScoreBgColor = (score: number | null | undefined) => {
+    if (!score) return 'bg-muted/30';
+    if (score <= 2) return 'bg-green-600/80 text-white';
+    if (score === 3) return 'bg-yellow-500/80 text-black';
+    if (score >= 4) return 'bg-red-600/80 text-white';
+    return 'bg-muted/30';
 };
 
 const RiskDisplay = ({ likelihood, severity, title = "Calculated Risk Level" }: { likelihood?: number | null, severity?: number | null, title?: string }) => {
@@ -1160,11 +1160,11 @@ const HiracEntryRow = ({
                             </td>
                             <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-2 px-3 w-[300px]"><Highlight text={item.hazardousEvent} highlight={highlight} /></td>
                             <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-2 px-3 w-[300px]"><Highlight text={item.impact} highlight={highlight} /></td>
-                            <td rowSpan={maxRows} className="text-center align-top font-mono text-xs border-r-2 border-border/50 p-2 px-3">
-                                <div className="flex flex-col items-center justify-center h-full">
-                                    <span className={cn('font-bold', getScoreColor(item.initialLikelihood))}>P: {item.initialLikelihood}</span>
-                                    <span className={cn('font-bold', getScoreColor(item.initialSeverity))}>S: {item.initialSeverity}</span>
-                                </div>
+                            <td className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(item.initialLikelihood))}>
+                                {item.initialLikelihood}
+                            </td>
+                            <td className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(item.initialSeverity))}>
+                                {item.initialSeverity}
                             </td>
                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", initialRiskDetails.color)}>
                                 <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-2 px-3">{initialRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
@@ -1178,8 +1178,8 @@ const HiracEntryRow = ({
                         {controls: ppeControls, type: 'PPE'}
                     ].map(({controls, type}, i) => {
                         const control = controls[rowIndex];
-                        const renderCell = (content: React.ReactNode, widthClass: string) => (
-                           <td className={cn("p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3", widthClass)}>
+                        const renderCell = (content: React.ReactNode, widthClass: string, otherClasses?: string) => (
+                           <td className={cn("p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3", widthClass, otherClasses)}>
                                 {content}
                            </td>
                         );
@@ -1219,13 +1219,11 @@ const HiracEntryRow = ({
 
                     {rowIndex === 0 && (
                          <>
-                            <td rowSpan={maxRows} className="text-center align-top font-mono text-xs border-r-2 border-border/50 p-2 px-3">
-                                {isReassessed ? (
-                                    <div className="flex flex-col items-center justify-center h-full">
-                                        <span className={cn('font-bold', getScoreColor(item.residualLikelihood))}>P: {item.residualLikelihood}</span>
-                                        <span className={cn('font-bold', getScoreColor(item.residualSeverity))}>S: {item.residualSeverity}</span>
-                                    </div>
-                                ) : 'N/A'}
+                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(item.residualLikelihood))}>
+                                {isReassessed ? item.residualLikelihood : 'N/A'}
+                            </td>
+                            <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(item.residualSeverity))}>
+                                {isReassessed ? item.residualSeverity : 'N/A'}
                             </td>
                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", isReassessed && residualRiskDetails ? residualRiskDetails.color : 'bg-muted/30')}>
                                 {isReassessed && residualRiskDetails && residualRiskLevel !== null ? (
@@ -1313,7 +1311,7 @@ export default function HiracPage() {
         toast({ variant: 'destructive', title: "Error", description: "Failed to load HIRAC data. The database might be initializing." });
     }
     setLoading(false);
-  }, [departmentFilter, toast]);
+  }, [departmentFilter]);
   
   React.useEffect(() => {
     loadData();
@@ -1438,18 +1436,19 @@ export default function HiracPage() {
                                 <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Hazard</th>
                                 <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Hazardous Event</th>
                                 <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Impact</th>
-                                <th colSpan={2} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2 px-3">Initial Risk</th>
+                                <th colSpan={3} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2 px-3">Initial Risk</th>
                                 <th colSpan={4} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2 px-3">Engineering Controls</th>
                                 <th colSpan={4} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2 px-3">Administrative Controls</th>
                                 <th colSpan={4} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2 px-3">PPE Controls</th>
-                                <th colSpan={2} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2 px-3">Risk Re-assessment</th>
+                                <th colSpan={3} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2 px-3">Risk Re-assessment</th>
                                 <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Created</th>
                                 <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Last Reviewed</th>
                                 <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Next Review</th>
                                 <th className="align-bottom text-primary-foreground p-2 px-3" rowSpan={2}><span className="sr-only">Actions</span></th>
                             </tr>
                             <tr className="border-b-2 border-border/50 hover:bg-primary/95">
-                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">P,S</th>
+                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">P</th>
+                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">S</th>
                                 <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">RL</th>
                                 <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Description</th>
                                 <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">PIC</th>
@@ -1463,7 +1462,8 @@ export default function HiracPage() {
                                 <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">PIC</th>
                                 <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Status</th>
                                 <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Completion</th>
-                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">P,S</th>
+                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">P</th>
+                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">S</th>
                                 <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">RL</th>
                             </tr>
                         </thead>
