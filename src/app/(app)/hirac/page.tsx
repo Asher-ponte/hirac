@@ -915,16 +915,38 @@ function ReassessmentForm({ entry, setOpen, onFormSubmit }: { entry: HiracEntry,
     );
 }
 
-const IdentificationDetail = ({ label, value }: { label: string, value: string | undefined | null }) => {
+const Highlight = ({ text, highlight }: { text: string | null | undefined; highlight: string }) => {
+    if (!text) return null;
+    if (!highlight.trim()) {
+        return <>{text}</>;
+    }
+    const regex = new RegExp(`(${highlight})`, 'gi');
+    const parts = text.split(regex);
+    return (
+        <>
+            {parts.map((part, i) =>
+                regex.test(part) ? (
+                    <mark key={i} className="bg-yellow-400 text-black rounded">
+                        {part}
+                    </mark>
+                ) : (
+                    part
+                )
+            )}
+        </>
+    );
+};
+
+const IdentificationDetail = ({ label, value, highlight }: { label: string, value: string | undefined | null, highlight: string }) => {
     if (!value) return null;
     return (
         <p className="text-sm">
-            <span className="font-semibold">{label}:</span> <span className="text-muted-foreground">{value}</span>
+            <span className="font-semibold">{label}:</span> <span className="text-muted-foreground"><Highlight text={value} highlight={highlight} /></span>
         </p>
     );
 };
 
-function HiracCard({ item, onEdit, onReassess, onDelete }: { item: HiracEntry, onEdit: (item: HiracEntry) => void, onReassess: (item: HiracEntry) => void, onDelete: (id: string) => void }) {
+function HiracCard({ item, onEdit, onReassess, onDelete, highlight }: { item: HiracEntry, onEdit: (item: HiracEntry) => void, onReassess: (item: HiracEntry) => void, onDelete: (id: string) => void, highlight: string }) {
     const initialRiskLevel = item.initialLikelihood * item.initialSeverity;
     const initialRiskDetails = getRiskLevelDetails(initialRiskLevel);
     const isReassessed = item.residualLikelihood != null && item.residualSeverity != null;
@@ -936,8 +958,8 @@ function HiracCard({ item, onEdit, onReassess, onDelete }: { item: HiracEntry, o
             <CardHeader>
                 <div className="flex justify-between items-start">
                     <div>
-                        <CardTitle className="text-base font-semibold">{item.task}</CardTitle>
-                        <CardDescription>{item.department?.name} ({item.taskType})</CardDescription>
+                        <CardTitle className="text-base font-semibold"><Highlight text={item.task} highlight={highlight} /></CardTitle>
+                        <CardDescription><Highlight text={item.department?.name} highlight={highlight} /> (<Highlight text={item.taskType} highlight={highlight} />)</CardDescription>
                     </div>
                     <AlertDialog>
                         <DropdownMenu>
@@ -997,10 +1019,10 @@ function HiracCard({ item, onEdit, onReassess, onDelete }: { item: HiracEntry, o
 
                 <div className="space-y-2 border-t pt-4">
                     <h4 className="text-sm font-semibold tracking-tight">Identification Details</h4>
-                    <IdentificationDetail label="Hazard" value={item.hazard} />
-                    <IdentificationDetail label="Hazard Class" value={item.hazardClass} />
-                    <IdentificationDetail label="Hazardous Event" value={item.hazardousEvent} />
-                    <IdentificationDetail label="Impact" value={item.impact} />
+                    <IdentificationDetail label="Hazard" value={item.hazard} highlight={highlight} />
+                    <IdentificationDetail label="Hazard Class" value={item.hazardClass} highlight={highlight} />
+                    <IdentificationDetail label="Hazardous Event" value={item.hazardousEvent} highlight={highlight} />
+                    <IdentificationDetail label="Impact" value={item.impact} highlight={highlight} />
                 </div>
 
 
@@ -1037,7 +1059,7 @@ function HiracCard({ item, onEdit, onReassess, onDelete }: { item: HiracEntry, o
                                 <div key={type}>
                                     <h4 className="font-semibold text-sm">{type} Controls</h4>
                                     <div className="text-sm text-muted-foreground space-y-1 mt-1">
-                                        {controls.map((c, i) => <p key={i}>- {c.description}</p>)}
+                                        {controls.map((c, i) => <p key={i}>- <Highlight text={c.description} highlight={highlight} /></p>)}
                                     </div>
                                 </div>
                             )
@@ -1070,12 +1092,14 @@ const HiracEntryRow = ({
     onEdit,
     onReassess,
     onDelete,
+    highlight,
 }: {
     item: HiracEntry;
     index: number;
     onEdit: (item: HiracEntry) => void;
     onReassess: (item: HiracEntry) => void;
     onDelete: (id: string) => void;
+    highlight: string;
 }) => {
     const initialRiskLevel = item.initialLikelihood * item.initialSeverity;
     const initialRiskDetails = getRiskLevelDetails(initialRiskLevel);
@@ -1095,10 +1119,10 @@ const HiracEntryRow = ({
                 <tr key={`${item.id}-${rowIndex}`} className={cn("border-b-2 border-border/50", index % 2 === 0 ? "bg-muted/30" : "")}>
                     {rowIndex === 0 && (
                         <>
-                            <td rowSpan={maxRows} className="font-medium align-top border-r-2 border-border/50 p-1">{item.department?.name}</td>
-                            <td rowSpan={maxRows} className="font-medium align-top border-r-2 border-border/50 p-1">{item.task}</td>
-                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-1">{item.taskType}</td>
-                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-1">{item.hazardClass}</td>
+                            <td rowSpan={maxRows} className="font-medium align-top border-r-2 border-border/50 p-1"><Highlight text={item.department?.name} highlight={highlight} /></td>
+                            <td rowSpan={maxRows} className="font-medium align-top border-r-2 border-border/50 p-1"><Highlight text={item.task} highlight={highlight} /></td>
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-1"><Highlight text={item.taskType} highlight={highlight} /></td>
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-1"><Highlight text={item.hazardClass} highlight={highlight} /></td>
                             <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-1 w-[300px]">
                                 {item.hazardPhotoUrl && (
                                     <Dialog>
@@ -1118,10 +1142,10 @@ const HiracEntryRow = ({
                                         </DialogContent>
                                     </Dialog>
                                 )}
-                                {item.hazard}
+                                <Highlight text={item.hazard} highlight={highlight} />
                             </td>
-                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-1 w-[300px]">{item.hazardousEvent}</td>
-                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-1 w-[300px]">{item.impact}</td>
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-1 w-[300px]"><Highlight text={item.hazardousEvent} highlight={highlight} /></td>
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-1 w-[300px]"><Highlight text={item.impact} highlight={highlight} /></td>
                             <td rowSpan={maxRows} className="text-center align-top font-mono text-xs border-r-2 border-border/50 p-1">P:{item.initialLikelihood}, S:{item.initialSeverity}</td>
                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", initialRiskDetails.color)}>
                                 <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-1">{initialRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
@@ -1144,27 +1168,27 @@ const HiracEntryRow = ({
                              if (i === 0) { // Engineering
                                 return (
                                     <React.Fragment key={`${type}-${control.id || rowIndex}`}>
-                                        {renderCell(control.description, "w-[300px]")}
-                                        {renderCell(control.pic, "text-center w-[100px]")}
-                                        {renderCell(<div className={cn("text-center p-1 h-full", control.status && statusColorMap[control.status])}>{control.status}</div>, "p-0 w-[100px]")}
+                                        {renderCell(<Highlight text={control.description} highlight={highlight} />, "w-[300px]")}
+                                        {renderCell(<Highlight text={control.pic} highlight={highlight} />, "text-center w-[100px]")}
+                                        {renderCell(<div className={cn("text-center p-1 h-full", control.status && statusColorMap[control.status])}><Highlight text={control.status} highlight={highlight} /></div>, "p-0 w-[100px]")}
                                         {renderCell(control.completionDate ? format(new Date(control.completionDate), "P") : '', "text-center w-[120px]")}
                                     </React.Fragment>
                                 );
                             } else if (i === 1) { // Administrative
                                 return (
                                     <React.Fragment key={`${type}-${control.id || rowIndex}`}>
-                                        {renderCell(control.description, "w-[300px]")}
-                                        {renderCell(control.pic, "text-center w-[100px]")}
-                                        {renderCell(<div className={cn("text-center p-1 h-full", control.status && statusColorMap[control.status])}>{control.status}</div>, "p-0 w-[100px]")}
+                                        {renderCell(<Highlight text={control.description} highlight={highlight} />, "w-[300px]")}
+                                        {renderCell(<Highlight text={control.pic} highlight={highlight} />, "text-center w-[100px]")}
+                                        {renderCell(<div className={cn("text-center p-1 h-full", control.status && statusColorMap[control.status])}><Highlight text={control.status} highlight={highlight} /></div>, "p-0 w-[100px]")}
                                         {renderCell(control.completionDate ? format(new Date(control.completionDate), "P") : '', "text-center w-[120px]")}
                                     </React.Fragment>
                                 );
                             } else { // PPE
                                 return (
                                      <React.Fragment key={`${type}-${control.id || rowIndex}`}>
-                                        {renderCell(control.description, "w-[300px]")}
-                                        {renderCell(control.pic, "text-center w-[100px]")}
-                                        {renderCell(<div className={cn("text-center p-1 h-full", control.status && statusColorMap[control.status])}>{control.status}</div>, "p-0 w-[100px]")}
+                                        {renderCell(<Highlight text={control.description} highlight={highlight} />, "w-[300px]")}
+                                        {renderCell(<Highlight text={control.pic} highlight={highlight} />, "text-center w-[100px]")}
+                                        {renderCell(<div className={cn("text-center p-1 h-full", control.status && statusColorMap[control.status])}><Highlight text={control.status} highlight={highlight} /></div>, "p-0 w-[100px]")}
                                         {renderCell(control.completionDate ? format(new Date(control.completionDate), "P") : '', "text-center w-[120px]")}
                                     </React.Fragment>
                                 )
@@ -1370,7 +1394,8 @@ export default function HiracPage() {
                         item={item} 
                         onEdit={handleEditEntry} 
                         onReassess={handleReassessEntry}
-                        onDelete={handleDeleteEntry} 
+                        onDelete={handleDeleteEntry}
+                        highlight={searchFilter} 
                       />
                   ))}
               </div>
@@ -1425,6 +1450,7 @@ export default function HiracPage() {
                                     onEdit={handleEditEntry}
                                     onReassess={handleReassessEntry}
                                     onDelete={handleDeleteEntry}
+                                    highlight={searchFilter}
                                 />
                             ))}
                         </tbody>
