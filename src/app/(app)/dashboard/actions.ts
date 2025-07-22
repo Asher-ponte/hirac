@@ -70,9 +70,9 @@ export async function getDashboardData() {
   const riskMap = { 'Low': lowRiskCount, 'Medium': mediumRiskCount, 'High': highRiskCount };
 
   const riskChartData = [
-    { risk: 'Low', value: riskMap['Low'] || 0, fill: 'hsl(var(--chart-2))' },
-    { risk: 'Medium', value: riskMap['Medium'] || 0, fill: 'hsl(var(--chart-3))' },
-    { risk: 'High', value: riskMap['High'] || 0, fill: 'hsl(var(--chart-1))' },
+    { risk: 'Low', value: riskMap['Low'] || 0, fill: 'hsl(120 76% 61%)' },
+    { risk: 'Medium', value: riskMap['Medium'] || 0, fill: 'hsl(12 76% 61%)' },
+    { risk: 'High', value: riskMap['High'] || 0, fill: 'hsl(12 76% 61%)' },
   ];
 
   const riskByDepartmentData = Array.from(riskByDepartmentMap.entries()).map(([name, counts]) => ({

@@ -44,9 +44,9 @@ const statusChartConfig = {
 
 const riskChartConfig = {
     value: { label: 'Hazards' },
-    low: { label: 'Low', color: 'hsl(var(--chart-2))' },
-    medium: { label: 'Medium', color: 'hsl(var(--chart-3))' },
-    high: { label: 'High', color: 'hsl(var(--chart-1))' },
+    Low: { label: 'Low', color: 'hsl(120 76% 61%)' },
+    Medium: { label: 'Medium', color: 'hsl(12 76% 61%)' },
+    High: { label: 'High', color: 'hsl(12 76% 61%)' },
     critical: { label: 'Critical', color: 'hsl(var(--destructive))' },
 };
 
@@ -65,7 +65,7 @@ const kpiIcons = {
 
 const kpiCardConfig: { [key: string]: { iconColor: string; cardClasses: string } } = {
     'Low Risk': { iconColor: 'text-green-500', cardClasses: 'border-green-500/50 bg-green-500/10' },
-    'Medium Risk': { iconColor: 'text-yellow-500', cardClasses: 'border-yellow-500/50 bg-yellow-500/10' },
+    'Medium Risk': { iconColor: 'text-red-500', cardClasses: 'border-red-500/50 bg-red-500/10' },
     'High Risk': { iconColor: 'text-red-500', cardClasses: 'border-red-500/50 bg-red-500/10' },
 };
 
