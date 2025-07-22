@@ -493,7 +493,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                         </div>
 
                         <FormField control={form.control} name="task" render={({ field }) => (
-                            <FormItem><FormLabel>Task/Job</FormLabel><FormControl><Input placeholder="e.g., Transportation Services" {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Task/Job</FormLabel><FormControl><Input placeholder="e.g., Pallet Sorting" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
 
                         <FormField
