@@ -71,7 +71,7 @@ export async function getDashboardData() {
 
   const riskChartData = [
     { risk: 'Low', value: riskMap['Low'] || 0, fill: 'hsl(120 76% 61%)' },
-    { risk: 'Medium', value: riskMap['Medium'] || 0, fill: 'hsl(12 76% 61%)' },
+    { risk: 'Medium', value: riskMap['Medium'] || 0, fill: 'hsl(43 74% 66%)' },
     { risk: 'High', value: riskMap['High'] || 0, fill: 'hsl(12 76% 61%)' },
   ];
 
