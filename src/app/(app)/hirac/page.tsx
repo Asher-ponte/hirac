@@ -1219,7 +1219,7 @@ export default function HiracPage() {
               </div>
 
               {/* Desktop View */}
-              <div className="hidden md:block relative border rounded-lg overflow-y-auto max-h-[calc(100vh-22rem)]">
+              <div className="hidden md:block relative border rounded-lg overflow-y-auto max-h-[calc(100vh-18rem)]">
                 <Table className="text-xs">
                   <TableHeader className="sticky top-0 z-10 bg-primary">
                       <TableRow className="hover:bg-primary border-primary">
