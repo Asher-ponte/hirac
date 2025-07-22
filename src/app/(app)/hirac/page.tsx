@@ -1263,7 +1263,7 @@ export default function HiracPage() {
         toast({ variant: 'destructive', title: "Error", description: "Failed to load HIRAC data. The database might be initializing." });
     }
     setLoading(false);
-  }, [toast, departmentFilter]);
+  }, [departmentFilter]);
   
   React.useEffect(() => {
     loadData();
