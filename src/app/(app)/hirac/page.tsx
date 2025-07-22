@@ -1165,26 +1165,15 @@ export default function HiracPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-            <h1 className="text-xl md:text-3xl font-bold tracking-tight">HIRAC Register</h1>
-            <p className="text-muted-foreground">Hazard Identification, Risk Assessment, and Control</p>
-        </div>
-        <Button onClick={handleNewEntry} className="w-full md:w-auto">
-            <FilePlus2 className="mr-2 h-4 w-4" />
-            New HIRAC Entry
-        </Button>
-      </div>
-      
       <Card>
         <CardHeader>
-          <div className="flex flex-col md:flex-row justify-between md:items-start gap-4">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
             <div className="flex-1">
-              <CardTitle className="text-xl md:text-2xl">HIRAC Table</CardTitle>
+              <CardTitle className="text-xl md:text-2xl">HIRAC Register</CardTitle>
               <CardDescription>A register of all identified hazards, their risks, and control measures.</CardDescription>
             </div>
-            <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 w-full md:w-auto">
-              <div className="relative w-full md:w-auto">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+              <div className="relative w-full sm:w-auto">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                       placeholder="Filter by task, hazard..."
@@ -1194,7 +1183,7 @@ export default function HiracPage() {
                   />
               </div>
               <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-                  <SelectTrigger className="w-full md:w-[200px]">
+                  <SelectTrigger className="w-full sm:w-[200px]">
                       <SelectValue placeholder="Filter by Department" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1202,6 +1191,10 @@ export default function HiracPage() {
                       {departments.map(opt => <SelectItem key={opt.id} value={String(opt.id)}>{opt.name}</SelectItem>)}
                   </SelectContent>
               </Select>
+               <Button onClick={handleNewEntry} className="w-full sm:w-auto">
+                    <FilePlus2 className="mr-2 h-4 w-4" />
+                    New HIRAC Entry
+                </Button>
             </div>
           </div>
         </CardHeader>
@@ -1224,9 +1217,9 @@ export default function HiracPage() {
                   </div>
 
                   {/* Desktop View */}
-                  <div className="hidden md:block relative max-h-[600px] overflow-x-auto border rounded-lg">
+                  <div className="hidden md:block relative border rounded-lg overflow-y-auto max-h-[calc(100vh-22rem)]">
                     <Table>
-                      <TableHeader className="sticky top-0 bg-primary z-10">
+                      <TableHeader className="sticky top-0 z-10 bg-primary">
                           <TableRow className="hover:bg-primary border-primary">
                               <TableHead className="min-w-[150px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Department</TableHead>
                               <TableHead className="min-w-[150px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Task/Job</TableHead>
