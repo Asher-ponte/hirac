@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -532,7 +533,31 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField control={form.control} name="hazard" render={({ field }) => (
-                                    <FormItem><FormLabel>Hazard</FormLabel><FormControl><Input placeholder="e.g., Riding on the Shuttle" {...field} /></FormControl><FormMessage /></FormItem>
+                                    <FormItem>
+                                        <div className="flex items-center gap-2">
+                                            <FormLabel>Hazard</FormLabel>
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full">
+                                                        <HelpCircle className="h-4 w-4" />
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-80" align="start">
+                                                    <div className="space-y-2">
+                                                        <h4 className="font-medium leading-none">🔍 What Is a Hazard?</h4>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            "Source, situation, or act with a potential for harm in terms of human injury or ill health, or a combination of these."
+                                                        </p>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            This means a hazard isn't just a thing—it can be a condition, behavior, or even a circumstance that could lead to harm.
+                                                        </p>
+                                                    </div>
+                                                </PopoverContent>
+                                            </Popover>
+                                        </div>
+                                        <FormControl><Input placeholder="e.g., Riding on the Shuttle" {...field} /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
                                 )} />
                             <FormField control={form.control} name="hazardClass" render={({ field }) => (
                                 <FormItem><FormLabel>Hazard Class</FormLabel>
