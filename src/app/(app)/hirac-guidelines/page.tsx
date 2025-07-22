@@ -2,20 +2,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 
-const likelihoods = [
-  { level: 5, label: 'Very Likely' },
+const Probability = [
+  { level: 5, label: 'Almost Certain' },
   { level: 4, label: 'Likely' },
   { level: 3, label: 'Possible' },
   { level: 2, label: 'Unlikely' },
-  { level: 1, label: 'Very Unlikely' },
+  { level: 1, label: 'Rare' },
 ];
 
 const severities = [
   { level: 1, label: 'Negligible' },
-  { level: 2, label: 'Slight' },
-  { level: 3, label: 'Moderate' },
-  { level: 4, label: 'High' },
-  { level: 5, label: 'Very High' },
+  { level: 2, label: 'Minor First aid' },
+  { level: 3, label: 'Minor Lost Time' },
+  { level: 4, label: 'Major' },
+  { level: 5, label: 'Catastrophic' },
 ];
 
 const getRiskColor = (risk: number) => {
@@ -43,7 +43,7 @@ export default function HiracGuidelinesPage() {
         <CardHeader>
           <CardTitle>Risk Assessment Matrix</CardTitle>
           <CardDescription>
-            The risk level is calculated by multiplying the Likelihood and Severity (L x S).
+            The risk level is calculated by multiplying the Probability and Severity (P x S).
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -51,7 +51,7 @@ export default function HiracGuidelinesPage() {
             <Table className="border">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="border-r font-bold text-center align-middle" rowSpan={2}>LIKELIHOOD</TableHead>
+                  <TableHead className="border-r font-bold text-center align-middle" rowSpan={2}>Probability</TableHead>
                   <TableHead className="text-center font-bold" colSpan={5}>SEVERITY</TableHead>
                 </TableRow>
                 <TableRow>
@@ -64,7 +64,7 @@ export default function HiracGuidelinesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {likelihoods.map(l => (
+                {Probability.map(l => (
                   <TableRow key={l.level}>
                     <TableCell className="border-r">
                         <div className="text-center">
@@ -121,7 +121,7 @@ export default function HiracGuidelinesPage() {
             <CardTitle>Note</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-muted-foreground">
-            <p>1. Risk Assessment for each job/activity shall be calculated as follows: Determine the value Risk Level (RL) using "Risk Assessment Matrix", then multiply the Likelihood and Severity [LxS].</p>
+            <p>1. Risk Assessment for each job/activity shall be calculated as follows: Determine the value Risk Level (RL) using "Risk Assessment Matrix", then multiply the Probability and Severity [LxS].</p>
             <p>2. All new and modified activity must undergo HAZARD IDENTIFICATION, RISK ASSESSMENT AND CONTROL (HIRAC) before commencement.</p>
         </CardContent>
       </Card>
