@@ -189,14 +189,9 @@ export default function DashboardPage() {
                 </Card>
             </div>
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                        <CardTitle>Risk Distribution by Department</CardTitle>
-                        <CardDescription>Breakdown of current risk levels for each department.</CardDescription>
-                    </div>
-                     <ChartContainer config={riskChartConfig} className="ml-auto w-auto">
-                        <ChartLegend content={<ChartLegendContent />} payload={riskChartData.map(r => ({value: r.risk, type: 'square', color: r.fill}))} />
-                     </ChartContainer>
+                <CardHeader>
+                    <CardTitle>Risk Distribution by Department</CardTitle>
+                    <CardDescription>Breakdown of current risk levels for each department.</CardDescription>
                 </CardHeader>
                 <CardContent className="pb-4">
                      {loading ? (
@@ -212,24 +207,45 @@ export default function DashboardPage() {
                                         <Building className="h-5 w-5 text-muted-foreground" />
                                         <h3 className="font-semibold tracking-tight">{dept.department}</h3>
                                     </CardHeader>
-                                    <CardContent className="flex flex-col items-center justify-center">
-                                         {dept.total > 0 ? (
-                                             <ChartContainer config={riskChartConfig} className="mx-auto aspect-square h-[160px] w-full">
-                                                <PieChart>
-                                                    <Tooltip content={<ChartTooltipContent nameKey="name" hideLabel />} />
-                                                    <Pie data={dept.breakdown} dataKey="value" nameKey="name" outerRadius={80} strokeWidth={5}>
-                                                        {dept.breakdown.map((entry) => (
-                                                            <Cell key={entry.name} fill={entry.fill} />
-                                                        ))}
-                                                    </Pie>
-                                                </PieChart>
-                                            </ChartContainer>
-                                        ) : (
-                                            <div className="mx-auto aspect-square h-[160px] w-full flex items-center justify-center"></div>
-                                        )}
-                                        <div className="text-center">
-                                            <p className="text-2xl font-bold">{dept.total}</p>
-                                            <p className="text-xs text-muted-foreground">Total Hazards</p>
+                                    <CardContent className="flex flex-col items-center justify-between h-full">
+                                        <div className="relative mx-auto aspect-square h-[140px] w-full">
+                                            {dept.total > 0 ? (
+                                                 <>
+                                                    <ChartContainer config={riskChartConfig} className="absolute inset-0">
+                                                        <PieChart>
+                                                            <Tooltip content={<ChartTooltipContent nameKey="name" hideLabel />} />
+                                                            <Pie data={dept.breakdown} dataKey="value" nameKey="name" innerRadius={40} strokeWidth={2}>
+                                                                {dept.breakdown.map((entry) => (
+                                                                    <Cell key={entry.name} fill={entry.fill} />
+                                                                ))}
+                                                            </Pie>
+                                                        </PieChart>
+                                                    </ChartContainer>
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                        <p className="text-xl font-bold">{dept.total}</p>
+                                                        <p className="text-xs text-muted-foreground">Total</p>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center h-full">
+                                                     <p className="text-2xl font-bold">{dept.total}</p>
+                                                     <p className="text-xs text-muted-foreground">Total Hazards</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                         <div className="flex justify-center items-center gap-4 mt-2 text-xs">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="w-2 h-2 rounded-full" style={{backgroundColor: riskChartConfig.Low.color}}></span>
+                                                <span>LR</span>
+                                            </div>
+                                             <div className="flex items-center gap-1.5">
+                                                <span className="w-2 h-2 rounded-full" style={{backgroundColor: riskChartConfig.Medium.color}}></span>
+                                                <span>MR</span>
+                                            </div>
+                                             <div className="flex items-center gap-1.5">
+                                                <span className="w-2 h-2 rounded-full" style={{backgroundColor: riskChartConfig.High.color}}></span>
+                                                <span>HR</span>
+                                            </div>
                                         </div>
                                     </CardContent>
                                 </Card>
