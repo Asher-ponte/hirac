@@ -915,12 +915,17 @@ function ReassessmentForm({ entry, setOpen, onFormSubmit }: { entry: HiracEntry,
     );
 }
 
+const escapeRegExp = (string: string) => {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+};
+
 const Highlight = ({ text, highlight }: { text: string | null | undefined; highlight: string }) => {
     if (!text) return null;
     if (!highlight.trim()) {
         return <>{text}</>;
     }
-    const regex = new RegExp(`(${highlight})`, 'gi');
+    const escapedHighlight = escapeRegExp(highlight);
+    const regex = new RegExp(`(${escapedHighlight})`, 'gi');
     const parts = text.split(regex);
     return (
         <>
