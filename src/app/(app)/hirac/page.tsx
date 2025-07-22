@@ -1232,9 +1232,9 @@ export default function HiracPage() {
               </div>
 
               {/* Desktop View */}
-              <div className="hidden md:block relative border rounded-lg overflow-y-auto max-h-[calc(100vh-16rem)]">
-                <Table className="text-xs">
-                  <TableHeader className="sticky top-0 z-10 bg-primary/90 backdrop-blur-sm">
+              <div className="hidden md:block border rounded-lg overflow-y-auto max-h-[calc(100vh-16rem)]">
+                <table className="w-full caption-bottom text-xs relative border-collapse">
+                  <thead className="sticky top-0 z-10 bg-primary/90 backdrop-blur-sm">
                       <TableRow className="hover:bg-primary/95 border-primary">
                           <TableHead className="w-[120px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Department</TableHead>
                           <TableHead className="w-[120px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Task/Job</TableHead>
@@ -1271,7 +1271,7 @@ export default function HiracPage() {
                           <TableHead className="text-center border-r text-primary-foreground border-primary/50">P,S</TableHead>
                           <TableHead className="text-center border-r text-primary-foreground border-primary/50">RL</TableHead>
                       </TableRow>
-                  </TableHeader>
+                  </thead>
                   <TableBody>
                       {filteredHiracData.map((item, index) => {
                       const initialRiskLevel = item.initialLikelihood * item.initialSeverity;
@@ -1351,7 +1351,7 @@ export default function HiracPage() {
                       );
                       })}
                   </TableBody>
-                </Table>
+                </table>
               </div>
             </>
          )}
