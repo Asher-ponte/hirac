@@ -1182,36 +1182,36 @@ export default function HiracPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <div>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight">HIRAC Register</h1>
-            <p className="text-sm text-muted-foreground">A register of all identified hazards, their risks, and control measures.</p>
-        </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-            <div className="relative w-full sm:w-auto">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                    placeholder="Filter by task, hazard..."
-                    value={searchFilter}
-                    onChange={(e) => setSearchFilter(e.target.value)}
-                    className="w-full max-w-sm pl-9"
-                />
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+            <div>
+                <h1 className="text-xl md:text-2xl font-bold tracking-tight">HIRAC Register</h1>
+                <p className="text-sm text-muted-foreground">A register of all identified hazards, their risks, and control measures.</p>
             </div>
-            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-                <SelectTrigger className="w-full sm:w-[200px]">
-                    <SelectValue placeholder="Filter by Department" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">All Departments</SelectItem>
-                    {departments.map(opt => <SelectItem key={opt.id} value={String(opt.id)}>{opt.name}</SelectItem>)}
-                </SelectContent>
-            </Select>
-            <Button onClick={handleNewEntry} className="w-full sm:w-auto">
-                <FilePlus2 className="mr-2 h-4 w-4" />
-                New HIRAC Entry
-            </Button>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                <div className="relative w-full sm:w-auto">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Filter by task, hazard..."
+                        value={searchFilter}
+                        onChange={(e) => setSearchFilter(e.target.value)}
+                        className="w-full max-w-sm pl-9"
+                    />
+                </div>
+                <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                    <SelectTrigger className="w-full sm:w-[200px]">
+                        <SelectValue placeholder="Filter by Department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Departments</SelectItem>
+                        {departments.map(opt => <SelectItem key={opt.id} value={String(opt.id)}>{opt.name}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+                <Button onClick={handleNewEntry} className="w-full sm:w-auto">
+                    <FilePlus2 className="mr-2 h-4 w-4" />
+                    New HIRAC Entry
+                </Button>
+            </div>
         </div>
-      </div>
       
       <div className="space-y-4">
          {loading && <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>}
@@ -1240,9 +1240,9 @@ export default function HiracPage() {
                           <TableHead className="w-[120px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Task/Job</TableHead>
                           <TableHead className="w-[100px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Task Type</TableHead>
                           <TableHead className="w-[120px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Hazard Class</TableHead>
-                          <TableHead className="w-[200px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Hazard</TableHead>
-                          <TableHead className="w-[200px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Hazardous Event</TableHead>
-                          <TableHead className="w-[200px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Impact</TableHead>
+                          <TableHead className="w-[300px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Hazard</TableHead>
+                          <TableHead className="w-[300px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Hazardous Event</TableHead>
+                          <TableHead className="w-[300px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Impact</TableHead>
                           <TableHead colSpan={2} className="text-center border-b border-r text-primary-foreground border-primary/50">Initial Risk</TableHead>
                           <TableHead colSpan={4} className="text-center border-b border-r text-primary-foreground border-primary/50">Engineering Controls</TableHead>
                           <TableHead colSpan={4} className="text-center border-b border-r text-primary-foreground border-primary/50">Administrative Controls</TableHead>
@@ -1256,15 +1256,15 @@ export default function HiracPage() {
                       <TableRow className="hover:bg-primary/95 border-primary">
                           <TableHead className="text-center border-r text-primary-foreground border-primary/50">P,S</TableHead>
                           <TableHead className="text-center border-r text-primary-foreground border-primary/50">RL</TableHead>
-                          <TableHead className="w-[150px] text-center border-r text-primary-foreground border-primary/50">Description</TableHead>
+                          <TableHead className="w-[250px] text-center border-r text-primary-foreground border-primary/50">Description</TableHead>
                           <TableHead className="w-[80px] text-center border-r text-primary-foreground border-primary/50">PIC</TableHead>
                           <TableHead className="w-[100px] text-center border-r text-primary-foreground border-primary/50">Status</TableHead>
                           <TableHead className="w-[100px] text-center border-r text-primary-foreground border-primary/50">Completion</TableHead>
-                          <TableHead className="w-[150px] text-center border-r text-primary-foreground border-primary/50">Description</TableHead>
+                          <TableHead className="w-[250px] text-center border-r text-primary-foreground border-primary/50">Description</TableHead>
                           <TableHead className="w-[80px] text-center border-r text-primary-foreground border-primary/50">PIC</TableHead>
                           <TableHead className="w-[100px] text-center border-r text-primary-foreground border-primary/50">Status</TableHead>
                           <TableHead className="w-[100px] text-center border-r text-primary-foreground border-primary/50">Completion</TableHead>
-                          <TableHead className="w-[150px] text-center border-r text-primary-foreground border-primary/50">Description</TableHead>
+                          <TableHead className="w-[250px] text-center border-r text-primary-foreground border-primary/50">Description</TableHead>
                           <TableHead className="w-[80px] text-center border-r text-primary-foreground border-primary/50">PIC</TableHead>
                           <TableHead className="w-[100px] text-center border-r text-primary-foreground border-primary/50">Status</TableHead>
                           <TableHead className="w-[100px] text-center border-r text-primary-foreground border-primary/50">Completion</TableHead>
