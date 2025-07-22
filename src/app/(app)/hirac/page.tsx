@@ -1182,40 +1182,36 @@ export default function HiracPage() {
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-            <div>
-              <CardTitle className="text-xl md:text-2xl">HIRAC Register</CardTitle>
-              <CardDescription>A register of all identified hazards, their risks, and control measures.</CardDescription>
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+        <div>
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight">HIRAC Register</h1>
+            <p className="text-sm text-muted-foreground">A register of all identified hazards, their risks, and control measures.</p>
+        </div>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+            <div className="relative w-full sm:w-auto">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                    placeholder="Filter by task, hazard..."
+                    value={searchFilter}
+                    onChange={(e) => setSearchFilter(e.target.value)}
+                    className="w-full max-w-sm pl-9"
+                />
             </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-              <div className="relative w-full sm:w-auto">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                      placeholder="Filter by task, hazard..."
-                      value={searchFilter}
-                      onChange={(e) => setSearchFilter(e.target.value)}
-                      className="w-full max-w-sm pl-9"
-                  />
-              </div>
-              <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-                  <SelectTrigger className="w-full sm:w-[200px]">
-                      <SelectValue placeholder="Filter by Department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                      <SelectItem value="all">All Departments</SelectItem>
-                      {departments.map(opt => <SelectItem key={opt.id} value={String(opt.id)}>{opt.name}</SelectItem>)}
-                  </SelectContent>
-              </Select>
-               <Button onClick={handleNewEntry} className="w-full sm:w-auto">
-                    <FilePlus2 className="mr-2 h-4 w-4" />
-                    New HIRAC Entry
-                </Button>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
+            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                <SelectTrigger className="w-full sm:w-[200px]">
+                    <SelectValue placeholder="Filter by Department" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">All Departments</SelectItem>
+                    {departments.map(opt => <SelectItem key={opt.id} value={String(opt.id)}>{opt.name}</SelectItem>)}
+                </SelectContent>
+            </Select>
+            <Button onClick={handleNewEntry} className="w-full sm:w-auto">
+                <FilePlus2 className="mr-2 h-4 w-4" />
+                New HIRAC Entry
+            </Button>
+        </div>
+      </div>
       
       <div className="space-y-4">
          {loading && <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>}
@@ -1236,7 +1232,7 @@ export default function HiracPage() {
               </div>
 
               {/* Desktop View */}
-              <div className="hidden md:block relative border rounded-lg overflow-y-auto max-h-[calc(100vh-20rem)]">
+              <div className="hidden md:block relative border rounded-lg overflow-y-auto max-h-[calc(100vh-16rem)]">
                 <Table className="text-xs">
                   <TableHeader className="sticky top-0 z-10 bg-primary/90 backdrop-blur-sm">
                       <TableRow className="hover:bg-primary/95 border-primary">

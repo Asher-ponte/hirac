@@ -121,7 +121,7 @@ export default function HiracGuidelinesPage() {
             <CardTitle>Note</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-muted-foreground">
-            <p>1. Risk Assessment for each job/activity shall be calculated as follows: Determine the value Risk Level (RL) using "Risk Assessment Matrix", then multiply the Probability and Severity [LxS].</p>
+            <p>1. Risk Assessment for each job/activity shall be calculated as follows: Determine the value Risk Level (RL) using "Risk Assessment Matrix", then multiply the Probability and Severity [PxS].</p>
             <p>2. All new and modified activity must undergo HAZARD IDENTIFICATION, RISK ASSESSMENT AND CONTROL (HIRAC) before commencement.</p>
         </CardContent>
       </Card>
