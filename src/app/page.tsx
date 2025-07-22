@@ -193,9 +193,14 @@ export default function DashboardPage() {
                 </Card>
             </div>
             <Card>
-                <CardHeader>
-                    <CardTitle>Risk Distribution by Department</CardTitle>
-                    <CardDescription>Breakdown of current risk levels for each department.</CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle>Risk Distribution by Department</CardTitle>
+                        <CardDescription>Breakdown of current risk levels for each department.</CardDescription>
+                    </div>
+                     <ChartContainer config={riskChartConfig} className="h-auto w-auto p-0 [&>div]:h-auto [&>div]:w-auto">
+                        <ChartLegend content={<ChartLegendContent />} payload={riskChartData.map(r => ({value: r.risk, type: 'square', color: r.fill}))} />
+                     </ChartContainer>
                 </CardHeader>
                 <CardContent className="pb-4">
                      {loading ? (
@@ -216,7 +221,7 @@ export default function DashboardPage() {
                                             <ResponsiveContainer width="100%" height="100%">
                                                 <PieChart>
                                                     <Tooltip content={<ChartTooltipContent nameKey="name" hideLabel />} />
-                                                    <Pie data={dept.breakdown} dataKey="value" nameKey="name" innerRadius={40} outerRadius={60} strokeWidth={5}>
+                                                    <Pie data={dept.breakdown} dataKey="value" nameKey="name" outerRadius={80} strokeWidth={5}>
                                                         {dept.breakdown.map((entry) => (
                                                             <Cell key={entry.name} fill={entry.fill} />
                                                         ))}
@@ -224,18 +229,13 @@ export default function DashboardPage() {
                                                 </PieChart>
                                             </ResponsiveContainer>
                                         </ChartContainer>
-                                        <div className="-mt-16 text-center">
+                                        <div className="text-center">
                                             <p className="text-2xl font-bold">{dept.total}</p>
                                             <p className="text-xs text-muted-foreground">Total Hazards</p>
                                         </div>
                                     </CardContent>
                                 </Card>
                             ))}
-                        </div>
-                        <div className="mt-4 flex justify-center">
-                            <ChartContainer config={riskChartConfig} className="h-auto w-auto p-0 [&>div]:h-auto [&>div]:w-auto">
-                                <ChartLegend content={<ChartLegendContent />} payload={riskChartData.map(r => ({value: r.risk, type: 'square', color: r.fill}))} />
-                             </ChartContainer>
                         </div>
                         </>
                      )}
