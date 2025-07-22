@@ -1038,7 +1038,7 @@ function HiracCard({ item, onEdit, onReassess, onDelete }: { item: HiracEntry, o
                         </Badge>
                     </div>
                      <div>
-                        <p className="text-sm text-muted-foreground">Residual Risk</p>
+                        <p className="text-sm text-muted-foreground">Risk Re-Assessment</p>
                          {residualRiskDetails && residualRiskLevel !== null ? (
                             <Badge variant={residualRiskDetails.variant} className={cn("mt-1 text-base px-3", residualRiskDetails.color)}>
                                 {residualRiskLevel}
@@ -1226,42 +1226,42 @@ export default function HiracPage() {
                   {/* Desktop View */}
                   <div className="hidden md:block relative max-h-[600px] overflow-x-auto border rounded-lg">
                     <Table>
-                      <TableHeader className="sticky top-0 bg-background z-10">
-                          <TableRow>
-                              <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Department</TableHead>
-                              <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Task/Job</TableHead>
-                              <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Task Type</TableHead>
-                              <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Hazard Class</TableHead>
-                              <TableHead className="min-w-[250px] align-bottom border-r" rowSpan={2}>Hazard</TableHead>
-                              <TableHead className="min-w-[250px] align-bottom border-r" rowSpan={2}>Hazardous Event</TableHead>
-                              <TableHead className="min-w-[250px] align-bottom border-r" rowSpan={2}>Impact</TableHead>
-                              <TableHead colSpan={2} className="text-center border-b border-r">Initial Risk</TableHead>
-                              <TableHead colSpan={4} className="text-center border-b border-r">Engineering Controls</TableHead>
-                              <TableHead colSpan={4} className="text-center border-b border-r">Administrative Controls</TableHead>
-                              <TableHead colSpan={4} className="text-center border-b border-r">PPE Controls</TableHead>
-                              <TableHead colSpan={2} className="text-center border-b border-r">Risk Re-assessment</TableHead>
-                              <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Created</TableHead>
-                              <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Last Reviewed</TableHead>
-                              <TableHead className="min-w-[150px] align-bottom border-r" rowSpan={2}>Next Review</TableHead>
-                              <TableHead className="align-bottom" rowSpan={2}><span className="sr-only">Actions</span></TableHead>
+                      <TableHeader className="sticky top-0 bg-primary z-10">
+                          <TableRow className="hover:bg-primary border-primary">
+                              <TableHead className="min-w-[150px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Department</TableHead>
+                              <TableHead className="min-w-[150px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Task/Job</TableHead>
+                              <TableHead className="min-w-[150px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Task Type</TableHead>
+                              <TableHead className="min-w-[150px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Hazard Class</TableHead>
+                              <TableHead className="min-w-[250px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Hazard</TableHead>
+                              <TableHead className="min-w-[250px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Hazardous Event</TableHead>
+                              <TableHead className="min-w-[250px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Impact</TableHead>
+                              <TableHead colSpan={2} className="text-center border-b border-r text-primary-foreground border-primary/50">Initial Risk</TableHead>
+                              <TableHead colSpan={4} className="text-center border-b border-r text-primary-foreground border-primary/50">Engineering Controls</TableHead>
+                              <TableHead colSpan={4} className="text-center border-b border-r text-primary-foreground border-primary/50">Administrative Controls</TableHead>
+                              <TableHead colSpan={4} className="text-center border-b border-r text-primary-foreground border-primary/50">PPE Controls</TableHead>
+                              <TableHead colSpan={2} className="text-center border-b border-r text-primary-foreground border-primary/50">Risk Re-assessment</TableHead>
+                              <TableHead className="min-w-[150px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Created</TableHead>
+                              <TableHead className="min-w-[150px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Last Reviewed</TableHead>
+                              <TableHead className="min-w-[150px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Next Review</TableHead>
+                              <TableHead className="align-bottom text-primary-foreground" rowSpan={2}><span className="sr-only">Actions</span></TableHead>
                           </TableRow>
-                          <TableRow>
-                              <TableHead className="text-center border-r">P,S</TableHead>
-                              <TableHead className="text-center border-r">RL</TableHead>
-                              <TableHead className="min-w-[200px] text-center border-r">Description</TableHead>
-                              <TableHead className="text-center border-r">PIC</TableHead>
-                              <TableHead className="text-center border-r">Status</TableHead>
-                              <TableHead className="text-center border-r">Completion</TableHead>
-                              <TableHead className="min-w-[200px] text-center border-r">Description</TableHead>
-                              <TableHead className="text-center border-r">PIC</TableHead>
-                              <TableHead className="text-center border-r">Status</TableHead>
-                              <TableHead className="text-center border-r">Completion</TableHead>
-                              <TableHead className="min-w-[200px] text-center border-r">Description</TableHead>
-                              <TableHead className="text-center border-r">PIC</TableHead>
-                              <TableHead className="text-center border-r">Status</TableHead>
-                              <TableHead className="text-center border-r">Completion</TableHead>
-                              <TableHead className="text-center border-r">P,S</TableHead>
-                              <TableHead className="text-center border-r">RL</TableHead>
+                          <TableRow className="hover:bg-primary border-primary">
+                              <TableHead className="text-center border-r text-primary-foreground border-primary/50">P,S</TableHead>
+                              <TableHead className="text-center border-r text-primary-foreground border-primary/50">RL</TableHead>
+                              <TableHead className="min-w-[200px] text-center border-r text-primary-foreground border-primary/50">Description</TableHead>
+                              <TableHead className="text-center border-r text-primary-foreground border-primary/50">PIC</TableHead>
+                              <TableHead className="text-center border-r text-primary-foreground border-primary/50">Status</TableHead>
+                              <TableHead className="text-center border-r text-primary-foreground border-primary/50">Completion</TableHead>
+                              <TableHead className="min-w-[200px] text-center border-r text-primary-foreground border-primary/50">Description</TableHead>
+                              <TableHead className="text-center border-r text-primary-foreground border-primary/50">PIC</TableHead>
+                              <TableHead className="text-center border-r text-primary-foreground border-primary/50">Status</TableHead>
+                              <TableHead className="text-center border-r text-primary-foreground border-primary/50">Completion</TableHead>
+                              <TableHead className="min-w-[200px] text-center border-r text-primary-foreground border-primary/50">Description</TableHead>
+                              <TableHead className="text-center border-r text-primary-foreground border-primary/50">PIC</TableHead>
+                              <TableHead className="text-center border-r text-primary-foreground border-primary/50">Status</TableHead>
+                              <TableHead className="text-center border-r text-primary-foreground border-primary/50">Completion</TableHead>
+                              <TableHead className="text-center border-r text-primary-foreground border-primary/50">P,S</TableHead>
+                              <TableHead className="text-center border-r text-primary-foreground border-primary/50">RL</TableHead>
                           </TableRow>
                       </TableHeader>
                       <TableBody>
