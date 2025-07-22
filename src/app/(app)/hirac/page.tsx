@@ -555,7 +555,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                                                 </PopoverContent>
                                             </Popover>
                                         </div>
-                                        <FormControl><Input placeholder="e.g., Riding on the Shuttle" {...field} /></FormControl>
+                                        <FormControl><Input placeholder="e.g., A stack of unstable pallets is stored too high" {...field} /></FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )} />
@@ -667,12 +667,12 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                                         </PopoverContent>
                                     </Popover>
                                 </div>
-                                <FormControl><Textarea placeholder="e.g., No Maintenance of shuttle service" rows={2} {...field} /></FormControl>
+                                <FormControl><Textarea placeholder="e.g., forklift bump triggers collapse" rows={2} {...field} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="impact" render={({ field }) => (
-                            <FormItem><FormLabel>Impact</FormLabel><FormControl><Textarea placeholder="e.g., Car Accident, Death" rows={2} {...field} /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Impact</FormLabel><FormControl><Textarea placeholder="e.g., Physical Injury > shoulder and Head Injury" rows={2} {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                     </CardContent>
                 </Card>
