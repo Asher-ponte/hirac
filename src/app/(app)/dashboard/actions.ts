@@ -77,7 +77,12 @@ export async function getDashboardData() {
 
   const riskByDepartmentData = Array.from(riskByDepartmentMap.entries()).map(([name, counts]) => ({
     department: name,
-    ...counts,
+    total: counts.Low + counts.Medium + counts.High,
+    breakdown: [
+      { name: 'Low', value: counts.Low, fill: 'hsl(120 76% 61%)' },
+      { name: 'Medium', value: counts.Medium, fill: 'hsl(43 74% 66%)' },
+      { name: 'High', value: counts.High, fill: 'hsl(12 76% 61%)' },
+    ]
   }));
 
   return {

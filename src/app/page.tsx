@@ -2,9 +2,9 @@
 'use client';
 
 import * as React from 'react';
-import { Sigma, ShieldAlert, ShieldCheck, Flame, Shield, ShieldQuestion } from 'lucide-react';
+import { Sigma, ShieldAlert, ShieldCheck, Flame, Shield, ShieldQuestion, Building } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Pie, PieChart, Cell, Legend, LabelList } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Pie, PieChart, Cell, Legend } from 'recharts';
 import { ChartContainer, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
 import { getDashboardData } from './(app)/dashboard/actions';
 import AppLayout from './(app)/layout';
@@ -29,11 +29,16 @@ type RiskChartData = {
     fill: string;
 };
 
+type DepartmentRiskBreakdown = {
+    name: string;
+    value: number;
+    fill: string;
+}
+
 type RiskByDepartmentData = {
     department: string;
-    Low: number;
-    Medium: number;
-    High: number;
+    total: number;
+    breakdown: DepartmentRiskBreakdown[];
 }
 
 const statusChartConfig = {
@@ -50,11 +55,6 @@ const riskChartConfig = {
     critical: { label: 'Critical', color: 'hsl(var(--destructive))' },
 };
 
-const riskByDeptChartConfig = {
-    Low: { label: 'Low', color: 'hsl(120 76% 61%)' },
-    Medium: { label: 'Medium', color: 'hsl(43 74% 66%)' },
-    High: { label: 'High', color: 'hsl(12 76% 61%)' },
-}
 
 const kpiIcons = {
     'Total Hazards': Sigma,
@@ -162,30 +162,34 @@ export default function DashboardPage() {
                 </Card>
 
                 <Card className="md:col-span-2">
-                <CardHeader>
-                    <CardTitle>Hazard Risk Level</CardTitle>
-                    <CardDescription>Overall distribution of hazards by current risk level.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex items-center justify-center">
-                    {loading ? <Skeleton className="h-[250px] w-full" /> : (
-                        <ChartContainer config={riskChartConfig} className="mx-auto aspect-square h-full w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Tooltip content={<ChartTooltipContent nameKey="risk" hideLabel />} />
-                                    <Pie data={riskChartData} dataKey="value" nameKey="risk" innerRadius={60} strokeWidth={5} labelLine={false} label>
-                                        {riskChartData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                                        ))}
-                                    </Pie>
-                                    <ChartLegend
-                                        content={<ChartLegendContent nameKey="risk" />}
-                                        className="-translate-y-2"
-                                    />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </ChartContainer>
-                    )}
-                </CardContent>
+                    <CardHeader>
+                        <CardTitle>Overall Hazard Risk Levels</CardTitle>
+                        <CardDescription>Distribution of hazards by current risk level.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                         {loading ? <Skeleton className="h-[250px] w-full" /> : (
+                             <ChartContainer config={riskChartConfig} className="h-[250px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={riskChartData} accessibilityLayer>
+                                        <CartesianGrid vertical={false} />
+                                        <XAxis
+                                            dataKey="risk"
+                                            tickLine={false}
+                                            tickMargin={10}
+                                            axisLine={false}
+                                        />
+                                        <YAxis />
+                                        <ChartTooltipContent />
+                                        <Bar dataKey="value" radius={4}>
+                                            {riskChartData.map((entry) => (
+                                                <Cell key={entry.risk} fill={entry.fill} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </ChartContainer>
+                         )}
+                    </CardContent>
                 </Card>
             </div>
             <Card>
@@ -194,34 +198,44 @@ export default function DashboardPage() {
                     <CardDescription>Breakdown of current risk levels for each department.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                     {loading ? <Skeleton className="h-[350px] w-full" /> : (
-                        <ChartContainer config={riskByDeptChartConfig} className="h-[350px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={riskByDepartmentData} layout="vertical" margin={{ left: 10, right: 40 }}>
-                                    <CartesianGrid horizontal={false} />
-                                    <YAxis 
-                                        dataKey="department" 
-                                        type="category" 
-                                        tickLine={false} 
-                                        axisLine={false} 
-                                        tick={{ fontSize: 12 }} 
-                                        width={100}
-                                    />
-                                    <XAxis dataKey="total" type="number" hide />
-                                    <Tooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<ChartTooltipContent />} />
-                                    <Legend content={<ChartLegendContent />} />
-                                    <Bar dataKey="Low" stackId="a" fill="var(--color-Low)" radius={[0, 4, 4, 0]}>
-                                        <LabelList dataKey="Low" position="right" offset={8} className="fill-foreground" fontSize={12} formatter={(value: number) => value > 0 ? value : ''} />
-                                    </Bar>
-                                    <Bar dataKey="Medium" stackId="a" fill="var(--color-Medium)" >
-                                        <LabelList dataKey="Medium" position="right" offset={8} className="fill-foreground" fontSize={12} formatter={(value: number) => value > 0 ? value : ''} />
-                                    </Bar>
-                                    <Bar dataKey="High" stackId="a" fill="var(--color-High)" radius={[4, 4, 0, 0]}>
-                                        <LabelList dataKey="High" position="right" offset={8} className="fill-foreground" fontSize={12} formatter={(value: number) => value > 0 ? value : ''} />
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </ChartContainer>
+                     {loading ? (
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                            {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-[250px] w-full" />)}
+                        </div>
+                     ) : (
+                        <>
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                            {riskByDepartmentData.map((dept) => (
+                                <Card key={dept.department}>
+                                    <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-2">
+                                        <Building className="h-5 w-5 text-muted-foreground" />
+                                        <h3 className="font-semibold tracking-tight">{dept.department}</h3>
+                                    </CardHeader>
+                                    <CardContent className="flex flex-col items-center justify-center">
+                                        <ChartContainer config={riskChartConfig} className="mx-auto aspect-square h-[160px] w-full">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <PieChart>
+                                                    <Tooltip content={<ChartTooltipContent nameKey="name" hideLabel />} />
+                                                    <Pie data={dept.breakdown} dataKey="value" nameKey="name" innerRadius={40} outerRadius={60} strokeWidth={5}>
+                                                        {dept.breakdown.map((entry) => (
+                                                            <Cell key={entry.name} fill={entry.fill} />
+                                                        ))}
+                                                    </Pie>
+                                                </PieChart>
+                                            </ResponsiveContainer>
+                                        </ChartContainer>
+                                        <div className="-mt-16 text-center">
+                                            <p className="text-2xl font-bold">{dept.total}</p>
+                                            <p className="text-xs text-muted-foreground">Total Hazards</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                        <div className="mt-4 flex justify-center">
+                             <ChartLegend content={<ChartLegendContent payload={riskChartData.map(r => ({value: r.risk, type: 'square', color: r.fill}))} />} />
+                        </div>
+                        </>
                      )}
                 </CardContent>
             </Card>
