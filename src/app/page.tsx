@@ -246,20 +246,6 @@ export default function DashboardPage() {
                                                 </BarChart>
                                             </ChartContainer>
                                         </div>
-                                        <div className="mt-4 flex justify-center items-center gap-4 text-xs text-muted-foreground">
-                                            <div className="flex items-center gap-1.5">
-                                                <div className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: 'hsl(120 76% 61%)'}}></div>
-                                                LR
-                                            </div>
-                                             <div className="flex items-center gap-1.5">
-                                                <div className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: 'hsl(43 74% 66%)'}}></div>
-                                                MR
-                                            </div>
-                                             <div className="flex items-center gap-1.5">
-                                                <div className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: 'hsl(12 76% 61%)'}}></div>
-                                                HR
-                                            </div>
-                                        </div>
                                     </CardContent>
                                 </Card>
                             ))}
