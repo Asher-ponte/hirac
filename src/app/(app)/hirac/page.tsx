@@ -1135,21 +1135,42 @@ const HiracEntryRow = ({
                         {controls: ppeControls, type: 'PPE'}
                     ].map(({controls, type}, i) => {
                         const control = controls[rowIndex];
-                        if (control) {
-                            return (
-                                <React.Fragment key={`${type}-${control.id || rowIndex}`}>
-                                    <td className="w-[300px] p-1 whitespace-pre-wrap border-r-2 border-border/50">{control.description}</td>
-                                    <td className="text-center p-1 border-r-2 border-border/50">{control.pic}</td>
-                                    <td className={cn("text-center p-0 border-r-2 border-border/50", control.status && statusColorMap[control.status])}>
-                                        {control.status}
-                                    </td>
-                                    <td className="text-center p-1 border-r-2 border-border/50">
-                                        {control.completionDate ? format(new Date(control.completionDate), "P") : ''}
-                                    </td>
-                                </React.Fragment>
-                            );
+                        const renderCell = (content: React.ReactNode, widthClass: string) => (
+                           <td className={cn("p-1 whitespace-pre-wrap border-r-2 border-border/50", widthClass)}>
+                                {content}
+                           </td>
+                        );
+                        if(control) {
+                             if (i === 0) { // Engineering
+                                return (
+                                    <React.Fragment key={`${type}-${control.id || rowIndex}`}>
+                                        {renderCell(control.description, "w-[300px]")}
+                                        {renderCell(control.pic, "text-center w-[100px]")}
+                                        {renderCell(<div className={cn("text-center p-1 h-full", control.status && statusColorMap[control.status])}>{control.status}</div>, "p-0 w-[100px]")}
+                                        {renderCell(control.completionDate ? format(new Date(control.completionDate), "P") : '', "text-center w-[120px]")}
+                                    </React.Fragment>
+                                );
+                            } else if (i === 1) { // Administrative
+                                return (
+                                    <React.Fragment key={`${type}-${control.id || rowIndex}`}>
+                                        {renderCell(control.description, "w-[300px]")}
+                                        {renderCell(control.pic, "text-center w-[100px]")}
+                                        {renderCell(<div className={cn("text-center p-1 h-full", control.status && statusColorMap[control.status])}>{control.status}</div>, "p-0 w-[100px]")}
+                                        {renderCell(control.completionDate ? format(new Date(control.completionDate), "P") : '', "text-center w-[120px]")}
+                                    </React.Fragment>
+                                );
+                            } else { // PPE
+                                return (
+                                     <React.Fragment key={`${type}-${control.id || rowIndex}`}>
+                                        {renderCell(control.description, "w-[300px]")}
+                                        {renderCell(control.pic, "text-center w-[100px]")}
+                                        {renderCell(<div className={cn("text-center p-1 h-full", control.status && statusColorMap[control.status])}>{control.status}</div>, "p-0 w-[100px]")}
+                                        {renderCell(control.completionDate ? format(new Date(control.completionDate), "P") : '', "text-center w-[120px]")}
+                                    </React.Fragment>
+                                )
+                            }
                         }
-                        return <td key={type} colSpan={4} className="p-1 border-r-2 border-border/50"></td>
+                        return <td key={`${type}-${rowIndex}`} colSpan={4} className="p-1 border-r-2 border-border/50"></td>
                     })}
                    
 
@@ -1251,13 +1272,23 @@ export default function HiracPage() {
   React.useEffect(() => {
     const lowercasedFilter = searchFilter.toLowerCase();
     const filtered = hiracData.filter(item => {
-        return (
-            item.task.toLowerCase().includes(lowercasedFilter) ||
-            item.hazard.toLowerCase().includes(lowercasedFilter) ||
-            item.hazardClass.toLowerCase().includes(lowercasedFilter) ||
-            item.hazardousEvent.toLowerCase().includes(lowercasedFilter) ||
-            item.impact.toLowerCase().includes(lowercasedFilter)
-        );
+        const searchableText = [
+            item.department?.name,
+            item.task,
+            item.taskType,
+            item.hazardClass,
+            item.hazard,
+            item.hazardousEvent,
+            item.impact,
+            item.status,
+            ...item.controlMeasures.flatMap(cm => [
+                cm.description,
+                cm.pic,
+                cm.status
+            ])
+        ].filter(Boolean).join(' ').toLowerCase();
+        
+        return searchableText.includes(lowercasedFilter);
     });
     setFilteredHiracData(filtered);
   }, [searchFilter, hiracData]);
