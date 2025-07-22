@@ -2,8 +2,8 @@
 'use server';
 
 import { db } from '@/lib/db';
-import type { HiracEntry } from '@/lib/types';
 import { getHiracEntries } from '@/app/(app)/hirac/actions';
+import { getDepartments as getAllDepartments } from '@/app/(app)/admin/actions';
 
 const getRiskLevelDetails = (level: number) => {
   if (level <= 6) return { label: 'Low', color: 'var(--color-low)' };
@@ -12,26 +12,40 @@ const getRiskLevelDetails = (level: number) => {
 };
 
 export async function getDashboardData() {
-  const hiracEntries = await getHiracEntries();
-
+  const [hiracEntries, departments] = await Promise.all([
+    getHiracEntries(),
+    getAllDepartments({ withSupervisor: false }),
+  ]);
+  
   const totalHazards = hiracEntries.length;
 
   let lowRiskCount = 0;
   let mediumRiskCount = 0;
   let highRiskCount = 0;
 
+  const riskByDepartmentMap = new Map<string, { Low: number, Medium: number, High: number }>();
+
+  departments.forEach(dept => {
+    riskByDepartmentMap.set(dept.name, { Low: 0, Medium: 0, High: 0 });
+  });
+
   hiracEntries.forEach(entry => {
     const hasResidual = entry.residualLikelihood != null && entry.residualSeverity != null;
     const likelihood = hasResidual ? entry.residualLikelihood! : entry.initialLikelihood;
     const severity = hasResidual ? entry.residualSeverity! : entry.initialSeverity;
     const riskLevel = likelihood * severity;
+    const riskDetails = getRiskLevelDetails(riskLevel);
+    
+    // Overall Counts
+    if (riskDetails.label === 'Low') lowRiskCount++;
+    else if (riskDetails.label === 'Medium') mediumRiskCount++;
+    else highRiskCount++;
 
-    if (riskLevel <= 6) {
-      lowRiskCount++;
-    } else if (riskLevel <= 12) {
-      mediumRiskCount++;
-    } else {
-      highRiskCount++;
+    // Per Department Counts
+    const deptName = entry.department?.name;
+    if (deptName && riskByDepartmentMap.has(deptName)) {
+        const currentCounts = riskByDepartmentMap.get(deptName)!;
+        currentCounts[riskDetails.label as 'Low' | 'Medium' | 'High']++;
     }
   });
 
@@ -53,26 +67,23 @@ export async function getDashboardData() {
     { status: 'Implemented', count: statusMap['Implemented'] || 0, fill: 'var(--color-resolved)' },
   ];
   
-  const riskMap = hiracEntries.reduce((acc, entry) => {
-    const hasResidual = entry.residualLikelihood != null && entry.residualSeverity != null;
-    const likelihood = hasResidual ? entry.residualLikelihood! : entry.initialLikelihood;
-    const severity = hasResidual ? entry.residualSeverity! : entry.initialSeverity;
-    const riskLevel = likelihood * severity;
-    const riskLevelLabel = getRiskLevelDetails(riskLevel).label;
-
-    acc[riskLevelLabel] = (acc[riskLevelLabel] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const riskMap = { 'Low': lowRiskCount, 'Medium': mediumRiskCount, 'High': highRiskCount };
 
   const riskChartData = [
-    { risk: 'Low', value: riskMap['Low'] || 0, fill: 'var(--color-low)' },
-    { risk: 'Medium', value: riskMap['Medium'] || 0, fill: 'var(--color-medium)' },
-    { risk: 'High', value: riskMap['High'] || 0, fill: 'var(--color-high)' },
+    { risk: 'Low', value: riskMap['Low'] || 0, fill: 'hsl(var(--chart-2))' },
+    { risk: 'Medium', value: riskMap['Medium'] || 0, fill: 'hsl(var(--chart-3))' },
+    { risk: 'High', value: riskMap['High'] || 0, fill: 'hsl(var(--chart-1))' },
   ];
+
+  const riskByDepartmentData = Array.from(riskByDepartmentMap.entries()).map(([name, counts]) => ({
+    department: name,
+    ...counts,
+  }));
 
   return {
     kpiData,
     statusChartData,
     riskChartData,
+    riskByDepartmentData,
   };
 }
