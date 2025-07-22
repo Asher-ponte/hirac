@@ -199,7 +199,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                     <p className="text-sm text-muted-foreground text-center py-4">No {title.toLowerCase()} added.</p>
                 )}
                 {filteredFields.map((field) => (
-                    <div key={field.id} className="p-2 border rounded-lg space-y-2 relative">
+                     <div key={field.id} className="p-2 border rounded-lg space-y-2 relative">
                         <Button 
                             type="button" 
                             variant="ghost" 
@@ -729,9 +729,86 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                         <CardDescription>Define control measures to mitigate the identified risk.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        <ControlMeasuresFieldArray form={form} controlType="Engineering" title="Engineering Controls" />
-                        <ControlMeasuresFieldArray form={form} controlType="Administrative" title="Administrative Controls" />
-                        <ControlMeasuresFieldArray form={form} controlType="PPE" title="Personal Protective Equipment (PPE)" />
+                         <div>
+                            <div className="flex items-center gap-2 mb-4">
+                                <h3 className="text-lg font-semibold">Engineering Controls</h3>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full"><HelpCircle className="h-4 w-4" /></Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-80" align="start">
+                                        <div className="space-y-2">
+                                            <h4 className="font-medium leading-none">🛠️ Engineering Controls</h4>
+                                            <p className="text-sm text-muted-foreground">These aim to physically isolate or reduce exposure to hazards at the source.</p>
+                                            <ul className="list-disc list-inside text-sm text-muted-foreground">
+                                                <li>Machine guards: Prevent contact with moving parts.</li>
+                                                <li>Barriers and railings: Separate pedestrian and forklift pathways.</li>
+                                                <li>Ventilation systems: Remove airborne contaminants (e.g., exhaust fumes).</li>
+                                                <li>Speed limiters or interlocks: Control vehicle behavior in sensitive zones.</li>
+                                                <li>Anti-collision sensors or mirrors: Enhance visibility and reduce blind spots.</li>
+                                                <li>Noise enclosures: Minimize exposure to harmful sound levels.</li>
+                                            </ul>
+                                            <p className="text-sm text-muted-foreground pt-2 italic">These controls are highly effective and require minimal human intervention once implemented.</p>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                            <ControlMeasuresFieldArray form={form} controlType="Engineering" title="Engineering Controls" />
+                        </div>
+
+                        <div>
+                            <div className="flex items-center gap-2 mb-4">
+                                <h3 className="text-lg font-semibold">Administrative Controls</h3>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full"><HelpCircle className="h-4 w-4" /></Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-80" align="start">
+                                         <div className="space-y-2">
+                                            <h4 className="font-medium leading-none">📋 Administrative Controls</h4>
+                                            <p className="text-sm text-muted-foreground">These modify work practices and procedures to reduce risk.</p>
+                                            <ul className="list-disc list-inside text-sm text-muted-foreground">
+                                                <li>Training programs: Forklift operation, pedestrian awareness, emergency response.</li>
+                                                <li>Permit-to-work systems: For confined spaces or high-risk zones.</li>
+                                                <li>Signage and labeling: Clear visual cues for hazards and safe zones.</li>
+                                                <li>Work scheduling: Limit exposure duration or rotate tasks.</li>
+                                                <li>Inspections and maintenance protocols: Prevent equipment failure.</li>
+                                                <li>Incident reporting systems: Encourage proactive hazard identification.</li>
+                                            </ul>
+                                            <p className="text-sm text-muted-foreground pt-2 italic">These rely on consistent human behavior and supervision, so reinforcement and engagement strategies are key.</p>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                            <ControlMeasuresFieldArray form={form} controlType="Administrative" title="Administrative Controls" />
+                        </div>
+                        
+                        <div>
+                             <div className="flex items-center gap-2 mb-4">
+                                <h3 className="text-lg font-semibold">Personal Protective Equipment (PPE)</h3>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full"><HelpCircle className="h-4 w-4" /></Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-80" align="start">
+                                        <div className="space-y-2">
+                                            <h4 className="font-medium leading-none">🦺 Personal Protective Equipment (PPE)</h4>
+                                            <p className="text-sm text-muted-foreground">The last line of defense, used when other controls can't fully eliminate risk.</p>
+                                            <ul className="list-disc list-inside text-sm text-muted-foreground">
+                                                <li>High-visibility vests: Improve visibility in shared zones.</li>
+                                                <li>Hard hats: Protect against falling objects.</li>
+                                                <li>Steel-toe boots: Guard against crush injuries.</li>
+                                                <li>Hearing protection: For noisy environments.</li>
+                                                <li>Gloves: For handling materials or operating controls.</li>
+                                                <li>Respirators: If airborne contaminants are present.</li>
+                                            </ul>
+                                            <p className="text-sm text-muted-foreground pt-2 italic">PPE must be properly selected, fitted, maintained, and used in conjunction with other controls—not as a standalone solution.</p>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                            <ControlMeasuresFieldArray form={form} controlType="PPE" title="Personal Protective Equipment (PPE)" />
+                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -847,7 +924,7 @@ const ControlMeasuresDetails = ({ controls, type }: { controls: HiracEntry['cont
     }
 
     return (
-        <React.Fragment>
+        <>
             <TableCell className="max-w-xs align-top whitespace-pre-wrap border-r p-0">
                 {filteredControls.map((c, i) => <div key={i} className={cn("p-2", i < filteredControls.length -1 && "border-b")}>{c.description}</div>)}
             </TableCell>
@@ -860,7 +937,7 @@ const ControlMeasuresDetails = ({ controls, type }: { controls: HiracEntry['cont
             <TableCell className="align-top border-r p-0">
                 {filteredControls.map((c, i) => <div key={i} className={cn("p-2", i < filteredControls.length -1 && "border-b")}>{c.completionDate ? format(new Date(c.completionDate), "P") : ''}</div>)}
             </TableCell>
-        </React.Fragment>
+        </>
     );
 };
 
