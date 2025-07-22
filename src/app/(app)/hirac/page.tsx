@@ -322,8 +322,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
         initialSeverity: entry?.initialSeverity ?? 1,
         nextReviewDate: entry?.nextReviewDate ?? null,
         controlMeasures: entry?.controlMeasures ?? [],
-        residualLikelihood: entry?.residualLikelihood ?? undefined,
-        residualSeverity: entry?.residualSeverity ?? undefined,
+        residualLikelihood: entry?.residualLikelihood,
+        residualSeverity: entry?.residualSeverity,
     });
 
 
@@ -915,47 +915,6 @@ function ReassessmentForm({ entry, setOpen, onFormSubmit }: { entry: HiracEntry,
     );
 }
 
-const ControlMeasuresDetails = ({ controls, type }: { controls: HiracEntry['controlMeasures'], type: ControlType }) => {
-    const filteredControls = controls.filter(c => c.type === type);
-
-    if (filteredControls.length === 0) {
-        return (
-            <td colSpan={4} className="align-top p-0 text-xs h-full">
-                 <div className="flex items-stretch h-full">
-                    <div className="flex-1 p-1 w-[40%] border-r border-border/50 text-center text-muted-foreground italic flex items-center justify-center">No {type.toLowerCase()} controls.</div>
-                    <div className="w-[20%] p-1 border-r border-border/50"></div>
-                    <div className="w-[20%] p-1 border-r border-border/50"></div>
-                    <div className="w-[20%] p-1"></div>
-                </div>
-            </td>
-        );
-    }
-
-    const statusColorMap: { [key in ControlStatus]: string } = {
-        'Implemented': 'bg-green-600/80 text-white',
-        'For Implementation': 'bg-yellow-500/80 text-black',
-    };
-
-    return (
-        <td colSpan={4} className="align-top p-0 text-xs">
-            <div className="flex flex-col h-full">
-                {filteredControls.map((c, i) => (
-                    <div key={i} className={cn("flex items-stretch flex-grow", i < filteredControls.length - 1 && "border-b border-border/50")}>
-                        <div className="flex-1 p-1 w-[40%] whitespace-pre-wrap border-r border-border/50">{c.description}</div>
-                        <div className="w-[20%] p-1 border-r border-border/50 text-center flex items-center justify-center">{c.pic}</div>
-                        <div className={cn("w-[20%] p-1 border-r border-border/50 text-center flex items-center justify-center", c.status && statusColorMap[c.status])}>
-                            {c.status}
-                        </div>
-                        <div className="w-[20%] p-1 text-center flex items-center justify-center">
-                            {c.completionDate ? format(new Date(c.completionDate), "P") : ''}
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </td>
-    );
-};
-
 const IdentificationDetail = ({ label, value }: { label: string, value: string | undefined | null }) => {
     if (!value) return null;
     return (
@@ -1022,7 +981,7 @@ function HiracCard({ item, onEdit, onReassess, onDelete }: { item: HiracEntry, o
                     <Dialog>
                         <DialogTrigger asChild>
                             <div className="relative w-full aspect-video cursor-pointer hover:opacity-80 transition-opacity rounded-md overflow-hidden">
-                                <Image src={item.hazardPhotoUrl} alt={`Photo for ${item.hazard}`} fill data-ai-hint="hazard" className="object-cover"/>
+                                <Image src={item.hazardPhotoUrl} alt={`Photo for ${item.hazard}`} fill className="object-cover" data-ai-hint="hazard"/>
                             </div>
                         </DialogTrigger>
                         <DialogContent>
@@ -1099,6 +1058,139 @@ function HiracCard({ item, onEdit, onReassess, onDelete }: { item: HiracEntry, o
         </Card>
     );
 }
+
+const statusColorMap: { [key in ControlStatus]: string } = {
+    'Implemented': 'bg-green-600/80 text-white',
+    'For Implementation': 'bg-yellow-500/80 text-black',
+};
+
+// This component renders the control measures for a specific type (Engineering, etc.)
+const HiracControlRow = ({ control }: { control: HiracEntry['controlMeasures'][0] }) => {
+    return (
+        <>
+            <td className="border-r border-border/50 p-1 whitespace-pre-wrap">{control.description}</td>
+            <td className="text-center border-r border-border/50 p-1">{control.pic}</td>
+            <td className={cn("text-center p-0 border-r border-border/50", control.status && statusColorMap[control.status])}>
+                {control.status}
+            </td>
+            <td className="text-center border-r border-border/50 p-1">
+                {control.completionDate ? format(new Date(control.completionDate), "P") : ''}
+            </td>
+        </>
+    );
+};
+
+const HiracEntryRow = ({
+    item,
+    index,
+    onEdit,
+    onReassess,
+    onDelete,
+}: {
+    item: HiracEntry;
+    index: number;
+    onEdit: (item: HiracEntry) => void;
+    onReassess: (item: HiracEntry) => void;
+    onDelete: (id: string) => void;
+}) => {
+    const initialRiskLevel = item.initialLikelihood * item.initialSeverity;
+    const initialRiskDetails = getRiskLevelDetails(initialRiskLevel);
+    const isReassessed = item.residualLikelihood != null && item.residualSeverity != null;
+    const residualRiskLevel = isReassessed ? item.residualLikelihood! * item.residualSeverity! : null;
+    const residualRiskDetails = isReassessed && residualRiskLevel !== null ? getRiskLevelDetails(residualRiskLevel) : null;
+
+    const engControls = item.controlMeasures.filter(c => c.type === 'Engineering');
+    const admControls = item.controlMeasures.filter(c => c.type === 'Administrative');
+    const ppeControls = item.controlMeasures.filter(c => c.type === 'PPE');
+
+    const maxRows = Math.max(1, engControls.length, admControls.length, ppeControls.length);
+
+    return (
+        <>
+            {[...Array(maxRows)].map((_, rowIndex) => (
+                <tr key={`${item.id}-${rowIndex}`} className={cn("border-b", index % 2 === 0 ? "bg-muted/30" : "")}>
+                    {rowIndex === 0 && (
+                        <>
+                            <td rowSpan={maxRows} className="font-medium align-top border-r p-1">{item.department?.name}</td>
+                            <td rowSpan={maxRows} className="font-medium align-top border-r p-1">{item.task}</td>
+                            <td rowSpan={maxRows} className="align-top border-r p-1">{item.taskType}</td>
+                            <td rowSpan={maxRows} className="align-top border-r p-1">{item.hazardClass}</td>
+                            <td rowSpan={maxRows} className="align-top border-r p-1">
+                                {item.hazardPhotoUrl && (
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                        <div className="mb-1 relative w-full aspect-video cursor-pointer hover:opacity-80 transition-opacity">
+                                            <Image src={item.hazardPhotoUrl} alt={`Photo for ${item.hazard}`} width={100} height={75} className="rounded-md object-contain" data-ai-hint="hazard"/>
+                                        </div>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                            <DialogHeader>
+                                                <DialogTitle>Hazard Photo: {item.hazard}</DialogTitle>
+                                                <DialogDescription>{item.task} - {item.department?.name}</DialogDescription>
+                                            </DialogHeader>
+                                            <div className="relative w-full aspect-video">
+                                                <Image src={item.hazardPhotoUrl} alt={`Photo for ${item.hazard}`} fill className="rounded-md object-contain" />
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
+                                )}
+                                {item.hazard}
+                            </td>
+                            <td rowSpan={maxRows} className="align-top border-r whitespace-pre-wrap p-1">{item.hazardousEvent}</td>
+                            <td rowSpan={maxRows} className="align-top border-r whitespace-pre-wrap p-1">{item.impact}</td>
+                            <td rowSpan={maxRows} className="text-center align-top font-mono text-xs border-r p-1">P:{item.initialLikelihood}, S:{item.initialSeverity}</td>
+                            <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r font-bold", initialRiskDetails.color)}>
+                                <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-1">{initialRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
+                            </td>
+                        </>
+                    )}
+                    
+                    {engControls[rowIndex] ? <HiracControlRow control={engControls[rowIndex]} /> : <td colSpan={4} className="border-r border-border/50 p-1"></td>}
+                    {admControls[rowIndex] ? <HiracControlRow control={admControls[rowIndex]} /> : <td colSpan={4} className="border-r border-border/50 p-1"></td>}
+                    {ppeControls[rowIndex] ? <HiracControlRow control={ppeControls[rowIndex]} /> : <td colSpan={4} className="border-r border-border/50 p-1"></td>}
+
+                    {rowIndex === 0 && (
+                         <>
+                            <td rowSpan={maxRows} className="text-center align-top font-mono text-xs border-r p-1">{isReassessed ? `P:${item.residualLikelihood}, S:${item.residualSeverity}` : 'N/A'}</td>
+                            <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r font-bold", isReassessed && residualRiskDetails ? residualRiskDetails.color : 'bg-muted/30')}>
+                                {isReassessed && residualRiskDetails && residualRiskLevel !== null ? (
+                                    <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-1">{residualRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {residualRiskLevel} ({residualRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
+                                ) : ('N/A')}
+                            </td>
+                            <td rowSpan={maxRows} className="align-top border-r p-1">{item.createdAt ? format(new Date(item.createdAt), "P") : ''}</td>
+                            <td rowSpan={maxRows} className="align-top border-r p-1">{item.reviewedAt ? format(new Date(item.reviewedAt), "P") : <span className="text-muted-foreground">Not yet</span>}</td>
+                            <td rowSpan={maxRows} className="align-top border-r p-1">{item.nextReviewDate ? format(new Date(item.nextReviewDate), "P") : <span className="text-muted-foreground">Not set</span>}</td>
+                            <td rowSpan={maxRows} className="align-top text-right p-1">
+                                <AlertDialog>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild><Button variant="ghost" className="h-8 w-8 p-0"><span className="sr-only">Open menu</span><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={() => onEdit(item)}><FilePenLine className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => onReassess(item)}><BarChart className="mr-2 h-4 w-4" /> Re-assess Risk</DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            <AlertDialogTrigger asChild><DropdownMenuItem className="text-destructive focus:text-destructive-foreground focus:bg-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem></AlertDialogTrigger>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>This action cannot be undone. This will permanently delete the HIRAC entry.</AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => onDelete(item.id)}>Delete</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </td>
+                        </>
+                    )}
+                </tr>
+            ))}
+        </>
+    );
+};
+
 
 export default function HiracPage() {
   const [dialogOpen, setDialogOpen] = React.useState(false);
@@ -1230,7 +1322,7 @@ export default function HiracPage() {
               </div>
 
               {/* Desktop View */}
-                <div className="border rounded-lg overflow-y-auto max-h-[calc(130vh-10rem)]">
+                <div className="hidden md:block border rounded-lg overflow-y-auto max-h-[calc(130vh-10rem)]">
                     <table className="w-full caption-bottom text-xs relative border-collapse">
                         <thead className="sticky top-0 z-10 bg-primary/90 backdrop-blur-sm">
                             <tr className="hover:bg-primary/95 border-primary">
@@ -1271,83 +1363,16 @@ export default function HiracPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredHiracData.map((item, index) => {
-                            const initialRiskLevel = item.initialLikelihood * item.initialSeverity;
-                            const initialRiskDetails = getRiskLevelDetails(initialRiskLevel);
-                            const isReassessed = item.residualLikelihood != null && item.residualSeverity != null;
-                            const residualRiskLevel = isReassessed ? (item.residualLikelihood!) * (item.residualSeverity!) : null;
-                            const residualRiskDetails = (isReassessed && residualRiskLevel !== null) ? getRiskLevelDetails(residualRiskLevel) : null;
-                            return (
-                                <tr key={item.id} className={cn("border-b", index % 2 === 0 ? "bg-muted/30" : "")}>
-                                    <td className="font-medium align-top border-r p-1">{item.department?.name}</td>
-                                    <td className="font-medium align-top border-r p-1">{item.task}</td>
-                                    <td className="align-top border-r p-1">{item.taskType}</td>
-                                    <td className="align-top border-r p-1">{item.hazardClass}</td>
-                                    <td className="align-top border-r p-1">
-                                        {item.hazardPhotoUrl && (
-                                            <Dialog>
-                                                <DialogTrigger asChild>
-                                                <div className="mb-1 relative w-full aspect-video cursor-pointer hover:opacity-80 transition-opacity">
-                                                    <Image src={item.hazardPhotoUrl} alt={`Photo for ${item.hazard}`} width={100} height={75} data-ai-hint="hazard" className="rounded-md object-contain"/>
-                                                </div>
-                                                </DialogTrigger>
-                                                <DialogContent>
-                                                    <DialogHeader>
-                                                        <DialogTitle>Hazard Photo: {item.hazard}</DialogTitle>
-                                                        <DialogDescription>{item.task} - {item.department?.name}</DialogDescription>
-                                                    </DialogHeader>
-                                                    <div className="relative w-full aspect-video">
-                                                        <Image src={item.hazardPhotoUrl} alt={`Photo for ${item.hazard}`} fill className="rounded-md object-contain" />
-                                                    </div>
-                                                </DialogContent>
-                                            </Dialog>
-                                        )}
-                                        {item.hazard}
-                                    </td>
-                                    <td className="align-top border-r whitespace-pre-wrap p-1">{item.hazardousEvent}</td>
-                                    <td className="align-top border-r whitespace-pre-wrap p-1">{item.impact}</td>
-                                    <td className="text-center align-top font-mono text-xs border-r p-1">P:{item.initialLikelihood}, S:{item.initialSeverity}</td>
-                                    <td className={cn("text-center align-middle p-0 border-r font-bold", initialRiskDetails.color)}>
-                                        <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-1">{initialRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
-                                    </td>
-                                    <ControlMeasuresDetails controls={item.controlMeasures} type="Engineering" />
-                                    <ControlMeasuresDetails controls={item.controlMeasures} type="Administrative" />
-                                    <ControlMeasuresDetails controls={item.controlMeasures} type="PPE" />
-                                    <td className="text-center align-top font-mono text-xs border-r p-1">{isReassessed ? `P:${item.residualLikelihood}, S:${item.residualSeverity}` : 'N/A'}</td>
-                                    <td className={cn("text-center align-middle p-0 border-r font-bold", isReassessed && residualRiskDetails ? residualRiskDetails.color : 'bg-muted/30')}>
-                                        {isReassessed && residualRiskDetails && residualRiskLevel !== null ? (
-                                            <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-1">{residualRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {residualRiskLevel} ({residualRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
-                                        ) : ('N/A')}
-                                    </td>
-                                    <td className="align-top border-r p-1">{item.createdAt ? format(new Date(item.createdAt), "P") : ''}</td>
-                                    <td className="align-top border-r p-1">{item.reviewedAt ? format(new Date(item.reviewedAt), "P") : <span className="text-muted-foreground">Not yet</span>}</td>
-                                    <td className="align-top border-r p-1">{item.nextReviewDate ? format(new Date(item.nextReviewDate), "P") : <span className="text-muted-foreground">Not set</span>}</td>
-                                    <td className="align-top text-right p-1">
-                                        <AlertDialog>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild><Button variant="ghost" className="h-8 w-8 p-0"><span className="sr-only">Open menu</span><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => handleEditEntry(item)}><FilePenLine className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => handleReassessEntry(item)}><BarChart className="mr-2 h-4 w-4" /> Re-assess Risk</DropdownMenuItem>
-                                                    <DropdownMenuSeparator />
-                                                    <AlertDialogTrigger asChild><DropdownMenuItem className="text-destructive focus:text-destructive-foreground focus:bg-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem></AlertDialogTrigger>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                    <AlertDialogDescription>This action cannot be undone. This will permanently delete the HIRAC entry.</AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => handleDeleteEntry(item.id)}>Delete</AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                    </td>
-                                </tr>
-                            );
-                            })}
+                            {filteredHiracData.map((item, index) => (
+                                <HiracEntryRow 
+                                    key={item.id} 
+                                    item={item}
+                                    index={index}
+                                    onEdit={handleEditEntry}
+                                    onReassess={handleReassessEntry}
+                                    onDelete={handleDeleteEntry}
+                                />
+                            ))}
                         </tbody>
                     </table>
                 </div>
@@ -1394,5 +1419,3 @@ export default function HiracPage() {
     </div>
   );
 }
-
-    
