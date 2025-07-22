@@ -197,7 +197,7 @@ export default function DashboardPage() {
                     <CardTitle>Risk Distribution by Department</CardTitle>
                     <CardDescription>Breakdown of current risk levels for each department.</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pb-4">
                      {loading ? (
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                             {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-[250px] w-full" />)}
@@ -233,7 +233,9 @@ export default function DashboardPage() {
                             ))}
                         </div>
                         <div className="mt-4 flex justify-center">
-                             <ChartLegend content={<ChartLegendContent payload={riskChartData.map(r => ({value: r.risk, type: 'square', color: r.fill}))} />} />
+                            <ChartContainer config={riskChartConfig} className="h-auto w-auto p-0 [&>div]:h-auto [&>div]:w-auto">
+                                <ChartLegend content={<ChartLegendContent />} payload={riskChartData.map(r => ({value: r.risk, type: 'square', color: r.fill}))} />
+                             </ChartContainer>
                         </div>
                         </>
                      )}
