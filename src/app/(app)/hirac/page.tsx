@@ -942,7 +942,7 @@ const ControlMeasuresDetails = ({ controls, type }: { controls: HiracEntry['cont
                     <div 
                         key={i} 
                         className={cn(
-                            "p-1 h-full", 
+                            "p-1 h-full flex items-center justify-center", 
                             i < filteredControls.length - 1 && "border-b",
                             c.status && statusColorMap[c.status]
                         )}
@@ -1309,16 +1309,16 @@ export default function HiracPage() {
                               <TableCell className="align-top border-r whitespace-pre-wrap p-1">{item.hazardousEvent}</TableCell>
                               <TableCell className="align-top border-r whitespace-pre-wrap p-1">{item.impact}</TableCell>
                               <TableCell className="text-center align-top font-mono text-xs border-r p-1">P:{item.initialLikelihood}, S:{item.initialSeverity}</TableCell>
-                              <TableCell className={cn("text-center align-top p-1 border-r font-bold", initialRiskDetails.color)}>
-                                  <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center">{initialRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
+                              <TableCell className={cn("text-center align-top p-0 border-r font-bold", initialRiskDetails.color)}>
+                                  <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-1">{initialRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
                               </TableCell>
                               <ControlMeasuresDetails controls={item.controlMeasures} type="Engineering" />
                               <ControlMeasuresDetails controls={item.controlMeasures} type="Administrative" />
                               <ControlMeasuresDetails controls={item.controlMeasures} type="PPE" />
                               <TableCell className="text-center align-top font-mono text-xs border-r p-1">{isReassessed ? `P:${item.residualLikelihood}, S:${item.residualSeverity}` : 'N/A'}</TableCell>
-                              <TableCell className={cn("text-center align-top p-1 border-r font-bold", isReassessed && residualRiskDetails ? residualRiskDetails.color : 'bg-muted/30')}>
+                              <TableCell className={cn("text-center align-top p-0 border-r font-bold", isReassessed && residualRiskDetails ? residualRiskDetails.color : 'bg-muted/30')}>
                                   {isReassessed && residualRiskDetails && residualRiskLevel !== null ? (
-                                      <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center">{residualRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {residualRiskLevel} ({residualRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
+                                      <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-1">{residualRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {residualRiskLevel} ({residualRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
                                   ) : ('N/A')}
                               </TableCell>
                               <TableCell className="align-top border-r p-1">{item.createdAt ? format(new Date(item.createdAt), "P") : ''}</TableCell>
