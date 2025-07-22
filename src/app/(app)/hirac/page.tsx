@@ -1160,10 +1160,10 @@ const HiracEntryRow = ({
                             </td>
                             <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-2 px-3 w-[300px]"><Highlight text={item.hazardousEvent} highlight={highlight} /></td>
                             <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-2 px-3 w-[300px]"><Highlight text={item.impact} highlight={highlight} /></td>
-                            <td className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(item.initialLikelihood))}>
+                            <td className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", initialRiskDetails.color)}>
                                 {item.initialLikelihood}
                             </td>
-                            <td className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(item.initialSeverity))}>
+                            <td className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", initialRiskDetails.color)}>
                                 {item.initialSeverity}
                             </td>
                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", initialRiskDetails.color)}>
@@ -1219,10 +1219,10 @@ const HiracEntryRow = ({
 
                     {rowIndex === 0 && (
                          <>
-                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(item.residualLikelihood))}>
+                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", isReassessed && residualRiskDetails ? residualRiskDetails.color : 'bg-muted/30')}>
                                 {isReassessed ? item.residualLikelihood : 'N/A'}
                             </td>
-                            <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(item.residualSeverity))}>
+                            <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", isReassessed && residualRiskDetails ? residualRiskDetails.color : 'bg-muted/30')}>
                                 {isReassessed ? item.residualSeverity : 'N/A'}
                             </td>
                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", isReassessed && residualRiskDetails ? residualRiskDetails.color : 'bg-muted/30')}>
@@ -1311,7 +1311,7 @@ export default function HiracPage() {
         toast({ variant: 'destructive', title: "Error", description: "Failed to load HIRAC data. The database might be initializing." });
     }
     setLoading(false);
-  }, [departmentFilter]);
+  }, [departmentFilter, toast]);
   
   React.useEffect(() => {
     loadData();
@@ -1525,3 +1525,4 @@ export default function HiracPage() {
     </div>
   );
 }
+
