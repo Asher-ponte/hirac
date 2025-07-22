@@ -1166,7 +1166,7 @@ const HiracEntryRow = ({
                             <td className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", initialRiskDetails.color)}>
                                 {item.initialSeverity}
                             </td>
-                            <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", initialRiskDetails.color)}>
+                            <td className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", initialRiskDetails.color)}>
                                 <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-2 px-3">{initialRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
                             </td>
                         </>
@@ -1525,5 +1525,6 @@ export default function HiracPage() {
     </div>
   );
 }
+
 
 
