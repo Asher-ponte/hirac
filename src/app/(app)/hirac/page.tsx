@@ -1064,21 +1064,6 @@ const statusColorMap: { [key in ControlStatus]: string } = {
     'For Implementation': 'bg-yellow-500/80 text-black',
 };
 
-const HiracControlRow = ({ control }: { control: HiracEntry['controlMeasures'][0] }) => {
-    return (
-        <>
-            <td className="border-r-2 border-border/50 p-1 whitespace-pre-wrap">{control.description}</td>
-            <td className="text-center border-r-2 border-border/50 p-1">{control.pic}</td>
-            <td className={cn("text-center p-0 border-r-2 border-border/50", control.status && statusColorMap[control.status])}>
-                {control.status}
-            </td>
-            <td className="text-center border-r-2 border-border/50 p-1">
-                {control.completionDate ? format(new Date(control.completionDate), "P") : ''}
-            </td>
-        </>
-    );
-};
-
 const HiracEntryRow = ({
     item,
     index,
@@ -1144,9 +1129,29 @@ const HiracEntryRow = ({
                         </>
                     )}
                     
-                    {engControls[rowIndex] ? <HiracControlRow control={engControls[rowIndex]} /> : <td colSpan={4} className="border-r-2 border-border/50 p-1"></td>}
-                    {admControls[rowIndex] ? <HiracControlRow control={admControls[rowIndex]} /> : <td colSpan={4} className="border-r-2 border-border/50 p-1"></td>}
-                    {ppeControls[rowIndex] ? <HiracControlRow control={ppeControls[rowIndex]} /> : <td colSpan={4} className="border-r-2 border-border/50 p-1"></td>}
+                    {[
+                        {controls: engControls, type: 'Engineering'}, 
+                        {controls: admControls, type: 'Administrative'}, 
+                        {controls: ppeControls, type: 'PPE'}
+                    ].map(({controls, type}, i) => {
+                        const control = controls[rowIndex];
+                        if (control) {
+                            return (
+                                <React.Fragment key={`${type}-${control.id || rowIndex}`}>
+                                    <td className="w-[300px] p-1 whitespace-pre-wrap border-r-2 border-border/50">{control.description}</td>
+                                    <td className="text-center p-1 border-r-2 border-border/50">{control.pic}</td>
+                                    <td className={cn("text-center p-0 border-r-2 border-border/50", control.status && statusColorMap[control.status])}>
+                                        {control.status}
+                                    </td>
+                                    <td className="text-center p-1 border-r-2 border-border/50">
+                                        {control.completionDate ? format(new Date(control.completionDate), "P") : ''}
+                                    </td>
+                                </React.Fragment>
+                            );
+                        }
+                        return <td key={type} colSpan={4} className="p-1 border-r-2 border-border/50"></td>
+                    })}
+                   
 
                     {rowIndex === 0 && (
                          <>
@@ -1189,6 +1194,23 @@ const HiracEntryRow = ({
         </>
     );
 };
+
+const RiskLegend = () => (
+    <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
+            <div className="h-3 w-3 rounded-full bg-green-600"></div>
+            <span className="text-xs">Low Risk</span>
+        </div>
+        <div className="flex items-center space-x-2">
+            <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
+            <span className="text-xs">Medium Risk</span>
+        </div>
+        <div className="flex items-center space-x-2">
+            <div className="h-3 w-3 rounded-full bg-red-600"></div>
+            <span className="text-xs">High Risk</span>
+        </div>
+    </div>
+);
 
 
 export default function HiracPage() {
@@ -1276,7 +1298,8 @@ export default function HiracPage() {
                 <h1 className="text-xl md:text-2xl font-bold tracking-tight">HIRAC Register</h1>
                 <p className="text-sm text-muted-foreground">A register of all identified hazards, their risks, and control measures.</p>
             </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
+                 <RiskLegend />
                 <div className="relative w-full sm:w-auto">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
