@@ -1064,16 +1064,15 @@ const statusColorMap: { [key in ControlStatus]: string } = {
     'For Implementation': 'bg-yellow-500/80 text-black',
 };
 
-// This component renders the control measures for a specific type (Engineering, etc.)
 const HiracControlRow = ({ control }: { control: HiracEntry['controlMeasures'][0] }) => {
     return (
         <>
-            <td className="border-r border-border/50 p-1 whitespace-pre-wrap">{control.description}</td>
-            <td className="text-center border-r border-border/50 p-1">{control.pic}</td>
-            <td className={cn("text-center p-0 border-r border-border/50", control.status && statusColorMap[control.status])}>
+            <td className="border-r-2 border-border/50 p-1 whitespace-pre-wrap">{control.description}</td>
+            <td className="text-center border-r-2 border-border/50 p-1">{control.pic}</td>
+            <td className={cn("text-center p-0 border-r-2 border-border/50", control.status && statusColorMap[control.status])}>
                 {control.status}
             </td>
-            <td className="text-center border-r border-border/50 p-1">
+            <td className="text-center border-r-2 border-border/50 p-1">
                 {control.completionDate ? format(new Date(control.completionDate), "P") : ''}
             </td>
         </>
@@ -1108,14 +1107,14 @@ const HiracEntryRow = ({
     return (
         <>
             {[...Array(maxRows)].map((_, rowIndex) => (
-                <tr key={`${item.id}-${rowIndex}`} className={cn("border-b", index % 2 === 0 ? "bg-muted/30" : "")}>
+                <tr key={`${item.id}-${rowIndex}`} className={cn("border-b-2 border-border/50", index % 2 === 0 ? "bg-muted/30" : "")}>
                     {rowIndex === 0 && (
                         <>
-                            <td rowSpan={maxRows} className="font-medium align-top border-r p-1">{item.department?.name}</td>
-                            <td rowSpan={maxRows} className="font-medium align-top border-r p-1">{item.task}</td>
-                            <td rowSpan={maxRows} className="align-top border-r p-1">{item.taskType}</td>
-                            <td rowSpan={maxRows} className="align-top border-r p-1">{item.hazardClass}</td>
-                            <td rowSpan={maxRows} className="align-top border-r p-1">
+                            <td rowSpan={maxRows} className="font-medium align-top border-r-2 border-border/50 p-1">{item.department?.name}</td>
+                            <td rowSpan={maxRows} className="font-medium align-top border-r-2 border-border/50 p-1">{item.task}</td>
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-1">{item.taskType}</td>
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-1">{item.hazardClass}</td>
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-1 w-[300px]">
                                 {item.hazardPhotoUrl && (
                                     <Dialog>
                                         <DialogTrigger asChild>
@@ -1136,30 +1135,30 @@ const HiracEntryRow = ({
                                 )}
                                 {item.hazard}
                             </td>
-                            <td rowSpan={maxRows} className="align-top border-r whitespace-pre-wrap p-1">{item.hazardousEvent}</td>
-                            <td rowSpan={maxRows} className="align-top border-r whitespace-pre-wrap p-1">{item.impact}</td>
-                            <td rowSpan={maxRows} className="text-center align-top font-mono text-xs border-r p-1">P:{item.initialLikelihood}, S:{item.initialSeverity}</td>
-                            <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r font-bold", initialRiskDetails.color)}>
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-1 w-[300px]">{item.hazardousEvent}</td>
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-1 w-[300px]">{item.impact}</td>
+                            <td rowSpan={maxRows} className="text-center align-top font-mono text-xs border-r-2 border-border/50 p-1">P:{item.initialLikelihood}, S:{item.initialSeverity}</td>
+                            <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", initialRiskDetails.color)}>
                                 <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-1">{initialRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
                             </td>
                         </>
                     )}
                     
-                    {engControls[rowIndex] ? <HiracControlRow control={engControls[rowIndex]} /> : <td colSpan={4} className="border-r border-border/50 p-1"></td>}
-                    {admControls[rowIndex] ? <HiracControlRow control={admControls[rowIndex]} /> : <td colSpan={4} className="border-r border-border/50 p-1"></td>}
-                    {ppeControls[rowIndex] ? <HiracControlRow control={ppeControls[rowIndex]} /> : <td colSpan={4} className="border-r border-border/50 p-1"></td>}
+                    {engControls[rowIndex] ? <HiracControlRow control={engControls[rowIndex]} /> : <td colSpan={4} className="border-r-2 border-border/50 p-1"></td>}
+                    {admControls[rowIndex] ? <HiracControlRow control={admControls[rowIndex]} /> : <td colSpan={4} className="border-r-2 border-border/50 p-1"></td>}
+                    {ppeControls[rowIndex] ? <HiracControlRow control={ppeControls[rowIndex]} /> : <td colSpan={4} className="border-r-2 border-border/50 p-1"></td>}
 
                     {rowIndex === 0 && (
                          <>
-                            <td rowSpan={maxRows} className="text-center align-top font-mono text-xs border-r p-1">{isReassessed ? `P:${item.residualLikelihood}, S:${item.residualSeverity}` : 'N/A'}</td>
-                            <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r font-bold", isReassessed && residualRiskDetails ? residualRiskDetails.color : 'bg-muted/30')}>
+                            <td rowSpan={maxRows} className="text-center align-top font-mono text-xs border-r-2 border-border/50 p-1">{isReassessed ? `P:${item.residualLikelihood}, S:${item.residualSeverity}` : 'N/A'}</td>
+                            <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", isReassessed && residualRiskDetails ? residualRiskDetails.color : 'bg-muted/30')}>
                                 {isReassessed && residualRiskDetails && residualRiskLevel !== null ? (
                                     <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-1">{residualRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {residualRiskLevel} ({residualRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
                                 ) : ('N/A')}
                             </td>
-                            <td rowSpan={maxRows} className="align-top border-r p-1">{item.createdAt ? format(new Date(item.createdAt), "P") : ''}</td>
-                            <td rowSpan={maxRows} className="align-top border-r p-1">{item.reviewedAt ? format(new Date(item.reviewedAt), "P") : <span className="text-muted-foreground">Not yet</span>}</td>
-                            <td rowSpan={maxRows} className="align-top border-r p-1">{item.nextReviewDate ? format(new Date(item.nextReviewDate), "P") : <span className="text-muted-foreground">Not set</span>}</td>
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-1">{item.createdAt ? format(new Date(item.createdAt), "P") : ''}</td>
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-1">{item.reviewedAt ? format(new Date(item.reviewedAt), "P") : <span className="text-muted-foreground">Not yet</span>}</td>
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-1">{item.nextReviewDate ? format(new Date(item.nextReviewDate), "P") : <span className="text-muted-foreground">Not set</span>}</td>
                             <td rowSpan={maxRows} className="align-top text-right p-1">
                                 <AlertDialog>
                                     <DropdownMenu>
@@ -1322,44 +1321,44 @@ export default function HiracPage() {
               </div>
 
               {/* Desktop View */}
-                <div className="hidden md:block border rounded-lg overflow-y-auto max-h-[calc(130vh-10rem)]">
+                <div className="hidden md:block border-2 border-border/50 rounded-lg overflow-y-auto max-h-[calc(130vh-10rem)]">
                     <table className="w-full caption-bottom text-xs relative border-collapse">
                         <thead className="sticky top-0 z-10 bg-primary/90 backdrop-blur-sm">
-                            <tr className="hover:bg-primary/95 border-primary">
-                                <th className="w-[120px] align-bottom border-r border-border/50 text-primary-foreground" rowSpan={2}>Department</th>
-                                <th className="w-[120px] align-bottom border-r border-border/50 text-primary-foreground" rowSpan={2}>Task/Job</th>
-                                <th className="w-[100px] align-bottom border-r border-border/50 text-primary-foreground" rowSpan={2}>Task Type</th>
-                                <th className="w-[120px] align-bottom border-r border-border/50 text-primary-foreground" rowSpan={2}>Hazard Class</th>
-                                <th className="w-[250px] align-bottom border-r border-border/50 text-primary-foreground" rowSpan={2}>Hazard</th>
-                                <th className="w-[250px] align-bottom border-r border-border/50 text-primary-foreground" rowSpan={2}>Hazardous Event</th>
-                                <th className="w-[250px] align-bottom border-r border-border/50 text-primary-foreground" rowSpan={2}>Impact</th>
-                                <th colSpan={2} className="text-center border-b border-r border-border/50 text-primary-foreground">Initial Risk</th>
-                                <th colSpan={4} className="text-center border-b border-r border-border/50 text-primary-foreground">Engineering Controls</th>
-                                <th colSpan={4} className="text-center border-b border-r border-border/50 text-primary-foreground">Administrative Controls</th>
-                                <th colSpan={4} className="text-center border-b border-r border-border/50 text-primary-foreground">PPE Controls</th>
-                                <th colSpan={2} className="text-center border-b border-r border-border/50 text-primary-foreground">Risk Re-assessment</th>
-                                <th className="w-[100px] align-bottom border-r border-border/50 text-primary-foreground" rowSpan={2}>Created</th>
-                                <th className="w-[100px] align-bottom border-r border-border/50 text-primary-foreground" rowSpan={2}>Last Reviewed</th>
-                                <th className="w-[100px] align-bottom border-r border-border/50 text-primary-foreground" rowSpan={2}>Next Review</th>
-                                <th className="align-bottom text-primary-foreground" rowSpan={2}><span className="sr-only">Actions</span></th>
+                            <tr className="border-b-2 border-border/50 hover:bg-primary/95">
+                                <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-1" rowSpan={2}>Department</th>
+                                <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-1" rowSpan={2}>Task/Job</th>
+                                <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-1" rowSpan={2}>Task Type</th>
+                                <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-1" rowSpan={2}>Hazard Class</th>
+                                <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-1" rowSpan={2}>Hazard</th>
+                                <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-1" rowSpan={2}>Hazardous Event</th>
+                                <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-1" rowSpan={2}>Impact</th>
+                                <th colSpan={2} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-1">Initial Risk</th>
+                                <th colSpan={4} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-1">Engineering Controls</th>
+                                <th colSpan={4} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-1">Administrative Controls</th>
+                                <th colSpan={4} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-1">PPE Controls</th>
+                                <th colSpan={2} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-1">Risk Re-assessment</th>
+                                <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-1" rowSpan={2}>Created</th>
+                                <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-1" rowSpan={2}>Last Reviewed</th>
+                                <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-1" rowSpan={2}>Next Review</th>
+                                <th className="align-bottom text-primary-foreground p-1" rowSpan={2}><span className="sr-only">Actions</span></th>
                             </tr>
-                            <tr className="hover:bg-primary/95 border-primary">
-                                <th className="text-center border-r border-border/50 text-primary-foreground">P,S</th>
-                                <th className="text-center border-r border-border/50 text-primary-foreground">RL</th>
-                                <th className="w-[300px] text-center border-r border-border/50 text-primary-foreground">Description</th>
-                                <th className="w-[100px] text-center border-r border-border/50 text-primary-foreground">PIC</th>
-                                <th className="w-[100px] text-center border-r border-border/50 text-primary-foreground">Status</th>
-                                <th className="w-[120px] text-center border-r border-border/50 text-primary-foreground">Completion</th>
-                                <th className="w-[300px] text-center border-r border-border/50 text-primary-foreground">Description</th>
-                                <th className="w-[100px] text-center border-r border-border/50 text-primary-foreground">PIC</th>
-                                <th className="w-[100px] text-center border-r border-border/50 text-primary-foreground">Status</th>
-                                <th className="w-[120px] text-center border-r border-border/50 text-primary-foreground">Completion</th>
-                                <th className="w-[300px] text-center border-r border-border/50 text-primary-foreground">Description</th>
-                                <th className="w-[100px] text-center border-r border-border/50 text-primary-foreground">PIC</th>
-                                <th className="w-[100px] text-center border-r border-border/50 text-primary-foreground">Status</th>
-                                <th className="w-[120px] text-center border-r border-border/50 text-primary-foreground">Completion</th>
-                                <th className="text-center border-r border-border/50 text-primary-foreground">P,S</th>
-                                <th className="text-center border-r border-border/50 text-primary-foreground">RL</th>
+                            <tr className="border-b-2 border-border/50 hover:bg-primary/95">
+                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-1">P,S</th>
+                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-1">RL</th>
+                                <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-1">Description</th>
+                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-1">PIC</th>
+                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-1">Status</th>
+                                <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-1">Completion</th>
+                                <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-1">Description</th>
+                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-1">PIC</th>
+                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-1">Status</th>
+                                <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-1">Completion</th>
+                                <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-1">Description</th>
+                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-1">PIC</th>
+                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-1">Status</th>
+                                <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-1">Completion</th>
+                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-1">P,S</th>
+                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-1">RL</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1419,3 +1418,5 @@ export default function HiracPage() {
     </div>
   );
 }
+
+    
