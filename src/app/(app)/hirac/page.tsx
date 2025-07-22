@@ -1160,13 +1160,13 @@ const HiracEntryRow = ({
                             </td>
                             <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-2 px-3 w-[300px]"><Highlight text={item.hazardousEvent} highlight={highlight} /></td>
                             <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-2 px-3 w-[300px]"><Highlight text={item.impact} highlight={highlight} /></td>
-                            <td className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", initialRiskDetails.color)}>
+                            <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", initialRiskDetails.color)}>
                                 {item.initialLikelihood}
                             </td>
-                            <td className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", initialRiskDetails.color)}>
+                            <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", initialRiskDetails.color)}>
                                 {item.initialSeverity}
                             </td>
-                            <td className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", initialRiskDetails.color)}>
+                            <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", initialRiskDetails.color)}>
                                 <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-2 px-3">{initialRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
                             </td>
                         </>
@@ -1525,6 +1525,7 @@ export default function HiracPage() {
     </div>
   );
 }
+
 
 
 
