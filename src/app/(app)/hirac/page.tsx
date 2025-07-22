@@ -925,16 +925,16 @@ const ControlMeasuresDetails = ({ controls, type }: { controls: HiracEntry['cont
 
     return (
         <>
-            <TableCell className="max-w-[150px] align-top whitespace-pre-wrap border-r p-0 text-xs">
+            <TableCell className="max-w-[150px] align-top whitespace-pre-wrap border-r p-1 text-xs">
                 {filteredControls.map((c, i) => <div key={i} className={cn("p-1", i < filteredControls.length -1 && "border-b")}>{c.description}</div>)}
             </TableCell>
-            <TableCell className="align-top border-r p-0 text-xs">
+            <TableCell className="align-top border-r p-1 text-xs">
                 {filteredControls.map((c, i) => <div key={i} className={cn("p-1", i < filteredControls.length -1 && "border-b")}>{c.pic}</div>)}
             </TableCell>
-            <TableCell className="align-top border-r p-0 text-xs">
+            <TableCell className="align-top border-r p-1 text-xs">
                 {filteredControls.map((c, i) => <div key={i} className={cn("p-1 text-center", i < filteredControls.length -1 && "border-b")}>{c.status && <Badge variant={c.status === 'Implemented' ? 'secondary' : 'default'} className="text-xs">{c.status}</Badge>}</div>)}
             </TableCell>
-            <TableCell className="align-top border-r p-0 text-xs">
+            <TableCell className="align-top border-r p-1 text-xs">
                 {filteredControls.map((c, i) => <div key={i} className={cn("p-1", i < filteredControls.length -1 && "border-b")}>{c.completionDate ? format(new Date(c.completionDate), "P") : ''}</div>)}
             </TableCell>
         </>
@@ -1219,10 +1219,10 @@ export default function HiracPage() {
               </div>
 
               {/* Desktop View */}
-              <div className="hidden md:block relative border rounded-lg overflow-y-auto max-h-[calc(100vh-18rem)]">
+              <div className="hidden md:block relative border rounded-lg overflow-y-auto max-h-[calc(100vh-20rem)]">
                 <Table className="text-xs">
-                  <TableHeader className="sticky top-0 z-10 bg-primary">
-                      <TableRow className="hover:bg-primary border-primary">
+                  <TableHeader className="sticky top-0 z-10 bg-primary/90 backdrop-blur-sm">
+                      <TableRow className="hover:bg-primary/95 border-primary">
                           <TableHead className="w-[120px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Department</TableHead>
                           <TableHead className="w-[120px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Task/Job</TableHead>
                           <TableHead className="w-[100px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Task Type</TableHead>
@@ -1240,7 +1240,7 @@ export default function HiracPage() {
                           <TableHead className="w-[100px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Next Review</TableHead>
                           <TableHead className="align-bottom text-primary-foreground" rowSpan={2}><span className="sr-only">Actions</span></TableHead>
                       </TableRow>
-                      <TableRow className="hover:bg-primary border-primary">
+                      <TableRow className="hover:bg-primary/95 border-primary">
                           <TableHead className="text-center border-r text-primary-foreground border-primary/50">P,S</TableHead>
                           <TableHead className="text-center border-r text-primary-foreground border-primary/50">RL</TableHead>
                           <TableHead className="w-[150px] text-center border-r text-primary-foreground border-primary/50">Description</TableHead>
