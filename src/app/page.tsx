@@ -140,22 +140,20 @@ export default function DashboardPage() {
                 <CardContent>
                     {loading ? <Skeleton className="h-[250px] w-full" /> : (
                         <ChartContainer config={statusChartConfig} className="h-[250px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={statusChartData} margin={{ top: 20, right: 20, bottom: 20, left: 0 }} accessibilityLayer>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                    <XAxis dataKey="status" tickLine={false} axisLine={false} />
-                                    <YAxis tickLine={false} axisLine={false} />
-                                    <Tooltip
-                                        cursor={{ fill: 'hsl(var(--muted))' }}
-                                        content={<ChartTooltipContent />}
-                                    />
-                                    <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                                        {statusChartData.map((entry) => (
-                                            <Cell key={entry.status} fill={entry.fill} />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
+                            <BarChart data={statusChartData} margin={{ top: 20, right: 20, bottom: 20, left: 0 }} accessibilityLayer>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="status" tickLine={false} axisLine={false} />
+                                <YAxis tickLine={false} axisLine={false} />
+                                <Tooltip
+                                    cursor={{ fill: 'hsl(var(--muted))' }}
+                                    content={<ChartTooltipContent />}
+                                />
+                                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                                    {statusChartData.map((entry) => (
+                                        <Cell key={entry.status} fill={entry.fill} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
                         </ChartContainer>
                     )}
                 </CardContent>
@@ -169,24 +167,22 @@ export default function DashboardPage() {
                     <CardContent>
                          {loading ? <Skeleton className="h-[250px] w-full" /> : (
                              <ChartContainer config={riskChartConfig} className="h-[250px] w-full">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={riskChartData} accessibilityLayer>
-                                        <CartesianGrid vertical={false} />
-                                        <XAxis
-                                            dataKey="risk"
-                                            tickLine={false}
-                                            tickMargin={10}
-                                            axisLine={false}
-                                        />
-                                        <YAxis />
-                                        <ChartTooltipContent />
-                                        <Bar dataKey="value" radius={4}>
-                                            {riskChartData.map((entry) => (
-                                                <Cell key={entry.risk} fill={entry.fill} />
-                                            ))}
-                                        </Bar>
-                                    </BarChart>
-                                </ResponsiveContainer>
+                                <BarChart data={riskChartData} accessibilityLayer>
+                                    <CartesianGrid vertical={false} />
+                                    <XAxis
+                                        dataKey="risk"
+                                        tickLine={false}
+                                        tickMargin={10}
+                                        axisLine={false}
+                                    />
+                                    <YAxis />
+                                    <ChartTooltipContent />
+                                    <Bar dataKey="value" radius={4}>
+                                        {riskChartData.map((entry) => (
+                                            <Cell key={entry.risk} fill={entry.fill} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
                             </ChartContainer>
                          )}
                     </CardContent>
@@ -198,7 +194,7 @@ export default function DashboardPage() {
                         <CardTitle>Risk Distribution by Department</CardTitle>
                         <CardDescription>Breakdown of current risk levels for each department.</CardDescription>
                     </div>
-                     <ChartContainer config={riskChartConfig} className="h-auto w-auto p-0 [&>div]:h-auto [&>div]:w-auto">
+                     <ChartContainer config={riskChartConfig} className="ml-auto w-auto">
                         <ChartLegend content={<ChartLegendContent />} payload={riskChartData.map(r => ({value: r.risk, type: 'square', color: r.fill}))} />
                      </ChartContainer>
                 </CardHeader>
@@ -217,8 +213,8 @@ export default function DashboardPage() {
                                         <h3 className="font-semibold tracking-tight">{dept.department}</h3>
                                     </CardHeader>
                                     <CardContent className="flex flex-col items-center justify-center">
-                                        <ChartContainer config={riskChartConfig} className="mx-auto aspect-square h-[160px] w-full">
-                                            <ResponsiveContainer width="100%" height="100%">
+                                         {dept.total > 0 ? (
+                                             <ChartContainer config={riskChartConfig} className="mx-auto aspect-square h-[160px] w-full">
                                                 <PieChart>
                                                     <Tooltip content={<ChartTooltipContent nameKey="name" hideLabel />} />
                                                     <Pie data={dept.breakdown} dataKey="value" nameKey="name" outerRadius={80} strokeWidth={5}>
@@ -227,8 +223,10 @@ export default function DashboardPage() {
                                                         ))}
                                                     </Pie>
                                                 </PieChart>
-                                            </ResponsiveContainer>
-                                        </ChartContainer>
+                                            </ChartContainer>
+                                        ) : (
+                                            <div className="mx-auto aspect-square h-[160px] w-full flex items-center justify-center"></div>
+                                        )}
                                         <div className="text-center">
                                             <p className="text-2xl font-bold">{dept.total}</p>
                                             <p className="text-xs text-muted-foreground">Total Hazards</p>
