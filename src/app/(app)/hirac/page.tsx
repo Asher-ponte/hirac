@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from 'react';
@@ -11,7 +10,6 @@ import { format, formatDistanceToNow } from "date-fns"
 import { v4 as uuidv4 } from 'uuid';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import type { HiracEntry, ControlStatus, ControlType, Department, TaskType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -62,7 +60,7 @@ const severityOptions = [
 
 
 const statusOptions = ['Implemented', 'For Implementation'] as const;
-const hazardClassOptions = ['Physical', 'Chemical', 'Biological', 'Mechanical', 'Electrical'];
+const hazardClassOptions = ['Physical', 'Chemical', 'Biological', 'Mechanical', 'Electrical'] as const;
 const taskTypeOptions = ['Routine', 'Non-Routine'] as const;
 
 const controlMeasureSchema = z.object({
@@ -80,7 +78,7 @@ const hiracFormSchema = z.object({
     taskType: z.enum(taskTypeOptions, { required_error: 'Task type is required' }),
     hazard: z.string().min(1, "Hazard is required."),
     hazardPhotoUrl: z.string().nullable().optional(),
-    hazardClass: z.string().min(1, "Hazard class is required."),
+    hazardClass: z.enum(hazardClassOptions, { required_error: 'Hazard class is required' }),
     hazardousEvent: z.string().min(1, "Hazardous event is required."),
     impact: z.string().min(1, "Impact is required."),
     initialLikelihood: z.coerce.number().min(1).max(5),
@@ -317,7 +315,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
         taskType: entry?.taskType ?? 'Routine',
         hazard: entry?.hazard ?? '',
         hazardPhotoUrl: entry?.hazardPhotoUrl ?? null,
-        hazardClass: entry?.hazardClass ?? '',
+        hazardClass: entry?.hazardClass ?? 'Physical',
         hazardousEvent: entry?.hazardousEvent ?? '',
         impact: entry?.impact ?? '',
         initialLikelihood: entry?.initialLikelihood ?? 1,
@@ -922,7 +920,14 @@ const ControlMeasuresDetails = ({ controls, type }: { controls: HiracEntry['cont
 
     if (filteredControls.length === 0) {
         return (
-            <TableCell colSpan={4} className="text-center text-muted-foreground border-r p-1 text-xs italic">No {type.toLowerCase()} controls defined.</TableCell>
+            <td colSpan={4} className="align-top p-0 text-xs h-full">
+                 <div className="flex items-stretch h-full">
+                    <div className="flex-1 p-1 w-[40%] border-r border-border/50 text-center text-muted-foreground italic flex items-center justify-center">No {type.toLowerCase()} controls.</div>
+                    <div className="w-[20%] p-1 border-r border-border/50"></div>
+                    <div className="w-[20%] p-1 border-r border-border/50"></div>
+                    <div className="w-[20%] p-1"></div>
+                </div>
+            </td>
         );
     }
 
@@ -932,22 +937,22 @@ const ControlMeasuresDetails = ({ controls, type }: { controls: HiracEntry['cont
     };
 
     return (
-        <TableCell colSpan={4} className="align-top border-r p-0 text-xs">
-            <div className="flex flex-col">
+        <td colSpan={4} className="align-top p-0 text-xs">
+            <div className="flex flex-col h-full">
                 {filteredControls.map((c, i) => (
-                    <div key={i} className={cn("flex items-stretch", i < filteredControls.length - 1 && "border-b border-white/20")}>
-                        <div className="flex-1 p-1 w-[40%] whitespace-pre-wrap">{c.description}</div>
-                        <div className="w-[20%] p-1 border-l border-white/20 text-center flex items-center justify-center">{c.pic}</div>
-                        <div className={cn("w-[20%] p-1 border-l border-white/20 text-center flex items-center justify-center", c.status && statusColorMap[c.status])}>
+                    <div key={i} className={cn("flex items-stretch flex-grow", i < filteredControls.length - 1 && "border-b border-border/50")}>
+                        <div className="flex-1 p-1 w-[40%] whitespace-pre-wrap border-r border-border/50">{c.description}</div>
+                        <div className="w-[20%] p-1 border-r border-border/50 text-center flex items-center justify-center">{c.pic}</div>
+                        <div className={cn("w-[20%] p-1 border-r border-border/50 text-center flex items-center justify-center", c.status && statusColorMap[c.status])}>
                             {c.status}
                         </div>
-                        <div className="w-[20%] p-1 border-l border-white/20 text-center flex items-center justify-center">
+                        <div className="w-[20%] p-1 text-center flex items-center justify-center">
                             {c.completionDate ? format(new Date(c.completionDate), "P") : ''}
                         </div>
                     </div>
                 ))}
             </div>
-        </TableCell>
+        </td>
     );
 };
 
@@ -1228,44 +1233,44 @@ export default function HiracPage() {
                 <div className="border rounded-lg overflow-y-auto max-h-[calc(130vh-10rem)]">
                     <table className="w-full caption-bottom text-xs relative border-collapse">
                         <thead className="sticky top-0 z-10 bg-primary/90 backdrop-blur-sm">
-                            <TableRow className="hover:bg-primary/95 border-primary">
-                                <TableHead className="w-[120px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Department</TableHead>
-                                <TableHead className="w-[120px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Task/Job</TableHead>
-                                <TableHead className="w-[100px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Task Type</TableHead>
-                                <TableHead className="w-[120px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Hazard Class</TableHead>
-                                <TableHead className="w-[900px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Hazard</TableHead>
-                                <TableHead className="w-[900px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Hazardous Event</TableHead>
-                                <TableHead className="w-[900px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Impact</TableHead>
-                                <TableHead colSpan={2} className="text-center border-b border-r text-primary-foreground border-primary/50">Initial Risk</TableHead>
-                                <TableHead colSpan={4} className="text-center border-b border-r text-primary-foreground border-primary/50">Engineering Controls</TableHead>
-                                <TableHead colSpan={4} className="text-center border-b border-r text-primary-foreground border-primary/50">Administrative Controls</TableHead>
-                                <TableHead colSpan={4} className="text-center border-b border-r text-primary-foreground border-primary/50">PPE Controls</TableHead>
-                                <TableHead colSpan={2} className="text-center border-b border-r text-primary-foreground border-primary/50">Risk Re-assessment</TableHead>
-                                <TableHead className="w-[100px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Created</TableHead>
-                                <TableHead className="w-[100px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Last Reviewed</TableHead>
-                                <TableHead className="w-[100px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Next Review</TableHead>
-                                <TableHead className="align-bottom text-primary-foreground" rowSpan={2}><span className="sr-only">Actions</span></TableHead>
-                            </TableRow>
-                            <TableRow className="hover:bg-primary/95 border-primary">
-                                <TableHead className="text-center border-r text-primary-foreground border-primary/50">P,S</TableHead>
-                                <TableHead className="text-center border-r text-primary-foreground border-primary/50">RL</TableHead>
-                                <TableHead className="w-[900px] text-center border-r text-primary-foreground border-primary/50">Description</TableHead>
-                                <TableHead className="w-[150px] text-center border-r text-primary-foreground border-primary/50">PIC</TableHead>
-                                <TableHead className="w-[100px] text-center border-r text-primary-foreground border-primary/50">Status</TableHead>
-                                <TableHead className="w-[100px] text-center border-r text-primary-foreground border-primary/50">Completion</TableHead>
-                                <TableHead className="w-[900px] text-center border-r text-primary-foreground border-primary/50">Description</TableHead>
-                                <TableHead className="w-[150px] text-center border-r text-primary-foreground border-primary/50">PIC</TableHead>
-                                <TableHead className="w-[100px] text-center border-r text-primary-foreground border-primary/50">Status</TableHead>
-                                <TableHead className="w-[100px] text-center border-r text-primary-foreground border-primary/50">Completion</TableHead>
-                                <TableHead className="w-[900px] text-center border-r text-primary-foreground border-primary/50">Description</TableHead>
-                                <TableHead className="w-[150px] text-center border-r text-primary-foreground border-primary/50">PIC</TableHead>
-                                <TableHead className="w-[100px] text-center border-r text-primary-foreground border-primary/50">Status</TableHead>
-                                <TableHead className="w-[100px] text-center border-r text-primary-foreground border-primary/50">Completion</TableHead>
-                                <TableHead className="text-center border-r text-primary-foreground border-primary/50">P,S</TableHead>
-                                <TableHead className="text-center border-r text-primary-foreground border-primary/50">RL</TableHead>
-                            </TableRow>
+                            <tr className="hover:bg-primary/95 border-primary">
+                                <th className="w-[120px] align-bottom border-r border-border/50 text-primary-foreground" rowSpan={2}>Department</th>
+                                <th className="w-[120px] align-bottom border-r border-border/50 text-primary-foreground" rowSpan={2}>Task/Job</th>
+                                <th className="w-[100px] align-bottom border-r border-border/50 text-primary-foreground" rowSpan={2}>Task Type</th>
+                                <th className="w-[120px] align-bottom border-r border-border/50 text-primary-foreground" rowSpan={2}>Hazard Class</th>
+                                <th className="w-[250px] align-bottom border-r border-border/50 text-primary-foreground" rowSpan={2}>Hazard</th>
+                                <th className="w-[250px] align-bottom border-r border-border/50 text-primary-foreground" rowSpan={2}>Hazardous Event</th>
+                                <th className="w-[250px] align-bottom border-r border-border/50 text-primary-foreground" rowSpan={2}>Impact</th>
+                                <th colSpan={2} className="text-center border-b border-r border-border/50 text-primary-foreground">Initial Risk</th>
+                                <th colSpan={4} className="text-center border-b border-r border-border/50 text-primary-foreground">Engineering Controls</th>
+                                <th colSpan={4} className="text-center border-b border-r border-border/50 text-primary-foreground">Administrative Controls</th>
+                                <th colSpan={4} className="text-center border-b border-r border-border/50 text-primary-foreground">PPE Controls</th>
+                                <th colSpan={2} className="text-center border-b border-r border-border/50 text-primary-foreground">Risk Re-assessment</th>
+                                <th className="w-[100px] align-bottom border-r border-border/50 text-primary-foreground" rowSpan={2}>Created</th>
+                                <th className="w-[100px] align-bottom border-r border-border/50 text-primary-foreground" rowSpan={2}>Last Reviewed</th>
+                                <th className="w-[100px] align-bottom border-r border-border/50 text-primary-foreground" rowSpan={2}>Next Review</th>
+                                <th className="align-bottom text-primary-foreground" rowSpan={2}><span className="sr-only">Actions</span></th>
+                            </tr>
+                            <tr className="hover:bg-primary/95 border-primary">
+                                <th className="text-center border-r border-border/50 text-primary-foreground">P,S</th>
+                                <th className="text-center border-r border-border/50 text-primary-foreground">RL</th>
+                                <th className="w-[250px] text-center border-r border-border/50 text-primary-foreground">Description</th>
+                                <th className="w-[100px] text-center border-r border-border/50 text-primary-foreground">PIC</th>
+                                <th className="w-[100px] text-center border-r border-border/50 text-primary-foreground">Status</th>
+                                <th className="w-[120px] text-center border-r border-border/50 text-primary-foreground">Completion</th>
+                                <th className="w-[250px] text-center border-r border-border/50 text-primary-foreground">Description</th>
+                                <th className="w-[100px] text-center border-r border-border/50 text-primary-foreground">PIC</th>
+                                <th className="w-[100px] text-center border-r border-border/50 text-primary-foreground">Status</th>
+                                <th className="w-[120px] text-center border-r border-border/50 text-primary-foreground">Completion</th>
+                                <th className="w-[250px] text-center border-r border-border/50 text-primary-foreground">Description</th>
+                                <th className="w-[100px] text-center border-r border-border/50 text-primary-foreground">PIC</th>
+                                <th className="w-[100px] text-center border-r border-border/50 text-primary-foreground">Status</th>
+                                <th className="w-[120px] text-center border-r border-border/50 text-primary-foreground">Completion</th>
+                                <th className="text-center border-r border-border/50 text-primary-foreground">P,S</th>
+                                <th className="text-center border-r border-border/50 text-primary-foreground">RL</th>
+                            </tr>
                         </thead>
-                        <TableBody>
+                        <tbody>
                             {filteredHiracData.map((item, index) => {
                             const initialRiskLevel = item.initialLikelihood * item.initialSeverity;
                             const initialRiskDetails = getRiskLevelDetails(initialRiskLevel);
@@ -1273,12 +1278,12 @@ export default function HiracPage() {
                             const residualRiskLevel = isReassessed ? (item.residualLikelihood!) * (item.residualSeverity!) : null;
                             const residualRiskDetails = (isReassessed && residualRiskLevel !== null) ? getRiskLevelDetails(residualRiskLevel) : null;
                             return (
-                                <TableRow key={item.id} className={cn(index % 2 === 0 ? "bg-muted/30" : "")}>
-                                    <TableCell className="font-medium align-top border-r p-1">{item.department?.name}</TableCell>
-                                    <TableCell className="font-medium align-top border-r p-1">{item.task}</TableCell>
-                                    <TableCell className="align-top border-r p-1">{item.taskType}</TableCell>
-                                    <TableCell className="align-top border-r p-1">{item.hazardClass}</TableCell>
-                                    <TableCell className="align-top border-r p-1 w-[900px]">
+                                <tr key={item.id} className={cn("border-b", index % 2 === 0 ? "bg-muted/30" : "")}>
+                                    <td className="font-medium align-top border-r p-1">{item.department?.name}</td>
+                                    <td className="font-medium align-top border-r p-1">{item.task}</td>
+                                    <td className="align-top border-r p-1">{item.taskType}</td>
+                                    <td className="align-top border-r p-1">{item.hazardClass}</td>
+                                    <td className="align-top border-r p-1">
                                         {item.hazardPhotoUrl && (
                                             <Dialog>
                                                 <DialogTrigger asChild>
@@ -1298,26 +1303,26 @@ export default function HiracPage() {
                                             </Dialog>
                                         )}
                                         {item.hazard}
-                                    </TableCell>
-                                    <TableCell className="align-top border-r whitespace-pre-wrap p-1 w-[900px]">{item.hazardousEvent}</TableCell>
-                                    <TableCell className="align-top border-r whitespace-pre-wrap p-1 w-[900px]">{item.impact}</TableCell>
-                                    <TableCell className="text-center align-top font-mono text-xs border-r p-1">P:{item.initialLikelihood}, S:{item.initialSeverity}</TableCell>
-                                    <TableCell className={cn("text-center align-top p-0 border-r font-bold", initialRiskDetails.color)}>
+                                    </td>
+                                    <td className="align-top border-r whitespace-pre-wrap p-1">{item.hazardousEvent}</td>
+                                    <td className="align-top border-r whitespace-pre-wrap p-1">{item.impact}</td>
+                                    <td className="text-center align-top font-mono text-xs border-r p-1">P:{item.initialLikelihood}, S:{item.initialSeverity}</td>
+                                    <td className={cn("text-center align-middle p-0 border-r font-bold", initialRiskDetails.color)}>
                                         <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-1">{initialRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
-                                    </TableCell>
+                                    </td>
                                     <ControlMeasuresDetails controls={item.controlMeasures} type="Engineering" />
                                     <ControlMeasuresDetails controls={item.controlMeasures} type="Administrative" />
                                     <ControlMeasuresDetails controls={item.controlMeasures} type="PPE" />
-                                    <TableCell className="text-center align-top font-mono text-xs border-r p-1">{isReassessed ? `P:${item.residualLikelihood}, S:${item.residualSeverity}` : 'N/A'}</TableCell>
-                                    <TableCell className={cn("text-center align-top p-0 border-r font-bold", isReassessed && residualRiskDetails ? residualRiskDetails.color : 'bg-muted/30')}>
+                                    <td className="text-center align-top font-mono text-xs border-r p-1">{isReassessed ? `P:${item.residualLikelihood}, S:${item.residualSeverity}` : 'N/A'}</td>
+                                    <td className={cn("text-center align-middle p-0 border-r font-bold", isReassessed && residualRiskDetails ? residualRiskDetails.color : 'bg-muted/30')}>
                                         {isReassessed && residualRiskDetails && residualRiskLevel !== null ? (
                                             <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-1">{residualRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {residualRiskLevel} ({residualRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
                                         ) : ('N/A')}
-                                    </TableCell>
-                                    <TableCell className="align-top border-r p-1">{item.createdAt ? format(new Date(item.createdAt), "P") : ''}</TableCell>
-                                    <TableCell className="align-top border-r p-1">{item.reviewedAt ? format(new Date(item.reviewedAt), "P") : <span className="text-muted-foreground">Not yet</span>}</TableCell>
-                                    <TableCell className="align-top border-r p-1">{item.nextReviewDate ? format(new Date(item.nextReviewDate), "P") : <span className="text-muted-foreground">Not set</span>}</TableCell>
-                                    <TableCell className="align-top text-right p-1">
+                                    </td>
+                                    <td className="align-top border-r p-1">{item.createdAt ? format(new Date(item.createdAt), "P") : ''}</td>
+                                    <td className="align-top border-r p-1">{item.reviewedAt ? format(new Date(item.reviewedAt), "P") : <span className="text-muted-foreground">Not yet</span>}</td>
+                                    <td className="align-top border-r p-1">{item.nextReviewDate ? format(new Date(item.nextReviewDate), "P") : <span className="text-muted-foreground">Not set</span>}</td>
+                                    <td className="align-top text-right p-1">
                                         <AlertDialog>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild><Button variant="ghost" className="h-8 w-8 p-0"><span className="sr-only">Open menu</span><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
@@ -1339,11 +1344,11 @@ export default function HiracPage() {
                                                 </AlertDialogFooter>
                                             </AlertDialogContent>
                                         </AlertDialog>
-                                    </TableCell>
-                                </TableRow>
+                                    </td>
+                                </tr>
                             );
                             })}
-                        </TableBody>
+                        </tbody>
                     </table>
                 </div>
             </>
@@ -1389,3 +1394,5 @@ export default function HiracPage() {
     </div>
   );
 }
+
+    
