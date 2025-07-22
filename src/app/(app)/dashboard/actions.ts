@@ -63,8 +63,8 @@ export async function getDashboardData() {
   }, {} as Record<string, number>);
 
   const statusChartData = [
-    { status: 'For Implementation', count: statusMap['For Implementation'] || 0, fill: 'var(--color-open)' },
-    { status: 'Implemented', count: statusMap['Implemented'] || 0, fill: 'var(--color-resolved)' },
+    { status: 'For Implementation', count: statusMap['For Implementation'] || 0, fill: 'hsl(43 74% 66%)' },
+    { status: 'Implemented', count: statusMap['Implemented'] || 0, fill: 'hsl(120 76% 61%)' },
   ];
   
   const riskMap = { 'Low': lowRiskCount, 'Medium': mediumRiskCount, 'High': highRiskCount };
