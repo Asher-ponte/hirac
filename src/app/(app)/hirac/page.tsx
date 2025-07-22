@@ -112,9 +112,9 @@ const reassessmentSchema = z.object({
 type ReassessmentValues = z.infer<typeof reassessmentSchema>;
 
 const getRiskLevelDetails = (level: number) => {
-  if (level <= 6) return { label: 'Low Risk', variant: 'secondary', color: 'bg-green-500 text-green-50' } as const;
-  if (level <= 12) return { label: 'Medium Risk', variant: 'default', color: 'bg-yellow-500 text-yellow-50' } as const;
-  return { label: 'High Risk', variant: 'destructive', color: 'bg-red-500 text-red-50' } as const;
+  if (level <= 6) return { label: 'Low Risk', variant: 'secondary', color: 'bg-green-600/80 text-white' } as const;
+  if (level <= 12) return { label: 'Medium Risk', variant: 'default', color: 'bg-yellow-500/80 text-black' } as const;
+  return { label: 'High Risk', variant: 'destructive', color: 'bg-red-600/80 text-white' } as const;
 };
 
 const RiskDisplay = ({ likelihood, severity, title = "Calculated Risk Level" }: { likelihood?: number, severity?: number, title?: string }) => {
@@ -922,6 +922,12 @@ const ControlMeasuresDetails = ({ controls, type }: { controls: HiracEntry['cont
     if (filteredControls.length === 0) {
         return <TableCell colSpan={4} className="text-center text-muted-foreground border-r p-1 text-xs">No {type.toLowerCase()} controls.</TableCell>;
     }
+    
+    const statusColorMap = {
+        'Implemented': 'bg-green-600/80 text-white',
+        'For Implementation': 'bg-yellow-500/80 text-black',
+    };
+
 
     return (
         <>
@@ -931,8 +937,19 @@ const ControlMeasuresDetails = ({ controls, type }: { controls: HiracEntry['cont
             <TableCell className="align-top border-r p-1 text-xs">
                 {filteredControls.map((c, i) => <div key={i} className={cn("p-1", i < filteredControls.length -1 && "border-b")}>{c.pic}</div>)}
             </TableCell>
-            <TableCell className="align-top border-r p-1 text-xs">
-                {filteredControls.map((c, i) => <div key={i} className={cn("p-1 text-center", i < filteredControls.length -1 && "border-b")}>{c.status && <Badge variant={c.status === 'Implemented' ? 'secondary' : 'default'} className="text-xs">{c.status}</Badge>}</div>)}
+            <TableCell className="align-top border-r p-0 text-xs text-center">
+                 {filteredControls.map((c, i) => (
+                    <div 
+                        key={i} 
+                        className={cn(
+                            "p-1 h-full", 
+                            i < filteredControls.length - 1 && "border-b",
+                            c.status && statusColorMap[c.status]
+                        )}
+                    >
+                        {c.status}
+                    </div>
+                ))}
             </TableCell>
             <TableCell className="align-top border-r p-1 text-xs">
                 {filteredControls.map((c, i) => <div key={i} className={cn("p-1", i < filteredControls.length -1 && "border-b")}>{c.completionDate ? format(new Date(c.completionDate), "P") : ''}</div>)}
@@ -1296,17 +1313,17 @@ export default function HiracPage() {
                               <TableCell className="align-top border-r whitespace-pre-wrap p-1">{item.hazardousEvent}</TableCell>
                               <TableCell className="align-top border-r whitespace-pre-wrap p-1">{item.impact}</TableCell>
                               <TableCell className="text-center align-top font-mono text-xs border-r p-1">P:{item.initialLikelihood}, S:{item.initialSeverity}</TableCell>
-                              <TableCell className="text-center align-top p-1 border-r">
-                                  <TooltipProvider><Tooltip><TooltipTrigger className="w-full"><Badge variant={initialRiskDetails.variant} className={cn("cursor-pointer w-full justify-center p-1 text-sm", initialRiskDetails.color)}>{initialRiskLevel}</Badge></TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
+                              <TableCell className={cn("text-center align-top p-1 border-r font-bold", initialRiskDetails.color)}>
+                                  <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center">{initialRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
                               </TableCell>
                               <ControlMeasuresDetails controls={item.controlMeasures} type="Engineering" />
                               <ControlMeasuresDetails controls={item.controlMeasures} type="Administrative" />
                               <ControlMeasuresDetails controls={item.controlMeasures} type="PPE" />
                               <TableCell className="text-center align-top font-mono text-xs border-r p-1">{isReassessed ? `P:${item.residualLikelihood}, S:${item.residualSeverity}` : 'N/A'}</TableCell>
-                              <TableCell className="text-center align-top p-1 border-r">
+                              <TableCell className={cn("text-center align-top p-1 border-r font-bold", isReassessed && residualRiskDetails ? residualRiskDetails.color : 'bg-muted/30')}>
                                   {isReassessed && residualRiskDetails && residualRiskLevel !== null ? (
-                                      <TooltipProvider><Tooltip><TooltipTrigger className="w-full"><Badge variant={residualRiskDetails.variant} className={cn("cursor-pointer w-full justify-center p-1 text-sm", residualRiskDetails.color)}>{residualRiskLevel}</Badge></TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {residualRiskLevel} ({residualRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
-                                  ) : (<Badge variant="outline" className="w-full justify-center p-1 text-sm">N/A</Badge>)}
+                                      <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center">{residualRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {residualRiskLevel} ({residualRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
+                                  ) : ('N/A')}
                               </TableCell>
                               <TableCell className="align-top border-r p-1">{item.createdAt ? format(new Date(item.createdAt), "P") : ''}</TableCell>
                               <TableCell className="align-top border-r p-1">{item.reviewedAt ? format(new Date(item.reviewedAt), "P") : <span className="text-muted-foreground">Not yet</span>}</TableCell>
