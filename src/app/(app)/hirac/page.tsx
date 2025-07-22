@@ -61,9 +61,9 @@ const severityOptions = [
 ];
 
 
-const statusOptions: ControlStatus[] = ['Implemented', 'For Implementation'];
+const statusOptions = ['Implemented', 'For Implementation'] as const;
 const hazardClassOptions = ['Physical', 'Chemical', 'Biological', 'Mechanical', 'Electrical'];
-const taskTypeOptions: TaskType[] = ['Routine', 'Non-Routine'];
+const taskTypeOptions = ['Routine', 'Non-Routine'] as const;
 
 const controlMeasureSchema = z.object({
     id: z.number().optional(),
@@ -320,8 +320,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
         hazardClass: entry?.hazardClass ?? '',
         hazardousEvent: entry?.hazardousEvent ?? '',
         impact: entry?.impact ?? '',
-        initialLikelihood: entry?.initialLikelihood ?? undefined,
-        initialSeverity: entry?.initialSeverity ?? undefined,
+        initialLikelihood: entry?.initialLikelihood ?? 1,
+        initialSeverity: entry?.initialSeverity ?? 1,
         nextReviewDate: entry?.nextReviewDate ?? null,
         controlMeasures: entry?.controlMeasures ?? [],
         residualLikelihood: entry?.residualLikelihood ?? undefined,
@@ -919,30 +919,34 @@ function ReassessmentForm({ entry, setOpen, onFormSubmit }: { entry: HiracEntry,
 
 const ControlMeasuresDetails = ({ controls, type }: { controls: HiracEntry['controlMeasures'], type: ControlType }) => {
     const filteredControls = controls.filter(c => c.type === type);
+
     if (filteredControls.length === 0) {
-        return <TableCell colSpan={4} className="text-center text-muted-foreground border-r p-1 text-xs">No {type.toLowerCase()} controls.</TableCell>;
+        return (
+            <React.Fragment>
+                <TableCell colSpan={4} className="text-center text-muted-foreground border-r p-1 text-xs italic">No {type.toLowerCase()} controls defined.</TableCell>
+            </React.Fragment>
+        )
     }
-    
-    const statusColorMap = {
+
+    const statusColorMap: { [key in ControlStatus]: string } = {
         'Implemented': 'bg-green-600/80 text-white',
         'For Implementation': 'bg-yellow-500/80 text-black',
     };
 
-
     return (
-        <>
+        <React.Fragment>
             <TableCell className="max-w-[150px] align-top whitespace-pre-wrap border-r p-1 text-xs">
-                {filteredControls.map((c, i) => <div key={i} className={cn("p-1", i < filteredControls.length -1 && "border-b")}>{c.description}</div>)}
+                {filteredControls.map((c, i) => <div key={i} className={cn("p-1", i < filteredControls.length - 1 && "border-b")}>{c.description}</div>)}
             </TableCell>
-            <TableCell className="align-top border-r p-1 text-xs">
-                {filteredControls.map((c, i) => <div key={i} className={cn("p-1", i < filteredControls.length -1 && "border-b")}>{c.pic}</div>)}
+            <TableCell className="align-top border-r p-1 text-xs text-center">
+                {filteredControls.map((c, i) => <div key={i} className={cn("p-1", i < filteredControls.length - 1 && "border-b")}>{c.pic}</div>)}
             </TableCell>
             <TableCell className="align-top border-r p-0 text-xs text-center">
-                 {filteredControls.map((c, i) => (
-                    <div 
-                        key={i} 
+                {filteredControls.map((c, i) => (
+                    <div
+                        key={i}
                         className={cn(
-                            "p-1 h-full flex items-center justify-center", 
+                            "p-1 h-full flex items-center justify-center",
                             i < filteredControls.length - 1 && "border-b",
                             c.status && statusColorMap[c.status]
                         )}
@@ -951,10 +955,10 @@ const ControlMeasuresDetails = ({ controls, type }: { controls: HiracEntry['cont
                     </div>
                 ))}
             </TableCell>
-            <TableCell className="align-top border-r p-1 text-xs">
-                {filteredControls.map((c, i) => <div key={i} className={cn("p-1", i < filteredControls.length -1 && "border-b")}>{c.completionDate ? format(new Date(c.completionDate), "P") : ''}</div>)}
+            <TableCell className="align-top border-r p-1 text-xs text-center">
+                {filteredControls.map((c, i) => <div key={i} className={cn("p-1", i < filteredControls.length - 1 && "border-b")}>{c.completionDate ? format(new Date(c.completionDate), "P") : ''}</div>)}
             </TableCell>
-        </>
+        </React.Fragment>
     );
 };
 
@@ -1232,7 +1236,7 @@ export default function HiracPage() {
               </div>
 
               {/* Desktop View */}
-              <div className="hidden md:block border rounded-lg overflow-y-auto max-h-[calc(100vh-16rem)]">
+              <div className="hidden md:block border rounded-lg overflow-y-auto max-h-[calc(130vh-10rem)]">
                 <table className="w-full caption-bottom text-xs relative border-collapse">
                   <thead className="sticky top-0 z-10 bg-primary/90 backdrop-blur-sm">
                       <TableRow className="hover:bg-primary/95 border-primary">
@@ -1240,9 +1244,9 @@ export default function HiracPage() {
                           <TableHead className="w-[120px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Task/Job</TableHead>
                           <TableHead className="w-[100px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Task Type</TableHead>
                           <TableHead className="w-[120px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Hazard Class</TableHead>
-                          <TableHead className="w-[300px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Hazard</TableHead>
-                          <TableHead className="w-[300px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Hazardous Event</TableHead>
-                          <TableHead className="w-[300px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Impact</TableHead>
+                          <TableHead className="w-[900px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Hazard</TableHead>
+                          <TableHead className="w-[900px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Hazardous Event</TableHead>
+                          <TableHead className="w-[900px] align-bottom border-r text-primary-foreground border-primary/50" rowSpan={2}>Impact</TableHead>
                           <TableHead colSpan={2} className="text-center border-b border-r text-primary-foreground border-primary/50">Initial Risk</TableHead>
                           <TableHead colSpan={4} className="text-center border-b border-r text-primary-foreground border-primary/50">Engineering Controls</TableHead>
                           <TableHead colSpan={4} className="text-center border-b border-r text-primary-foreground border-primary/50">Administrative Controls</TableHead>
@@ -1256,16 +1260,16 @@ export default function HiracPage() {
                       <TableRow className="hover:bg-primary/95 border-primary">
                           <TableHead className="text-center border-r text-primary-foreground border-primary/50">P,S</TableHead>
                           <TableHead className="text-center border-r text-primary-foreground border-primary/50">RL</TableHead>
-                          <TableHead className="w-[250px] text-center border-r text-primary-foreground border-primary/50">Description</TableHead>
-                          <TableHead className="w-[80px] text-center border-r text-primary-foreground border-primary/50">PIC</TableHead>
+                          <TableHead className="w-[900px] text-center border-r text-primary-foreground border-primary/50">Description</TableHead>
+                          <TableHead className="w-[150px] text-center border-r text-primary-foreground border-primary/50">PIC</TableHead>
                           <TableHead className="w-[100px] text-center border-r text-primary-foreground border-primary/50">Status</TableHead>
                           <TableHead className="w-[100px] text-center border-r text-primary-foreground border-primary/50">Completion</TableHead>
-                          <TableHead className="w-[250px] text-center border-r text-primary-foreground border-primary/50">Description</TableHead>
-                          <TableHead className="w-[80px] text-center border-r text-primary-foreground border-primary/50">PIC</TableHead>
+                          <TableHead className="w-[900px] text-center border-r text-primary-foreground border-primary/50">Description</TableHead>
+                          <TableHead className="w-[150px] text-center border-r text-primary-foreground border-primary/50">PIC</TableHead>
                           <TableHead className="w-[100px] text-center border-r text-primary-foreground border-primary/50">Status</TableHead>
                           <TableHead className="w-[100px] text-center border-r text-primary-foreground border-primary/50">Completion</TableHead>
-                          <TableHead className="w-[250px] text-center border-r text-primary-foreground border-primary/50">Description</TableHead>
-                          <TableHead className="w-[80px] text-center border-r text-primary-foreground border-primary/50">PIC</TableHead>
+                          <TableHead className="w-[900px] text-center border-r text-primary-foreground border-primary/50">Description</TableHead>
+                          <TableHead className="w-[150px] text-center border-r text-primary-foreground border-primary/50">PIC</TableHead>
                           <TableHead className="w-[100px] text-center border-r text-primary-foreground border-primary/50">Status</TableHead>
                           <TableHead className="w-[100px] text-center border-r text-primary-foreground border-primary/50">Completion</TableHead>
                           <TableHead className="text-center border-r text-primary-foreground border-primary/50">P,S</TableHead>
