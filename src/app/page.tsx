@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { Sigma, ShieldAlert, ShieldCheck, Flame, Shield, ShieldQuestion, Building } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Pie, PieChart, Cell, Legend } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Pie, PieChart, Cell, Legend, LabelList } from 'recharts';
 import { ChartContainer, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
 import { getDashboardData } from './(app)/dashboard/actions';
 import AppLayout from './(app)/layout';
@@ -149,6 +149,7 @@ export default function DashboardPage() {
                                     content={<ChartTooltipContent />}
                                 />
                                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                                    <LabelList dataKey="count" position="top" fill="hsl(var(--foreground))" fontSize={12} />
                                     {statusChartData.map((entry) => (
                                         <Cell key={entry.status} fill={entry.fill} />
                                     ))}
@@ -178,6 +179,7 @@ export default function DashboardPage() {
                                     <YAxis />
                                     <ChartTooltipContent />
                                     <Bar dataKey="value" radius={4}>
+                                        <LabelList dataKey="value" position="top" fill="hsl(var(--foreground))" fontSize={12} />
                                         {riskChartData.map((entry) => (
                                             <Cell key={entry.risk} fill={entry.fill} />
                                         ))}
@@ -189,7 +191,7 @@ export default function DashboardPage() {
                 </Card>
             </div>
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader className="flex flex-col sm:flex-row items-start justify-between gap-4">
                     <div>
                         <CardTitle>Risk Distribution by Department</CardTitle>
                         <CardDescription>Breakdown of current risk levels for each department.</CardDescription>
@@ -236,6 +238,7 @@ export default function DashboardPage() {
                                                     <YAxis />
                                                     <Tooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<ChartTooltipContent indicator="line" />} />
                                                     <Bar dataKey="value" radius={4}>
+                                                        <LabelList dataKey="value" position="top" fill="hsl(var(--foreground))" fontSize={12} />
                                                         {dept.breakdown.map((entry) => (
                                                             <Cell key={entry.name} fill={entry.fill} />
                                                         ))}
