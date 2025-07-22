@@ -1176,7 +1176,7 @@ const HiracEntryRow = ({
                         {controls: engControls, type: 'Engineering'}, 
                         {controls: admControls, type: 'Administrative'}, 
                         {controls: ppeControls, type: 'PPE'}
-                    ].map(({controls, type}, i) => {
+                    ].map(({controls, type}) => {
                         const control = controls[rowIndex];
                         const renderCell = (content: React.ReactNode, widthClass: string, otherClasses?: string) => (
                            <td className={cn("p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3", widthClass, otherClasses)}>
@@ -1184,36 +1184,24 @@ const HiracEntryRow = ({
                            </td>
                         );
                         if(control) {
-                             if (i === 0) { // Engineering
-                                return (
-                                    <React.Fragment key={`${type}-${control.id || rowIndex}`}>
-                                        {renderCell(<Highlight text={control.description} highlight={highlight} />, "w-[300px]")}
-                                        {renderCell(<Highlight text={control.pic} highlight={highlight} />, "text-center w-[100px]")}
-                                        {renderCell(<div className={cn("text-center p-1 h-full", control.status && statusColorMap[control.status])}><Highlight text={control.status} highlight={highlight} /></div>, "p-0 w-[100px]")}
-                                        {renderCell(control.completionDate ? format(new Date(control.completionDate), "P") : '', "text-center w-[120px]")}
-                                    </React.Fragment>
-                                );
-                            } else if (i === 1) { // Administrative
-                                return (
-                                    <React.Fragment key={`${type}-${control.id || rowIndex}`}>
-                                        {renderCell(<Highlight text={control.description} highlight={highlight} />, "w-[300px]")}
-                                        {renderCell(<Highlight text={control.pic} highlight={highlight} />, "text-center w-[100px]")}
-                                        {renderCell(<div className={cn("text-center p-1 h-full", control.status && statusColorMap[control.status])}><Highlight text={control.status} highlight={highlight} /></div>, "p-0 w-[100px]")}
-                                        {renderCell(control.completionDate ? format(new Date(control.completionDate), "P") : '', "text-center w-[120px]")}
-                                    </React.Fragment>
-                                );
-                            } else { // PPE
-                                return (
-                                     <React.Fragment key={`${type}-${control.id || rowIndex}`}>
-                                        {renderCell(<Highlight text={control.description} highlight={highlight} />, "w-[300px]")}
-                                        {renderCell(<Highlight text={control.pic} highlight={highlight} />, "text-center w-[100px]")}
-                                        {renderCell(<div className={cn("text-center p-1 h-full", control.status && statusColorMap[control.status])}><Highlight text={control.status} highlight={highlight} /></div>, "p-0 w-[100px]")}
-                                        {renderCell(control.completionDate ? format(new Date(control.completionDate), "P") : '', "text-center w-[120px]")}
-                                    </React.Fragment>
-                                )
-                            }
+                            return (
+                                <React.Fragment key={`${type}-${control.id || uuidv4()}`}>
+                                    {renderCell(<Highlight text={control.description} highlight={highlight} />, "w-[300px]")}
+                                    {renderCell(<Highlight text={control.pic} highlight={highlight} />, "text-center w-[100px]")}
+                                    {renderCell(<div className={cn("text-center p-1 h-full", control.status && statusColorMap[control.status])}><Highlight text={control.status} highlight={highlight} /></div>, "p-0 w-[100px]")}
+                                    {renderCell(control.completionDate ? format(new Date(control.completionDate), "P") : '', "text-center w-[120px]")}
+                                </React.Fragment>
+                            );
                         }
-                        return <td key={`${type}-${rowIndex}`} colSpan={4} className="p-2 px-3 border-r-2 border-border/50"></td>
+                        // Render empty cells to maintain table structure
+                        return (
+                            <React.Fragment key={`${type}-${rowIndex}`}>
+                                <td className="p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3 w-[300px]"></td>
+                                <td className="p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3 text-center w-[100px]"></td>
+                                <td className="p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3 p-0 w-[100px]"></td>
+                                <td className="p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3 text-center w-[120px]"></td>
+                            </React.Fragment>
+                        )
                     })}
                    
 
@@ -1525,6 +1513,7 @@ export default function HiracPage() {
     </div>
   );
 }
+
 
 
 
