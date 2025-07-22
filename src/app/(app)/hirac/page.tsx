@@ -1197,6 +1197,7 @@ const HiracEntryRow = ({
 
 const RiskLegend = () => (
     <div className="flex items-center space-x-4">
+        <span className="text-sm font-semibold">Risk Level:</span>
         <div className="flex items-center space-x-2">
             <div className="h-3 w-3 rounded-full bg-green-600"></div>
             <span className="text-xs">Low Risk</span>
@@ -1441,5 +1442,3 @@ export default function HiracPage() {
     </div>
   );
 }
-
-    
