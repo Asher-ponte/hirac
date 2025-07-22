@@ -5,6 +5,7 @@ import {
   ClipboardList,
   Users,
   ListChecks,
+  BookText,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ const navItems = [
   { href: "/", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/inspections", icon: ClipboardList, label: "Inspections" },
   { href: "/hirac", icon: ListChecks, label: "HIRAC" },
+  { href: "/hirac-guidelines", icon: BookText, label: "Guidelines" },
   { href: "/admin", icon: Users, label: "Admin Panel" },
 ];
 
