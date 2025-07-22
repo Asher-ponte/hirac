@@ -56,7 +56,7 @@ const severityOptions = [
     { value: 2, label: "🟢 Minor – First Aid Required (Level 2)", description: "Injury is limited to surface-level effects like cuts or strains requiring only first aid. Health impact is temporary—minor discomfort such as headache, dizziness, or muscle pain." },
     { value: 3, label: "🟡 Minor – Lost Time or Minor Property Damage (Level 3)", description: "Injury may result in short recovery time off work. Health effects include short-term conditions like fever or common infections. Damage to property is limited but noticeable." },
     { value: 4, label: "🔴 Major – Permanent Disability or Major Damage (Level 4)", description: "Incident leads to life-altering injury (e.g., permanent hearing loss, limb damage) or chronic illness. Property damage is extensive, requiring major repair or replacement." },
-    { value: 5, label: "🔴 Catastrophic – Fatality or Massive Damage (Level 5)", description: "Hazard results in fatal injury or major incident affecting multiple lives or assets. Damage disrupts operations completely and may have legal or reputational consequences." },
+    { value: 5, label: "🔴 Catastrophic – Fatality or Massive Damage (Level 5)", description: "Incident results in fatal injury or major incident affecting multiple lives or assets. Damage disrupts operations completely and may have legal or reputational consequences." },
 ];
 
 
@@ -1133,11 +1133,11 @@ const HiracEntryRow = ({
                 <tr key={`${item.id}-${rowIndex}`} className={cn("border-b-2 border-border/50", index % 2 === 0 ? "bg-muted/30" : "")}>
                     {rowIndex === 0 && (
                         <>
-                            <td rowSpan={maxRows} className="font-medium align-top border-r-2 border-border/50 p-1"><Highlight text={item.department?.name} highlight={highlight} /></td>
-                            <td rowSpan={maxRows} className="font-medium align-top border-r-2 border-border/50 p-1"><Highlight text={item.task} highlight={highlight} /></td>
-                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-1"><Highlight text={item.taskType} highlight={highlight} /></td>
-                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-1"><Highlight text={item.hazardClass} highlight={highlight} /></td>
-                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-1 w-[300px]">
+                            <td rowSpan={maxRows} className="font-medium align-top border-r-2 border-border/50 p-2"><Highlight text={item.department?.name} highlight={highlight} /></td>
+                            <td rowSpan={maxRows} className="font-medium align-top border-r-2 border-border/50 p-2"><Highlight text={item.task} highlight={highlight} /></td>
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-2"><Highlight text={item.taskType} highlight={highlight} /></td>
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-2"><Highlight text={item.hazardClass} highlight={highlight} /></td>
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-2 w-[300px]">
                                 {item.hazardPhotoUrl && (
                                     <Dialog>
                                         <DialogTrigger asChild>
@@ -1158,16 +1158,16 @@ const HiracEntryRow = ({
                                 )}
                                 <Highlight text={item.hazard} highlight={highlight} />
                             </td>
-                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-1 w-[300px]"><Highlight text={item.hazardousEvent} highlight={highlight} /></td>
-                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-1 w-[300px]"><Highlight text={item.impact} highlight={highlight} /></td>
-                            <td rowSpan={maxRows} className="text-center align-top font-mono text-xs border-r-2 border-border/50 p-1">
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-2 w-[300px]"><Highlight text={item.hazardousEvent} highlight={highlight} /></td>
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-2 w-[300px]"><Highlight text={item.impact} highlight={highlight} /></td>
+                            <td rowSpan={maxRows} className="text-center align-top font-mono text-xs border-r-2 border-border/50 p-2">
                                 <div className="flex flex-col items-center justify-center h-full">
                                     <span className={cn('font-bold', getScoreColor(item.initialLikelihood))}>P: {item.initialLikelihood}</span>
                                     <span className={cn('font-bold', getScoreColor(item.initialSeverity))}>S: {item.initialSeverity}</span>
                                 </div>
                             </td>
                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", initialRiskDetails.color)}>
-                                <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-1">{initialRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
+                                <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-2">{initialRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
                             </td>
                         </>
                     )}
@@ -1179,7 +1179,7 @@ const HiracEntryRow = ({
                     ].map(({controls, type}, i) => {
                         const control = controls[rowIndex];
                         const renderCell = (content: React.ReactNode, widthClass: string) => (
-                           <td className={cn("p-1 whitespace-pre-wrap border-r-2 border-border/50", widthClass)}>
+                           <td className={cn("p-2 whitespace-pre-wrap border-r-2 border-border/50", widthClass)}>
                                 {content}
                            </td>
                         );
@@ -1213,13 +1213,13 @@ const HiracEntryRow = ({
                                 )
                             }
                         }
-                        return <td key={`${type}-${rowIndex}`} colSpan={4} className="p-1 border-r-2 border-border/50"></td>
+                        return <td key={`${type}-${rowIndex}`} colSpan={4} className="p-2 border-r-2 border-border/50"></td>
                     })}
                    
 
                     {rowIndex === 0 && (
                          <>
-                            <td rowSpan={maxRows} className="text-center align-top font-mono text-xs border-r-2 border-border/50 p-1">
+                            <td rowSpan={maxRows} className="text-center align-top font-mono text-xs border-r-2 border-border/50 p-2">
                                 {isReassessed ? (
                                     <div className="flex flex-col items-center justify-center h-full">
                                         <span className={cn('font-bold', getScoreColor(item.residualLikelihood))}>P: {item.residualLikelihood}</span>
@@ -1229,13 +1229,13 @@ const HiracEntryRow = ({
                             </td>
                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", isReassessed && residualRiskDetails ? residualRiskDetails.color : 'bg-muted/30')}>
                                 {isReassessed && residualRiskDetails && residualRiskLevel !== null ? (
-                                    <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-1">{residualRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {residualRiskLevel} ({residualRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
+                                    <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-2">{residualRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {residualRiskLevel} ({residualRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
                                 ) : ('N/A')}
                             </td>
-                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-1">{item.createdAt ? format(new Date(item.createdAt), "P") : ''}</td>
-                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-1">{item.reviewedAt ? format(new Date(item.reviewedAt), "P") : <span className="text-muted-foreground">Not yet</span>}</td>
-                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-1">{item.nextReviewDate ? format(new Date(item.nextReviewDate), "P") : <span className="text-muted-foreground">Not set</span>}</td>
-                            <td rowSpan={maxRows} className="align-top text-right p-1">
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-2">{item.createdAt ? format(new Date(item.createdAt), "P") : ''}</td>
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-2">{item.reviewedAt ? format(new Date(item.reviewedAt), "P") : <span className="text-muted-foreground">Not yet</span>}</td>
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-2">{item.nextReviewDate ? format(new Date(item.nextReviewDate), "P") : <span className="text-muted-foreground">Not set</span>}</td>
+                            <td rowSpan={maxRows} className="align-top text-right p-2">
                                 <AlertDialog>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild><Button variant="ghost" className="h-8 w-8 p-0"><span className="sr-only">Open menu</span><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
@@ -1313,7 +1313,7 @@ export default function HiracPage() {
         toast({ variant: 'destructive', title: "Error", description: "Failed to load HIRAC data. The database might be initializing." });
     }
     setLoading(false);
-  }, [departmentFilter]);
+  }, [departmentFilter, toast]);
   
   React.useEffect(() => {
     loadData();
@@ -1431,40 +1431,40 @@ export default function HiracPage() {
                     <table className="w-full caption-bottom text-xs relative border-collapse">
                         <thead className="sticky top-0 z-10 bg-primary/90 backdrop-blur-sm">
                             <tr className="border-b-2 border-border/50 hover:bg-primary/95">
-                                <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-1" rowSpan={2}>Department</th>
-                                <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-1" rowSpan={2}>Task/Job</th>
-                                <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-1" rowSpan={2}>Task Type</th>
-                                <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-1" rowSpan={2}>Hazard Class</th>
-                                <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-1" rowSpan={2}>Hazard</th>
-                                <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-1" rowSpan={2}>Hazardous Event</th>
-                                <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-1" rowSpan={2}>Impact</th>
-                                <th colSpan={2} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-1">Initial Risk</th>
-                                <th colSpan={4} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-1">Engineering Controls</th>
-                                <th colSpan={4} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-1">Administrative Controls</th>
-                                <th colSpan={4} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-1">PPE Controls</th>
-                                <th colSpan={2} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-1">Risk Re-assessment</th>
-                                <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-1" rowSpan={2}>Created</th>
-                                <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-1" rowSpan={2}>Last Reviewed</th>
-                                <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-1" rowSpan={2}>Next Review</th>
-                                <th className="align-bottom text-primary-foreground p-1" rowSpan={2}><span className="sr-only">Actions</span></th>
+                                <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2" rowSpan={2}>Department</th>
+                                <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2" rowSpan={2}>Task/Job</th>
+                                <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2" rowSpan={2}>Task Type</th>
+                                <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2" rowSpan={2}>Hazard Class</th>
+                                <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2" rowSpan={2}>Hazard</th>
+                                <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2" rowSpan={2}>Hazardous Event</th>
+                                <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2" rowSpan={2}>Impact</th>
+                                <th colSpan={2} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2">Initial Risk</th>
+                                <th colSpan={4} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2">Engineering Controls</th>
+                                <th colSpan={4} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2">Administrative Controls</th>
+                                <th colSpan={4} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2">PPE Controls</th>
+                                <th colSpan={2} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2">Risk Re-assessment</th>
+                                <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2" rowSpan={2}>Created</th>
+                                <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2" rowSpan={2}>Last Reviewed</th>
+                                <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2" rowSpan={2}>Next Review</th>
+                                <th className="align-bottom text-primary-foreground p-2" rowSpan={2}><span className="sr-only">Actions</span></th>
                             </tr>
                             <tr className="border-b-2 border-border/50 hover:bg-primary/95">
-                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-1">P,S</th>
-                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-1">RL</th>
-                                <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-1">Description</th>
-                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-1">PIC</th>
-                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-1">Status</th>
-                                <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-1">Completion</th>
-                                <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-1">Description</th>
-                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-1">PIC</th>
-                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-1">Status</th>
-                                <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-1">Completion</th>
-                                <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-1">Description</th>
-                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-1">PIC</th>
-                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-1">Status</th>
-                                <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-1">Completion</th>
-                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-1">P,S</th>
-                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-1">RL</th>
+                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2">P,S</th>
+                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2">RL</th>
+                                <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-2">Description</th>
+                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2">PIC</th>
+                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2">Status</th>
+                                <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-2">Completion</th>
+                                <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-2">Description</th>
+                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2">PIC</th>
+                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2">Status</th>
+                                <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-2">Completion</th>
+                                <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-2">Description</th>
+                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2">PIC</th>
+                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2">Status</th>
+                                <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-2">Completion</th>
+                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2">P,S</th>
+                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2">RL</th>
                             </tr>
                         </thead>
                         <tbody>
