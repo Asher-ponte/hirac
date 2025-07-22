@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import type { HiracEntry, ControlStatus, ControlType, Department, TaskType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle, BarChart, Camera, Search, ChevronDown } from 'lucide-react';
+import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle, BarChart, Camera, Search, ChevronDown, HelpCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -197,7 +197,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                 {filteredFields.length === 0 && (
                     <p className="text-sm text-muted-foreground text-center py-4">No {title.toLowerCase()} added.</p>
                 )}
-                {filteredFields.map((field, index) => (
+                {filteredFields.map((field) => (
                     <div key={field.id} className="p-2 border rounded-lg space-y-2 relative">
                         <Button 
                             type="button" 
@@ -612,7 +612,36 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
 
                         <FormField control={form.control} name="hazardousEvent" render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Hazardous Event</FormLabel>
+                                <div className="flex items-center gap-2">
+                                    <FormLabel>Hazardous Event</FormLabel>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full">
+                                                <HelpCircle className="h-4 w-4" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-80" align="start">
+                                            <div className="space-y-2">
+                                                <h4 className="font-medium leading-none">What is a Hazardous Event?</h4>
+                                                <p className="text-sm text-muted-foreground">
+                                                    An event that results in harm or ill-health, caused by a specific hazard. It acts as the bridge between a hazard (a potential source of harm) and the actual impact it creates.
+                                                </p>
+                                                <p className="text-sm font-semibold">⚠️ Examples of Hazardous Events:</p>
+                                                <ul className="list-disc list-inside text-sm text-muted-foreground">
+                                                    <li>Bump into</li>
+                                                    <li>Fall from</li>
+                                                    <li>Hit by</li>
+                                                    <li>Struck by</li>
+                                                    <li>Contact with</li>
+                                                    <li>Caught in between</li>
+                                                    <li>Inhalation of</li>
+                                                    <li>Bitten by</li>
+                                                    <li>Fall into</li>
+                                                </ul>
+                                            </div>
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
                                 <FormControl><Textarea placeholder="e.g., No Maintenance of shuttle service" rows={2} {...field} /></FormControl>
                                 <FormMessage />
                             </FormItem>
