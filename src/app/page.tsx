@@ -210,34 +210,30 @@ export default function DashboardPage() {
                                             <Building className="h-5 w-5 text-muted-foreground" />
                                             <h3 className="font-semibold tracking-tight">{dept.department}</h3>
                                         </div>
-                                        <div className="text-sm font-bold">{dept.total} <span className="text-xs font-normal text-muted-foreground">Total</span></div>
                                     </CardHeader>
                                     <CardContent>
                                         <div className="h-[140px] w-full">
                                             <ChartContainer config={riskChartConfig} className="w-full h-full">
                                                 <BarChart 
                                                     data={dept.breakdown} 
-                                                    layout="vertical"
-                                                    margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+                                                    margin={{ top: 20, right: 10, bottom: 0, left: 10 }}
                                                     accessibilityLayer
                                                 >
-                                                    <CartesianGrid horizontal={false} />
-                                                    <XAxis type="number" hide />
-                                                    <YAxis 
+                                                    <CartesianGrid vertical={false} />
+                                                    <XAxis 
                                                         dataKey="name" 
-                                                        type="category" 
                                                         tickLine={false} 
                                                         axisLine={false}
                                                         tickMargin={8}
-                                                        width={60}
                                                         tick={({ x, y, payload }) => (
                                                           <g transform={`translate(${x},${y})`}>
-                                                            <text x={0} y={0} dy={4} textAnchor="end" fill="hsl(var(--foreground))" fontSize={12}>
+                                                            <text x={0} y={0} dy={16} textAnchor="middle" fill="hsl(var(--foreground))" fontSize={12}>
                                                               {payload.value}
                                                             </text>
                                                           </g>
                                                         )}
                                                     />
+                                                    <YAxis />
                                                     <Tooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<ChartTooltipContent indicator="line" />} />
                                                     <Bar dataKey="value" radius={4}>
                                                         {dept.breakdown.map((entry) => (
@@ -246,6 +242,20 @@ export default function DashboardPage() {
                                                     </Bar>
                                                 </BarChart>
                                             </ChartContainer>
+                                        </div>
+                                        <div className="mt-4 flex justify-center items-center gap-4 text-xs text-muted-foreground">
+                                            <div className="flex items-center gap-1.5">
+                                                <div className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: 'hsl(120 76% 61%)'}}></div>
+                                                LR
+                                            </div>
+                                             <div className="flex items-center gap-1.5">
+                                                <div className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: 'hsl(43 74% 66%)'}}></div>
+                                                MR
+                                            </div>
+                                             <div className="flex items-center gap-1.5">
+                                                <div className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: 'hsl(12 76% 61%)'}}></div>
+                                                HR
+                                            </div>
                                         </div>
                                     </CardContent>
                                 </Card>
