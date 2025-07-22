@@ -54,7 +54,12 @@ export async function getDashboardData() {
   ];
   
   const riskMap = hiracEntries.reduce((acc, entry) => {
-    const riskLevelLabel = getRiskLevelDetails(entry.initialLikelihood * entry.initialSeverity).label;
+    const hasResidual = entry.residualLikelihood != null && entry.residualSeverity != null;
+    const likelihood = hasResidual ? entry.residualLikelihood! : entry.initialLikelihood;
+    const severity = hasResidual ? entry.residualSeverity! : entry.initialSeverity;
+    const riskLevel = likelihood * severity;
+    const riskLevelLabel = getRiskLevelDetails(riskLevel).label;
+
     acc[riskLevelLabel] = (acc[riskLevelLabel] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);

@@ -139,8 +139,8 @@ export default function DashboardPage() {
 
             <Card className="md:col-span-2">
             <CardHeader>
-                <CardTitle>Hazards by Initial Risk Level</CardTitle>
-                <CardDescription>Overall distribution of hazards.</CardDescription>
+                <CardTitle>Hazard Risk Level</CardTitle>
+                <CardDescription>Overall distribution of hazards by current risk level.</CardDescription>
             </CardHeader>
             <CardContent className="flex items-center justify-center">
                  {loading ? <Skeleton className="h-[250px] w-full" /> : (
