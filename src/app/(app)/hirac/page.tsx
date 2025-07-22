@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -113,6 +114,14 @@ const getRiskLevelDetails = (level: number) => {
   if (level <= 6) return { label: 'Low Risk', variant: 'secondary', color: 'bg-green-600/80 text-white' } as const;
   if (level <= 12) return { label: 'Medium Risk', variant: 'default', color: 'bg-yellow-500/80 text-black' } as const;
   return { label: 'High Risk', variant: 'destructive', color: 'bg-red-600/80 text-white' } as const;
+};
+
+const getScoreColor = (score: number | null | undefined) => {
+    if (!score) return 'text-muted-foreground';
+    if (score <= 2) return 'text-green-500';
+    if (score === 3) return 'text-yellow-500';
+    if (score >= 4) return 'text-red-500';
+    return 'text-muted-foreground';
 };
 
 const RiskDisplay = ({ likelihood, severity, title = "Calculated Risk Level" }: { likelihood?: number | null, severity?: number | null, title?: string }) => {
@@ -1151,7 +1160,12 @@ const HiracEntryRow = ({
                             </td>
                             <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-1 w-[300px]"><Highlight text={item.hazardousEvent} highlight={highlight} /></td>
                             <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-1 w-[300px]"><Highlight text={item.impact} highlight={highlight} /></td>
-                            <td rowSpan={maxRows} className="text-center align-top font-mono text-xs border-r-2 border-border/50 p-1">P:{item.initialLikelihood}, S:{item.initialSeverity}</td>
+                            <td rowSpan={maxRows} className="text-center align-top font-mono text-xs border-r-2 border-border/50 p-1">
+                                <div className="flex flex-col items-center justify-center h-full">
+                                    <span className={cn('font-bold', getScoreColor(item.initialLikelihood))}>P: {item.initialLikelihood}</span>
+                                    <span className={cn('font-bold', getScoreColor(item.initialSeverity))}>S: {item.initialSeverity}</span>
+                                </div>
+                            </td>
                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", initialRiskDetails.color)}>
                                 <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-1">{initialRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
                             </td>
@@ -1205,7 +1219,14 @@ const HiracEntryRow = ({
 
                     {rowIndex === 0 && (
                          <>
-                            <td rowSpan={maxRows} className="text-center align-top font-mono text-xs border-r-2 border-border/50 p-1">{isReassessed ? `P:${item.residualLikelihood}, S:${item.residualSeverity}` : 'N/A'}</td>
+                            <td rowSpan={maxRows} className="text-center align-top font-mono text-xs border-r-2 border-border/50 p-1">
+                                {isReassessed ? (
+                                    <div className="flex flex-col items-center justify-center h-full">
+                                        <span className={cn('font-bold', getScoreColor(item.residualLikelihood))}>P: {item.residualLikelihood}</span>
+                                        <span className={cn('font-bold', getScoreColor(item.residualSeverity))}>S: {item.residualSeverity}</span>
+                                    </div>
+                                ) : 'N/A'}
+                            </td>
                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", isReassessed && residualRiskDetails ? residualRiskDetails.color : 'bg-muted/30')}>
                                 {isReassessed && residualRiskDetails && residualRiskLevel !== null ? (
                                     <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-1">{residualRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {residualRiskLevel} ({residualRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
