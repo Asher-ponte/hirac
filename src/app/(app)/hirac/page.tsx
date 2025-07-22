@@ -115,7 +115,7 @@ const getRiskLevelDetails = (level: number) => {
   return { label: 'High Risk', variant: 'destructive', color: 'bg-red-600/80 text-white' } as const;
 };
 
-const RiskDisplay = ({ likelihood, severity, title = "Calculated Risk Level" }: { likelihood?: number, severity?: number, title?: string }) => {
+const RiskDisplay = ({ likelihood, severity, title = "Calculated Risk Level" }: { likelihood?: number | null, severity?: number | null, title?: string }) => {
     const riskLevel = (likelihood && severity) ? likelihood * severity : undefined;
     const riskDetails = riskLevel !== undefined ? getRiskLevelDetails(riskLevel) : null;
 
@@ -240,7 +240,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Status</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                                        <Select onValueChange={field.onChange} value={field.value ?? undefined}>
                                             <FormControl>
                                                 <SelectTrigger><SelectValue placeholder="Select status..." /></SelectTrigger>
                                             </FormControl>
@@ -1346,15 +1346,15 @@ export default function HiracPage() {
                             <tr className="hover:bg-primary/95 border-primary">
                                 <th className="text-center border-r border-border/50 text-primary-foreground">P,S</th>
                                 <th className="text-center border-r border-border/50 text-primary-foreground">RL</th>
-                                <th className="w-[250px] text-center border-r border-border/50 text-primary-foreground">Description</th>
+                                <th className="w-[30ch] text-center border-r border-border/50 text-primary-foreground">Description</th>
                                 <th className="w-[100px] text-center border-r border-border/50 text-primary-foreground">PIC</th>
                                 <th className="w-[100px] text-center border-r border-border/50 text-primary-foreground">Status</th>
                                 <th className="w-[120px] text-center border-r border-border/50 text-primary-foreground">Completion</th>
-                                <th className="w-[250px] text-center border-r border-border/50 text-primary-foreground">Description</th>
+                                <th className="w-[30ch] text-center border-r border-border/50 text-primary-foreground">Description</th>
                                 <th className="w-[100px] text-center border-r border-border/50 text-primary-foreground">PIC</th>
                                 <th className="w-[100px] text-center border-r border-border/50 text-primary-foreground">Status</th>
                                 <th className="w-[120px] text-center border-r border-border/50 text-primary-foreground">Completion</th>
-                                <th className="w-[250px] text-center border-r border-border/50 text-primary-foreground">Description</th>
+                                <th className="w-[30ch] text-center border-r border-border/50 text-primary-foreground">Description</th>
                                 <th className="w-[100px] text-center border-r border-border/50 text-primary-foreground">PIC</th>
                                 <th className="w-[100px] text-center border-r border-border/50 text-primary-foreground">Status</th>
                                 <th className="w-[120px] text-center border-r border-border/50 text-primary-foreground">Completion</th>
