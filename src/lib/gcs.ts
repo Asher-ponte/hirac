@@ -8,38 +8,42 @@ import { v4 as uuidv4 } from 'uuid';
 // To use Google Cloud Storage, you must set up authentication
 // and specify a bucket name.
 //
-// 1. Authentication with a Service Account:
-//    - In your Google Cloud project, go to "IAM & Admin" > "Service Accounts".
-//    - Create a new service account. Give it a descriptive name.
-//    - Grant the service account the "Storage Admin" role. This gives it
-//      permissions to read and write files in GCS buckets.
-//    - After creating the service account, go to its "Keys" tab,
-//      click "Add Key", and create a new JSON key.
-//    - A JSON file will be downloaded. Securely store this file.
-//
-// 2. Set Environment Variables:
-//    - Create a `.env` file in the root of your project if you haven't already.
-//    - Add the following variables to your `.env` file:
+// 1. Set Environment Variables:
+//    - This application is configured to read GCS credentials directly
+//      from environment variables.
+//    - Ensure the following are set in your `.env` file:
 //
 //      GCS_BUCKET_NAME=your-actual-bucket-name
-//      GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/downloaded-service-account-key.json
+//      GCS_SERVICE_ACCOUNT_KEY_JSON="{\"type\": "service_account", ...}"
 //
-//    - IMPORTANT: Replace `your-actual-bucket-name` with your real GCS bucket name.
-//    - IMPORTANT: Replace the path with the *absolute path* to the JSON key file you downloaded.
-//
-// 3. Ensure `.env` is in `.gitignore` to keep your credentials secure.
+//    - GCS_SERVICE_ACCOUNT_KEY_JSON should contain the full JSON content
+//      of the service account key.
 // =================================================================
 
-const gcsKeyFile = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+const gcsServiceAccountKeyJson = process.env.GCS_SERVICE_ACCOUNT_KEY_JSON;
 const bucketName = process.env.GCS_BUCKET_NAME;
 
-if (!gcsKeyFile || !bucketName) {
-    console.error("GCS environment variables not fully set. Check GCS_BUCKET_NAME and GOOGLE_APPLICATION_CREDENTIALS.");
-    // We don't throw an error here to allow the app to run without GCS configured,
-    // but file uploads will fail. The frontend should handle the error gracefully.
+let storage: Storage;
+
+if (!bucketName) {
+    console.error("GCS_BUCKET_NAME environment variable is not set.");
 }
 
-const storage = gcsKeyFile ? new Storage({ keyFilename: gcsKeyFile }) : new Storage();
+if (!gcsServiceAccountKeyJson) {
+    console.error("GCS_SERVICE_ACCOUNT_KEY_JSON environment variable not set.");
+    // Fallback for environments where GOOGLE_APPLICATION_CREDENTIALS might be set as a file path
+    storage = new Storage();
+} else {
+    try {
+        const credentialsString = gcsServiceAccountKeyJson.replace(/\\n/g, '\n');
+        const credentials = JSON.parse(credentialsString);
+        storage = new Storage({ credentials });
+    } catch (error) {
+        console.error("Failed to parse GCS_SERVICE_ACCOUNT_KEY_JSON:", error);
+        throw new Error("Invalid GCS service account JSON in environment variable.");
+    }
+}
+
 
 /**
  * Uploads a file to Google Cloud Storage.
@@ -49,6 +53,9 @@ const storage = gcsKeyFile ? new Storage({ keyFilename: gcsKeyFile }) : new Stor
 export async function uploadFile(file: File): Promise<string> {
   if (!bucketName) {
     throw new Error("GCS_BUCKET_NAME environment variable is not set.");
+  }
+  if (!storage) {
+    throw new Error("GCS Storage client is not initialized. Check your credentials.");
   }
 
   const bucket = storage.bucket(bucketName);
@@ -66,7 +73,7 @@ export async function uploadFile(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     stream.on('error', (err) => {
       console.error("GCS Upload Stream Error:", err);
-      reject(err);
+      reject(new Error('Failed to upload file to Google Cloud Storage.'));
     });
 
     stream.on('finish', async () => {
@@ -79,7 +86,7 @@ export async function uploadFile(file: File): Promise<string> {
         resolve(publicUrl);
       } catch (err) {
           console.error("GCS Make Public Error:", err);
-          reject(err);
+          reject(new Error('Failed to make file public. Check GCS permissions.'));
       }
     });
 

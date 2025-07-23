@@ -18,18 +18,7 @@ import { defineConfig } from 'drizzle-kit';
 //    DB_PASSWORD=your_database_password
 //    DB_DATABASE=your_database_name
 //
-// 3. For Google Cloud Storage (if you use photo uploads):
-//    - Create a Service Account in your Google Cloud project with the
-//      "Storage Admin" role.
-//    - Download the JSON key file for that service account.
-//    - Add the following to your .env file:
-//
-//      GCS_BUCKET_NAME=your_gcs_bucket_name
-//      GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/service-account-key.json
-//
-//      Note: Use the *absolute path* for the credentials file.
-//
-// 4. Ensure the `.env` file is listed in your `.gitignore` file
+// 3. Ensure the `.env` file is listed in your `.gitignore` file
 //    to prevent committing sensitive credentials to version control.
 // =================================================================
 
