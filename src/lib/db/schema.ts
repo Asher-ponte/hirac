@@ -1,3 +1,4 @@
+
 import { int, text, mysqlTable, serial, varchar, mysqlEnum, timestamp, foreignKey } from 'drizzle-orm/mysql-core';
 import { relations, sql } from 'drizzle-orm';
 
@@ -24,7 +25,7 @@ export const usersRelations = relations(users, ({ one }) => ({
 export const departments = mysqlTable('departments', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 255 }).notNull().unique(),
-  supervisorId: int('supervisor_id'),
+  supervisorId: int('supervisor_id', { unsigned: true }),
 },
 (table) => {
   return {
