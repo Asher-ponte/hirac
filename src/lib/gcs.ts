@@ -8,40 +8,31 @@ import { v4 as uuidv4 } from 'uuid';
 // To use Google Cloud Storage, you must set up authentication
 // and specify a bucket name.
 //
-// 1. Set Environment Variables:
-//    - This application is configured to read GCS credentials directly
-//      from environment variables.
-//    - Ensure the following are set in your `.env` file:
+// 1. Create a Service Account in your Google Cloud Project with the "Storage Admin" role.
+// 2. Download the JSON key file for that service account.
+// 3. Place the key file in the root directory of this project.
+//
+// 4. Set Environment Variables in your `.env` file:
+//    - Create a `.env` file in the root of your project if it doesn't exist.
+//    - Add the following variables:
 //
 //      GCS_BUCKET_NAME=your-actual-bucket-name
-//      GCS_SERVICE_ACCOUNT_KEY_JSON="{\"type\": "service_account", ...}"
+//      GOOGLE_APPLICATION_CREDENTIALS=your-service-account-key-file.json
 //
-//    - GCS_SERVICE_ACCOUNT_KEY_JSON should contain the full JSON content
-//      of the service account key.
+//    - Replace the placeholder values with your actual bucket name and the
+//      filename of the key you downloaded.
 // =================================================================
 
-const gcsServiceAccountKeyJson = process.env.GCS_SERVICE_ACCOUNT_KEY_JSON;
 const bucketName = process.env.GCS_BUCKET_NAME;
 
+// The Storage constructor will automatically use the credentials from the
+// GOOGLE_APPLICATION_CREDENTIALS environment variable.
 let storage: Storage;
-
-if (!bucketName) {
-    console.error("GCS_BUCKET_NAME environment variable is not set.");
-}
-
-if (!gcsServiceAccountKeyJson) {
-    console.error("GCS_SERVICE_ACCOUNT_KEY_JSON environment variable not set.");
-    // Fallback for environments where GOOGLE_APPLICATION_CREDENTIALS might be set as a file path
+try {
     storage = new Storage();
-} else {
-    try {
-        const credentialsString = gcsServiceAccountKeyJson.replace(/\\n/g, '\n');
-        const credentials = JSON.parse(credentialsString);
-        storage = new Storage({ credentials });
-    } catch (error) {
-        console.error("Failed to parse GCS_SERVICE_ACCOUNT_KEY_JSON:", error);
-        throw new Error("Invalid GCS service account JSON in environment variable.");
-    }
+} catch (error) {
+    console.error("Failed to initialize Google Cloud Storage. Ensure GOOGLE_APPLICATION_CREDENTIALS is set correctly.", error);
+    throw new Error("Could not initialize Google Cloud Storage client.");
 }
 
 
