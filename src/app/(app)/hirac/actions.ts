@@ -52,7 +52,7 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
         : formatISO(addYears(new Date(), 1));
 
     const [newHiracEntry] = await tx.insert(hiracEntries).values({
-      departmentId: formData.departmentId,
+      departmentId: Number(formData.departmentId),
       task: formData.task,
       taskType: formData.taskType,
       hazard: formData.hazard,
