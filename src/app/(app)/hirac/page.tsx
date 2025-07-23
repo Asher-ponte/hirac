@@ -8,7 +8,6 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format, formatDistanceToNow } from "date-fns"
-import { v4 as uuidv4 } from 'uuid';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -70,21 +69,21 @@ const controlMeasureSchema = z.object({
     description: z.string().min(1, 'Description is required.'),
     pic: z.string().optional().nullable(),
     status: z.enum(statusOptions).optional().nullable(),
-    completionDate: z.string().optional().nullable(),
+    completionDate: z.string().datetime().optional().nullable(),
 });
 
 const hiracFormSchema = z.object({
-    departmentId: z.coerce.number({invalid_type_error: "Department is required."}).min(1, "Department is required."),
+    departmentId: z.coerce.number().min(1, "Department is required."),
     task: z.string().min(1, "Task is required."),
     taskType: z.enum(taskTypeOptions, { required_error: 'Task type is required' }),
     hazard: z.string().min(1, "Hazard is required."),
-    hazardPhotoUrl: z.string().nullable().optional(),
+    hazardPhotoUrl: z.string().url().nullable().optional(),
     hazardClass: z.enum(hazardClassOptions, { required_error: 'Hazard class is required' }),
     hazardousEvent: z.string().min(1, "Hazardous event is required."),
     impact: z.string().min(1, "Impact is required."),
     initialLikelihood: z.coerce.number().min(1).max(5),
     initialSeverity: z.coerce.number().min(1).max(5),
-    nextReviewDate: z.string().optional().nullable(),
+    nextReviewDate: z.string().datetime().optional().nullable(),
     
     controlMeasures: z.array(controlMeasureSchema),
 
@@ -329,8 +328,11 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
         impact: entry?.impact ?? '',
         initialLikelihood: entry?.initialLikelihood ?? 1,
         initialSeverity: entry?.initialSeverity ?? 1,
-        nextReviewDate: entry?.nextReviewDate ?? null,
-        controlMeasures: entry?.controlMeasures ?? [],
+        nextReviewDate: entry?.nextReviewDate ? new Date(entry.nextReviewDate).toISOString() : null,
+        controlMeasures: entry?.controlMeasures.map(cm => ({
+            ...cm,
+            completionDate: cm.completionDate ? new Date(cm.completionDate).toISOString() : null,
+        })) ?? [],
         residualLikelihood: entry?.residualLikelihood,
         residualSeverity: entry?.residualSeverity,
     });
@@ -595,7 +597,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                                             disabled={isUploading}
                                         />
                                         {imagePreview ? (
-                                            <div className="relative group w-full aspect-square rounded-md border border-dashed flex items-center justify-center">
+                                            <div className="relative group w-full aspect-[4/3] rounded-md border border-dashed flex items-center justify-center">
                                                 <Image 
                                                     src={imagePreview} 
                                                     alt="Hazard preview" 
@@ -619,7 +621,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                                             <label 
                                                 htmlFor="hazard-photo-upload" 
                                                 className={cn(
-                                                    "cursor-pointer w-full aspect-square rounded-md border-2 border-dashed border-muted-foreground/50 bg-muted/20 flex flex-col items-center justify-center text-muted-foreground hover:bg-muted/40 transition-colors",
+                                                    "cursor-pointer w-full aspect-[4/3] rounded-md border-2 border-dashed border-muted-foreground/50 bg-muted/20 flex flex-col items-center justify-center text-muted-foreground hover:bg-muted/40 transition-colors",
                                                     isUploading && "cursor-not-allowed opacity-50"
                                                 )}
                                             >
@@ -1187,7 +1189,7 @@ const HiracEntryRow = ({
                         );
                         if(control) {
                             return (
-                                <React.Fragment key={`${type}-${control.id || uuidv4()}`}>
+                                <React.Fragment key={`${type}-${control.id || rowIndex}`}>
                                     {renderCell(<Highlight text={control.description} highlight={highlight} />, "w-[300px]")}
                                     {renderCell(<Highlight text={control.pic} highlight={highlight} />, "text-center w-[100px]")}
                                     {renderCell(<div className={cn("text-center p-1 h-full", control.status && statusColorMap[control.status])}><Highlight text={control.status} highlight={highlight} /></div>, "p-0 w-[100px]")}
@@ -1301,7 +1303,7 @@ export default function HiracPage() {
         toast({ variant: 'destructive', title: "Error", description: "Failed to load HIRAC data. The database might be initializing." });
     }
     setLoading(false);
-  }, [departmentFilter]);
+  }, [departmentFilter, toast]);
   
   React.useEffect(() => {
     loadData();
