@@ -96,7 +96,7 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
         ...cm,
         hiracEntryId: newHiracEntryId,
         description: cm.description || "N/A",
-        completionDate: cm.completionDate ? new Date(cm.completionDate) : null,
+        completionDate: cm.status === 'Implemented' ? null : (cm.completionDate ? new Date(cm.completionDate) : null),
       }));
       await tx.insert(controlMeasures).values(controlsToInsert);
     }
@@ -147,7 +147,7 @@ export async function updateHiracEntry(id: number, formData: HiracEntryPayload) 
                     await tx.update(controlMeasures).set({
                         ...cm,
                         description: cm.description || "N/A",
-                        completionDate: cm.completionDate ? new Date(cm.completionDate) : null,
+                        completionDate: cm.status === 'Implemented' ? null : (cm.completionDate ? new Date(cm.completionDate) : null),
                     }).where(eq(controlMeasures.id, cm.id));
                 }
             }
@@ -158,7 +158,7 @@ export async function updateHiracEntry(id: number, formData: HiracEntryPayload) 
                 ...cm,
                 hiracEntryId: id,
                 description: cm.description || "N/A",
-                completionDate: cm.completionDate ? new Date(cm.completionDate) : null,
+                completionDate: cm.status === 'Implemented' ? null : (cm.completionDate ? new Date(cm.completionDate) : null),
             })));
         }
 

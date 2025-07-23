@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format, formatDistanceToNow } from "date-fns"
@@ -185,6 +185,11 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
 
     const filteredFields = fields.map((field, index) => ({...field, originalIndex: index})).filter(field => (field as any).type === controlType);
     
+    const controlMeasuresValues = useWatch({
+        name: "controlMeasures",
+        control: form.control
+    });
+    
     return (
         <Card>
             <CardHeader>
@@ -194,7 +199,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => append({ type: controlType, description: '', pic: '', status: 'For Implementation', completionDate: '' })}
+                        onClick={() => append({ type: controlType, description: '', pic: '', status: 'For Implementation', completionDate: null })}
                     >
                         <PlusCircle className="mr-2 h-4 w-4" /> Add
                     </Button>
@@ -204,7 +209,9 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                 {filteredFields.length === 0 && (
                     <p className="text-sm text-muted-foreground text-center py-4">No {title.toLowerCase()} added.</p>
                 )}
-                {filteredFields.map((field) => (
+                {filteredFields.map((field) => {
+                     const currentStatus = controlMeasuresValues[field.originalIndex]?.status;
+                     return (
                      <div key={field.id} className="p-2 border rounded-lg space-y-2 relative">
                         <Button 
                             type="button" 
@@ -248,7 +255,15 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Status</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value ?? undefined}>
+                                        <Select 
+                                            onValueChange={(value) => {
+                                                field.onChange(value);
+                                                if (value === 'Implemented') {
+                                                    form.setValue(`controlMeasures.${field.originalIndex}.completionDate`, null);
+                                                }
+                                            }} 
+                                            value={field.value ?? undefined}
+                                        >
                                             <FormControl>
                                                 <SelectTrigger><SelectValue placeholder="Select status..." /></SelectTrigger>
                                             </FormControl>
@@ -261,47 +276,49 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                                 )}
                             />
                         </div>
-                        <FormField
-                            control={form.control}
-                            name={`controlMeasures.${field.originalIndex}.completionDate`}
-                            render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                    <FormLabel>Completion Date</FormLabel>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <FormControl>
-                                                <Button
-                                                    variant={"outline"}
-                                                    className={cn(
-                                                        "w-full pl-3 text-left font-normal",
-                                                        !field.value && "text-muted-foreground"
-                                                    )}
-                                                >
-                                                    {field.value ? (
-                                                        format(new Date(field.value), "PPP")
-                                                    ) : (
-                                                        <span>Pick a date</span>
-                                                    )}
-                                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                </Button>
-                                            </FormControl>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0" align="start">
-                                            <Calendar
-                                                mode="single"
-                                                selected={field.value ? new Date(field.value) : undefined}
-                                                onSelect={(date) => field.onChange(date?.toISOString())}
-                                                initialFocus
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                    <FormDescription>Required if status is 'For Implementation'.</FormDescription>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                        {currentStatus === 'For Implementation' && (
+                             <FormField
+                                control={form.control}
+                                name={`controlMeasures.${field.originalIndex}.completionDate`}
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-col">
+                                        <FormLabel>Completion Date</FormLabel>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <FormControl>
+                                                    <Button
+                                                        variant={"outline"}
+                                                        className={cn(
+                                                            "w-full pl-3 text-left font-normal",
+                                                            !field.value && "text-muted-foreground"
+                                                        )}
+                                                    >
+                                                        {field.value ? (
+                                                            format(new Date(field.value), "PPP")
+                                                        ) : (
+                                                            <span>Pick a date</span>
+                                                        )}
+                                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                    </Button>
+                                                </FormControl>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={field.value ? new Date(field.value) : undefined}
+                                                    onSelect={(date) => field.onChange(date?.toISOString())}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                        <FormDescription>Required if status is 'For Implementation'.</FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        )}
                     </div>
-                ))}
+                )})}
             </CardContent>
         </Card>
     );
@@ -597,7 +614,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                                             disabled={isUploading}
                                         />
                                         {imagePreview ? (
-                                            <div className="relative group w-full aspect-[4/3] rounded-md border border-dashed flex items-center justify-center">
+                                            <div className="relative group w-full aspect-square rounded-md border border-dashed flex items-center justify-center">
                                                 <Image 
                                                     src={imagePreview} 
                                                     alt="Hazard preview" 
@@ -621,7 +638,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                                             <label 
                                                 htmlFor="hazard-photo-upload" 
                                                 className={cn(
-                                                    "cursor-pointer w-full aspect-[4/3] rounded-md border-2 border-dashed border-muted-foreground/50 bg-muted/20 flex flex-col items-center justify-center text-muted-foreground hover:bg-muted/40 transition-colors",
+                                                    "cursor-pointer w-full aspect-square rounded-md border-2 border-dashed border-muted-foreground/50 bg-muted/20 flex flex-col items-center justify-center text-muted-foreground hover:bg-muted/40 transition-colors",
                                                     isUploading && "cursor-not-allowed opacity-50"
                                                 )}
                                             >
