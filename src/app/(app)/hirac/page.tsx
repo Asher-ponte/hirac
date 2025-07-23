@@ -410,21 +410,21 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            setIsUploading(true);
-
             const formData = new FormData();
             formData.append('file', file);
-            
+
+            setIsUploading(true);
             try {
                 const result = await uploadHazardPhoto(formData);
                 if (result.url) {
                     form.setValue('hazardPhotoUrl', result.url, { shouldValidate: true });
+                    toast({ title: "Upload Successful", description: "Image uploaded and linked." });
                 } else {
                     toast({ variant: 'destructive', title: "Upload Failed", description: result.error || "Could not get the public URL." });
                     handleRemoveImage();
                 }
             } catch (error) {
-                toast({ variant: 'destructive', title: "Upload Failed", description: (error as Error).message });
+                toast({ variant: 'destructive', title: "Upload Error", description: (error as Error).message });
                 handleRemoveImage();
             } finally {
                 setIsUploading(false);
@@ -595,7 +595,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                                             disabled={isUploading}
                                         />
                                         {imagePreview ? (
-                                            <div className="relative group w-full aspect-square rounded-md border border-dashed flex items-center justify-center">
+                                            <div className="relative group w-full aspect-[4/3] rounded-md border border-dashed flex items-center justify-center">
                                                 <Image 
                                                     src={imagePreview} 
                                                     alt="Hazard preview" 
@@ -619,7 +619,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                                             <label 
                                                 htmlFor="hazard-photo-upload" 
                                                 className={cn(
-                                                    "cursor-pointer w-full aspect-square rounded-md border-2 border-dashed border-muted-foreground/50 bg-muted/20 flex flex-col items-center justify-center text-muted-foreground hover:bg-muted/40 transition-colors",
+                                                    "cursor-pointer w-full aspect-[4/3] rounded-md border-2 border-dashed border-muted-foreground/50 bg-muted/20 flex flex-col items-center justify-center text-muted-foreground hover:bg-muted/40 transition-colors",
                                                     isUploading && "cursor-not-allowed opacity-50"
                                                 )}
                                             >
