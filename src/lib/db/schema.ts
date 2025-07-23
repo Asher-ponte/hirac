@@ -1,4 +1,4 @@
-import { int, text, mysqlTable, serial, varchar, mysqlEnum, timestamp } from 'drizzle-orm/mysql-core';
+import { int, text, mysqlTable, serial, varchar, mysqlEnum, timestamp, foreignKey } from 'drizzle-orm/mysql-core';
 import { relations, sql } from 'drizzle-orm';
 
 const controlStatusEnum = ['Implemented', 'For Implementation'] as const;
@@ -25,6 +25,14 @@ export const departments = mysqlTable('departments', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 255 }).notNull().unique(),
   supervisorId: int('supervisor_id'),
+},
+(table) => {
+  return {
+    supervisorFk: foreignKey({
+      columns: [table.supervisorId],
+      foreignColumns: [users.id],
+    }).onDelete('set null'),
+  }
 });
 
 export const departmentsRelations = relations(departments, ({ one, many }) => ({
