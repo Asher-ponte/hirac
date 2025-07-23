@@ -15,6 +15,9 @@ export async function checkDbConnection(): Promise<{ ok: boolean; error?: string
         if (error.message.includes('ECONNREFUSED')) {
             return { ok: false, error: "Connection Refused: Please ensure the database server is running and accessible." };
         }
+        if (error.message.includes('ETIMEDOUT')) {
+            return { ok: false, error: "Connection Timed Out: The database server is not responding. Please ensure your application's IP address is added to the authorized networks in your Google Cloud SQL settings." };
+        }
         if (error.message.includes('ER_ACCESS_DENIED_ERROR')) {
             return { ok: false, error: "Access Denied: Please check the database username and password in your .env file." };
         }
