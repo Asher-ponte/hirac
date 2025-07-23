@@ -22,7 +22,7 @@ import { v4 as uuidv4 } from 'uuid';
 const bucketName = process.env.GCS_BUCKET_NAME;
 
 // The Storage client will automatically use the credentials from the
-// GOOGLE_APPLICATION_CREDENTIALS environment variable.
+// GOOGLE_APPLICATION_CREDENTIALS environment variable if it's set.
 let storage: Storage;
 try {
     storage = new Storage();
@@ -38,9 +38,11 @@ try {
  */
 export async function uploadFile(file: File): Promise<string> {
   if (!bucketName) {
+    console.error("GCS_BUCKET_NAME environment variable is not set.");
     throw new Error("GCS_BUCKET_NAME environment variable is not set.");
   }
   if (!storage) {
+    console.error("GCS Storage client is not initialized. Check your credentials.");
     throw new Error("GCS Storage client is not initialized. Check your credentials.");
   }
 
@@ -57,17 +59,17 @@ export async function uploadFile(file: File): Promise<string> {
 
   return new Promise((resolve, reject) => {
     stream.on('error', (err) => {
-      console.error("GCS Upload Stream Error:", err);
-      reject(new Error('Failed to upload file to Google Cloud Storage. Check bucket permissions and configuration.'));
+      console.error("GCS Upload Stream Error:", err.message);
+      reject(new Error('Failed to upload file to Google Cloud Storage. Check bucket permissions (e.g., Storage Object Creator role) and ensure the bucket exists.'));
     });
 
     stream.on('finish', async () => {
       try {
         await gcsFile.makePublic();
-        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${gcsFile.name}`;
+        const publicUrl = gcsFile.publicUrl();
         resolve(publicUrl);
       } catch (err) {
-          console.error("GCS Make Public Error:", err);
+          console.error("GCS Make Public Error:", (err as Error).message);
           reject(new Error('Failed to make file public. Check GCS permissions (e.g., Storage Object Admin role).'));
       }
     });
