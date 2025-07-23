@@ -54,7 +54,7 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
         ? formData.nextReviewDate 
         : formatISO(addYears(new Date(), 1));
 
-    const [newHiracEntry] = await tx.insert(hiracEntries).values({
+    const insertResult = await tx.insert(hiracEntries).values({
       departmentId: Number(formData.departmentId),
       task: formData.task,
       taskType: formData.taskType,
@@ -70,12 +70,14 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
       nextReviewDate: nextReviewDate,
       // Default status for new entries
       status: 'For Implementation'
-    }).returning({ id: hiracEntries.id });
+    });
+    
+    const newHiracEntryId = insertResult.insertId;
 
     if (formData.controlMeasures.length > 0) {
       const controlsToInsert = formData.controlMeasures.map(cm => ({
         ...cm,
-        hiracEntryId: newHiracEntry.id,
+        hiracEntryId: newHiracEntryId,
         description: cm.description || "N/A",
       }));
       await tx.insert(controlMeasures).values(controlsToInsert);
