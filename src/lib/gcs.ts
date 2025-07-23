@@ -27,7 +27,7 @@ const bucketName = process.env.GCS_BUCKET_NAME;
 const keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
 // The Storage constructor will automatically use the credentials from the
-// GOOGLE_APPLICATION_CREDENTIALS environment variable.
+// GOOGLE_APPLICATION_CREDENTIALS environment variable if the variable is set.
 let storage: Storage;
 try {
     if (!keyFilename) {
@@ -64,7 +64,6 @@ export async function uploadFile(file: File): Promise<string> {
     metadata: {
       contentType: file.type,
     },
-    resumable: false,
   });
 
   return new Promise((resolve, reject) => {
