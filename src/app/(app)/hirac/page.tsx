@@ -583,7 +583,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                             <FormItem>
                                 <FormLabel>Hazard Photo</FormLabel>
                                 <FormControl>
-                                    <div className="w-full">
+                                    <div className="w-full max-w-[200px]">
                                         <Input
                                             id="hazard-photo-upload"
                                             type="file"
@@ -595,7 +595,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                                             disabled={isUploading}
                                         />
                                         {imagePreview ? (
-                                            <div className="relative group w-full aspect-video rounded-md border border-dashed flex items-center justify-center">
+                                            <div className="relative group w-full aspect-square rounded-md border border-dashed flex items-center justify-center">
                                                 <Image 
                                                     src={imagePreview} 
                                                     alt="Hazard preview" 
@@ -619,19 +619,19 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                                             <label 
                                                 htmlFor="hazard-photo-upload" 
                                                 className={cn(
-                                                    "cursor-pointer w-full aspect-video rounded-md border-2 border-dashed border-muted-foreground/50 bg-muted/20 flex flex-col items-center justify-center text-muted-foreground hover:bg-muted/40 transition-colors",
+                                                    "cursor-pointer w-full aspect-square rounded-md border-2 border-dashed border-muted-foreground/50 bg-muted/20 flex flex-col items-center justify-center text-muted-foreground hover:bg-muted/40 transition-colors",
                                                     isUploading && "cursor-not-allowed opacity-50"
                                                 )}
                                             >
                                                 {isUploading ? (
                                                     <>
-                                                        <Loader2 className="h-10 w-10 mb-2 animate-spin" />
+                                                        <Loader2 className="h-8 w-8 mb-2 animate-spin" />
                                                         <span>Uploading...</span>
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <Camera className="h-10 w-10 mb-2" />
-                                                        <span>Tap to upload or take a photo</span>
+                                                        <Camera className="h-8 w-8 mb-2" />
+                                                        <span className="text-xs text-center">Tap to upload</span>
                                                     </>
                                                 )}
                                             </label>
