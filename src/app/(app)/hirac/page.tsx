@@ -74,7 +74,7 @@ const controlMeasureSchema = z.object({
 });
 
 const hiracFormSchema = z.object({
-    departmentId: z.coerce.number().min(1, "Department is required."),
+    departmentId: z.coerce.number({invalid_type_error: "Department is required."}).min(1, "Department is required."),
     task: z.string().min(1, "Task is required."),
     taskType: z.enum(taskTypeOptions, { required_error: 'Task type is required' }),
     hazard: z.string().min(1, "Hazard is required."),
@@ -452,7 +452,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField control={form.control} name="departmentId" render={({ field }) => (
                                 <FormItem><FormLabel>Department</FormLabel>
-                                    <Select onValueChange={field.onChange} value={String(field.value)}>
+                                    <Select onValueChange={field.onChange} value={String(field.value ?? 0)}>
                                         <FormControl><SelectTrigger><SelectValue placeholder="Select department..." /></SelectTrigger></FormControl>
                                         <SelectContent>{departments.map(opt => <SelectItem key={opt.id} value={String(opt.id)}>{opt.name}</SelectItem>)}</SelectContent>
                                     </Select>
@@ -1515,6 +1515,7 @@ export default function HiracPage() {
     </div>
   );
 }
+
 
 
 

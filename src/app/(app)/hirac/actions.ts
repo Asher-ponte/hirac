@@ -45,6 +45,9 @@ type HiracEntryPayload = Omit<HiracEntry, 'id' | 'controlMeasures' | 'status' | 
 };
 
 export async function createHiracEntry(formData: HiracEntryPayload) {
+  if (!formData.departmentId || formData.departmentId === 0) {
+    throw new Error("A valid department must be selected.");
+  }
   await db.transaction(async (tx) => {
     
     const nextReviewDate = formData.nextReviewDate 
