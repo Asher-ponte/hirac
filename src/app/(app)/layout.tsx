@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import * as React from 'react';
 import {
   ShieldCheck,
   LayoutDashboard,
@@ -17,10 +20,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import NavLink from "./nav-link";
+import { useToast } from "@/hooks/use-toast";
+import { checkDbConnection } from "./actions";
 
 const navItems = [
   { href: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -31,6 +35,30 @@ const navItems = [
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const { toast } = useToast();
+
+  React.useEffect(() => {
+    // Only run this check once per session on the client
+    if (!sessionStorage.getItem('db_checked')) {
+        checkDbConnection().then(result => {
+            if (result.ok) {
+                toast({
+                    title: "Database Connected",
+                    description: "Successfully connected to the database.",
+                });
+            } else {
+                 toast({
+                    variant: 'destructive',
+                    title: "Database Connection Failed",
+                    description: result.error,
+                });
+            }
+            sessionStorage.setItem('db_checked', 'true');
+        });
+    }
+  }, [toast]);
+
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-[5px] md:px-6 z-50">
@@ -60,9 +88,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </Button>
           </SheetTrigger>
           <SheetContent side="left">
-            <SheetHeader>
-                <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-            </SheetHeader>
             <nav className="grid gap-6 text-lg font-medium">
               <Link
                 href="/"
