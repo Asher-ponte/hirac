@@ -35,7 +35,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry, updateResidualRisk, getDepartments } from './actions';
+import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry, updateResidualRisk, getDepartments, uploadHazardPhoto } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -407,28 +407,28 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
         }
     }
     
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             setIsUploading(true);
 
-            const reader = new FileReader();
-            reader.onload = (loadEvent) => {
-                const dataUrl = loadEvent.target?.result as string;
-                if (dataUrl) {
-                    form.setValue('hazardPhotoUrl', dataUrl, { shouldValidate: true });
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const result = await uploadHazardPhoto(formData);
+                if (result.url) {
+                    form.setValue('hazardPhotoUrl', result.url, { shouldValidate: true });
                 } else {
-                    toast({ variant: 'destructive', title: "Upload Failed", description: "Could not read the image file." });
+                    toast({ variant: 'destructive', title: "Upload Failed", description: result.error || "Could not get the public URL." });
                     handleRemoveImage();
                 }
-                setIsUploading(false);
-            };
-            reader.onerror = () => {
-                toast({ variant: 'destructive', title: "Upload Failed", description: "There was an error reading the file." });
+            } catch (error) {
+                toast({ variant: 'destructive', title: "Upload Failed", description: (error as Error).message });
                 handleRemoveImage();
+            } finally {
                 setIsUploading(false);
-            };
-            reader.readAsDataURL(file);
+            }
         }
     }
     
@@ -611,7 +611,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                                                  {isUploading && (
                                                     <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white rounded-md">
                                                         <Loader2 className="h-8 w-8 animate-spin mb-2" />
-                                                        <span>Processing...</span>
+                                                        <span>Uploading...</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -626,7 +626,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                                                 {isUploading ? (
                                                     <>
                                                         <Loader2 className="h-10 w-10 mb-2 animate-spin" />
-                                                        <span>Processing...</span>
+                                                        <span>Uploading...</span>
                                                     </>
                                                 ) : (
                                                     <>
@@ -1515,10 +1515,3 @@ export default function HiracPage() {
     </div>
   );
 }
-
-
-
-
-
-
-

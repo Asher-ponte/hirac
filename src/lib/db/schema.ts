@@ -1,5 +1,5 @@
 
-import { int, text, mysqlTable, serial, varchar, mysqlEnum, timestamp, foreignKey, mediumtext } from 'drizzle-orm/mysql-core';
+import { int, text, mysqlTable, serial, varchar, mysqlEnum, timestamp, foreignKey } from 'drizzle-orm/mysql-core';
 import { relations, sql } from 'drizzle-orm';
 
 const controlStatusEnum = ['Implemented', 'For Implementation'] as const;
@@ -42,7 +42,7 @@ export const hiracEntries = mysqlTable('hirac_entries', {
   task: varchar('task', { length: 255 }).notNull(),
   taskType: mysqlEnum('task_type', taskTypeEnum).notNull().default('Routine'),
   hazard: text('hazard').notNull(),
-  hazardPhotoUrl: mediumtext('hazard_photo_url'),
+  hazardPhotoUrl: varchar('hazard_photo_url', { length: 1024 }),
   hazardClass: mysqlEnum('hazard_class', hazardClassEnum).notNull(),
   hazardousEvent: text('hazardous_event').notNull(),
   impact: text('impact').notNull(),
