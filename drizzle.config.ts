@@ -1,11 +1,19 @@
+import 'dotenv/config';
 import { defineConfig } from 'drizzle-kit';
+
+if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_NAME) {
+  throw new Error("Missing database credentials in .env file");
+}
 
 export default defineConfig({
   schema: './src/lib/db/schema.ts',
   out: './drizzle',
-  dialect: 'sqlite',
+  dialect: 'mysql',
   dbCredentials: {
-    url: 'file:./local.db',
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
   },
   verbose: true,
   strict: true,

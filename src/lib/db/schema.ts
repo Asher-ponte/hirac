@@ -1,4 +1,4 @@
-import { integer, text, sqliteTable } from 'drizzle-orm/sqlite-core';
+import { int, text, mysqlTable, serial, varchar, mysqlEnum, timestamp } from 'drizzle-orm/mysql-core';
 import { relations, sql } from 'drizzle-orm';
 
 const controlStatusEnum = ['Implemented', 'For Implementation'] as const;
@@ -7,11 +7,11 @@ const hazardClassEnum = ['Physical', 'Chemical', 'Biological', 'Mechanical', 'El
 const userRoleEnum = ['Admin', 'Safety Officer', 'Viewer'] as const;
 const taskTypeEnum = ['Routine', 'Non-Routine'] as const;
 
-export const users = sqliteTable('users', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  name: text('name').notNull(),
-  email: text('email').notNull().unique(),
-  role: text('role', { enum: userRoleEnum }).notNull(),
+export const users = mysqlTable('users', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  role: mysqlEnum('role', userRoleEnum).notNull(),
 });
 
 export const usersRelations = relations(users, ({ one }) => ({
@@ -21,10 +21,10 @@ export const usersRelations = relations(users, ({ one }) => ({
   }),
 }));
 
-export const departments = sqliteTable('departments', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  name: text('name').notNull().unique(),
-  supervisorId: integer('supervisor_id').references(() => users.id, { onDelete: 'set null' }),
+export const departments = mysqlTable('departments', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull().unique(),
+  supervisorId: int('supervisor_id'),
 });
 
 export const departmentsRelations = relations(departments, ({ one, many }) => ({
@@ -35,24 +35,24 @@ export const departmentsRelations = relations(departments, ({ one, many }) => ({
   hiracEntries: many(hiracEntries),
 }));
 
-export const hiracEntries = sqliteTable('hirac_entries', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  departmentId: integer('department_id').notNull().references(() => departments.id, { onDelete: 'cascade' }),
-  task: text('task').notNull(),
-  taskType: text('task_type', { enum: taskTypeEnum }).notNull().default('Routine'),
+export const hiracEntries = mysqlTable('hirac_entries', {
+  id: serial('id').primaryKey(),
+  departmentId: int('department_id').notNull(),
+  task: varchar('task', { length: 255 }).notNull(),
+  taskType: mysqlEnum('task_type', taskTypeEnum).notNull().default('Routine'),
   hazard: text('hazard').notNull(),
   hazardPhotoUrl: text('hazard_photo_url'),
-  hazardClass: text('hazard_class', { enum: hazardClassEnum }).notNull(),
+  hazardClass: mysqlEnum('hazard_class', hazardClassEnum).notNull(),
   hazardousEvent: text('hazardous_event').notNull(),
   impact: text('impact').notNull(),
-  initialLikelihood: integer('initial_likelihood').notNull(),
-  initialSeverity: integer('initial_severity').notNull(),
-  residualLikelihood: integer('residual_likelihood'),
-  residualSeverity: integer('residual_severity'),
-  status: text('status', { enum: ['Implemented', 'For Implementation'] }),
-  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
-  reviewedAt: text('reviewed_at'),
-  nextReviewDate: text('next_review_date'),
+  initialLikelihood: int('initial_likelihood').notNull(),
+  initialSeverity: int('initial_severity').notNull(),
+  residualLikelihood: int('residual_likelihood'),
+  residualSeverity: int('residual_severity'),
+  status: mysqlEnum('status', ['Implemented', 'For Implementation']),
+  createdAt: timestamp('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  reviewedAt: timestamp('reviewed_at'),
+  nextReviewDate: timestamp('next_review_date'),
 });
 
 export const hiracEntriesRelations = relations(hiracEntries, ({ many, one }) => ({
@@ -63,14 +63,14 @@ export const hiracEntriesRelations = relations(hiracEntries, ({ many, one }) => 
   }),
 }));
 
-export const controlMeasures = sqliteTable('control_measures', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  hiracEntryId: integer('hirac_entry_id').notNull().references(() => hiracEntries.id, { onDelete: 'cascade' }),
-  type: text('type', { enum: controlTypeEnum }).notNull(),
+export const controlMeasures = mysqlTable('control_measures', {
+  id: serial('id').primaryKey(),
+  hiracEntryId: int('hirac_entry_id').notNull(),
+  type: mysqlEnum('type', controlTypeEnum).notNull(),
   description: text('description').notNull(),
-  pic: text('pic'),
-  status: text('status', { enum: controlStatusEnum }),
-  completionDate: text('completion_date'),
+  pic: varchar('pic', { length: 255 }),
+  status: mysqlEnum('status', controlStatusEnum),
+  completionDate: timestamp('completion_date'),
 });
 
 export const controlMeasuresRelations = relations(controlMeasures, ({ one }) => ({
