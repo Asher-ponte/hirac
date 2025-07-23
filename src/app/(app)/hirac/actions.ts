@@ -51,8 +51,8 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
   await db.transaction(async (tx) => {
     
     const nextReviewDate = formData.nextReviewDate 
-        ? formData.nextReviewDate 
-        : formatISO(addYears(new Date(), 1));
+        ? new Date(formData.nextReviewDate)
+        : addYears(new Date(), 1);
 
     const insertResult = await tx.insert(hiracEntries).values({
       departmentId: formData.departmentId,
@@ -68,7 +68,6 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
       residualLikelihood: null,
       residualSeverity: null,
       nextReviewDate: nextReviewDate,
-      // Default status for new entries
       status: 'For Implementation'
     });
     
@@ -79,6 +78,7 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
         ...cm,
         hiracEntryId: newHiracEntryId,
         description: cm.description || "N/A",
+        completionDate: cm.completionDate ? new Date(cm.completionDate) : null,
       }));
       await tx.insert(controlMeasures).values(controlsToInsert);
     }
@@ -90,7 +90,6 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
 
 export async function updateHiracEntry(id: number, formData: HiracEntryPayload) {
     await db.transaction(async (tx) => {
-        // Recalculate status based on control measures
         const allImplemented = formData.controlMeasures.length > 0 && formData.controlMeasures.every(cm => cm.status === 'Implemented');
         
         let newStatus: HiracEntry['status'] = 'For Implementation';
@@ -111,8 +110,8 @@ export async function updateHiracEntry(id: number, formData: HiracEntryPayload) 
             initialSeverity: formData.initialSeverity,
             residualLikelihood: formData.residualLikelihood,
             residualSeverity: formData.residualSeverity,
-            nextReviewDate: formData.nextReviewDate,
-            reviewedAt: formatISO(new Date()),
+            nextReviewDate: formData.nextReviewDate ? new Date(formData.nextReviewDate) : null,
+            reviewedAt: new Date(),
             status: newStatus,
         }).where(eq(hiracEntries.id, id));
 
@@ -129,7 +128,8 @@ export async function updateHiracEntry(id: number, formData: HiracEntryPayload) 
                 if(cm.id) {
                     await tx.update(controlMeasures).set({
                         ...cm,
-                        description: cm.description || "N/A"
+                        description: cm.description || "N/A",
+                        completionDate: cm.completionDate ? new Date(cm.completionDate) : null,
                     }).where(eq(controlMeasures.id, cm.id));
                 }
             }
@@ -140,6 +140,7 @@ export async function updateHiracEntry(id: number, formData: HiracEntryPayload) 
                 ...cm,
                 hiracEntryId: id,
                 description: cm.description || "N/A",
+                completionDate: cm.completionDate ? new Date(cm.completionDate) : null,
             })));
         }
 
@@ -162,7 +163,7 @@ export async function updateResidualRisk(id: number, data: { residualLikelihood:
   await db.update(hiracEntries).set({
     residualLikelihood: data.residualLikelihood,
     residualSeverity: data.residualSeverity,
-    reviewedAt: formatISO(new Date()),
+    reviewedAt: new Date(),
   }).where(eq(hiracEntries.id, id));
 
   revalidatePath('/hirac');
