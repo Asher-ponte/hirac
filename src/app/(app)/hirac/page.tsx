@@ -583,7 +583,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                             <FormItem>
                                 <FormLabel>Hazard Photo</FormLabel>
                                 <FormControl>
-                                    <div className="w-full max-w-[200px]">
+                                    <div className="w-full max-w-[150px]">
                                         <Input
                                             id="hazard-photo-upload"
                                             type="file"
@@ -595,12 +595,12 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                                             disabled={isUploading}
                                         />
                                         {imagePreview ? (
-                                            <div className="relative group w-full aspect-[4/3] rounded-md border border-dashed flex items-center justify-center">
+                                            <div className="relative group w-full aspect-square rounded-md border border-dashed flex items-center justify-center">
                                                 <Image 
                                                     src={imagePreview} 
                                                     alt="Hazard preview" 
                                                     fill 
-                                                    className="object-contain rounded-md"
+                                                    className="object-contain rounded-md p-1"
                                                     data-ai-hint="hazard"
                                                 />
                                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-opacity">
@@ -619,7 +619,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                                             <label 
                                                 htmlFor="hazard-photo-upload" 
                                                 className={cn(
-                                                    "cursor-pointer w-full aspect-[4/3] rounded-md border-2 border-dashed border-muted-foreground/50 bg-muted/20 flex flex-col items-center justify-center text-muted-foreground hover:bg-muted/40 transition-colors",
+                                                    "cursor-pointer w-full aspect-square rounded-md border-2 border-dashed border-muted-foreground/50 bg-muted/20 flex flex-col items-center justify-center text-muted-foreground hover:bg-muted/40 transition-colors",
                                                     isUploading && "cursor-not-allowed opacity-50"
                                                 )}
                                             >
