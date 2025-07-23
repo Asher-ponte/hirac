@@ -54,7 +54,7 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
         ? new Date(formData.nextReviewDate)
         : addYears(new Date(), 1);
 
-    const insertResult = await tx.insert(hiracEntries).values({
+    const [insertResult] = await tx.insert(hiracEntries).values({
       departmentId: formData.departmentId,
       task: formData.task,
       taskType: formData.taskType,
