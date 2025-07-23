@@ -26,14 +26,6 @@ export const departments = mysqlTable('departments', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 255 }).notNull().unique(),
   supervisorId: int('supervisor_id', { unsigned: true }),
-},
-(table) => {
-  return {
-    supervisorFk: foreignKey({
-      columns: [table.supervisorId],
-      foreignColumns: [users.id],
-    }).onDelete('set null'),
-  }
 });
 
 export const departmentsRelations = relations(departments, ({ one, many }) => ({
