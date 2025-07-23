@@ -18,7 +18,11 @@ import { defineConfig } from 'drizzle-kit';
 //    DB_PASSWORD=your_database_password
 //    DB_DATABASE=your_database_name
 //
-// 3. Ensure the `.env` file is listed in your `.gitignore` file
+// 3. For Google Cloud Storage, also add:
+//    GCS_BUCKET_NAME=your-gcs-bucket-name
+//    GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/service-account-key.json
+//
+// 4. Ensure the `.env` file is listed in your `.gitignore` file
 //    to prevent committing sensitive credentials to version control.
 // =================================================================
 
