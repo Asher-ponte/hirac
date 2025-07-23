@@ -2,7 +2,8 @@
 'use client';
 
 import * as React from 'react';
-import { Sigma, ShieldAlert, ShieldCheck, Flame, Shield, ShieldQuestion, Building } from 'lucide-react';
+import Link from 'next/link';
+import { Sigma, ShieldAlert, ShieldCheck, Flame, Shield, ShieldQuestion, Building, Users, FilePlus2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Pie, PieChart, Cell, Legend, LabelList } from 'recharts';
 import { ChartContainer, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
@@ -10,6 +11,7 @@ import { getDashboardData } from './(app)/dashboard/actions';
 import AppLayout from './(app)/layout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 type KpiData = {
     title: string;
@@ -95,6 +97,8 @@ export default function DashboardPage() {
     loadData();
   }, []);
 
+  const hasDepartments = riskByDepartmentData.length > 0;
+
   return (
     <AppLayout>
         <div className="space-y-6">
@@ -130,6 +134,45 @@ export default function DashboardPage() {
                     })
                 )}
             </div>
+
+            {!loading && !hasDepartments && (
+                <Card className="bg-primary/10 border-primary/50">
+                    <CardHeader>
+                        <CardTitle>Welcome to SafetySight!</CardTitle>
+                        <CardDescription>It looks like you're just getting started. Follow these steps to set up your workspace.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid md:grid-cols-2 gap-4">
+                        <div className="flex items-start gap-4 p-4 rounded-lg bg-background/50">
+                            <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary text-primary-foreground shrink-0">
+                                <Users className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold">Step 1: Set Up Admin Panel</h3>
+                                <p className="text-sm text-muted-foreground mb-2">
+                                    Start by adding departments and users. This is essential for assigning HIRAC entries.
+                                </p>
+                                <Button asChild variant="secondary" size="sm">
+                                    <Link href="/admin">Go to Admin Panel</Link>
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-4 p-4 rounded-lg bg-background/50">
+                             <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary text-primary-foreground shrink-0">
+                                <FilePlus2 className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold">Step 2: Create Your First HIRAC Entry</h3>
+                                <p className="text-sm text-muted-foreground mb-2">
+                                    Once you have departments set up, you can start identifying hazards and assessing risks.
+                                </p>
+                                 <Button asChild variant="secondary" size="sm">
+                                    <Link href="/hirac">Add New Entry</Link>
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
                 <Card className="md:col-span-3">
@@ -204,52 +247,63 @@ export default function DashboardPage() {
                         </div>
                      ) : (
                         <>
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            {riskByDepartmentData.map((dept) => (
-                                <Card key={dept.department}>
-                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <div className="flex items-center gap-2">
-                                            <Building className="h-5 w-5 text-muted-foreground" />
-                                            <h3 className="font-semibold tracking-tight">{dept.department}</h3>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="h-[140px] w-full">
-                                            <ChartContainer config={riskChartConfig} className="w-full h-full">
-                                                <BarChart 
-                                                    data={dept.breakdown} 
-                                                    margin={{ top: 20, right: 10, bottom: 0, left: 10 }}
-                                                    accessibilityLayer
-                                                >
-                                                    <CartesianGrid vertical={false} />
-                                                    <XAxis 
-                                                        dataKey="name" 
-                                                        tickLine={false} 
-                                                        axisLine={false}
-                                                        tickMargin={8}
-                                                        tick={({ x, y, payload }) => (
-                                                          <g transform={`translate(${x},${y})`}>
-                                                            <text x={0} y={0} dy={16} textAnchor="middle" fill="hsl(var(--foreground))" fontSize={12}>
-                                                              {payload.value}
-                                                            </text>
-                                                          </g>
-                                                        )}
-                                                    />
-                                                    <YAxis />
-                                                    <Tooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<ChartTooltipContent indicator="line" />} />
-                                                    <Bar dataKey="value" radius={4}>
-                                                        <LabelList dataKey="value" position="top" fill="hsl(var(--foreground))" fontSize={12} />
-                                                        {dept.breakdown.map((entry) => (
-                                                            <Cell key={entry.name} fill={entry.fill} />
-                                                        ))}
-                                                    </Bar>
-                                                </BarChart>
-                                            </ChartContainer>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
+                        {riskByDepartmentData.length > 0 ? (
+                             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                {riskByDepartmentData.map((dept) => (
+                                    <Card key={dept.department}>
+                                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                            <div className="flex items-center gap-2">
+                                                <Building className="h-5 w-5 text-muted-foreground" />
+                                                <h3 className="font-semibold tracking-tight">{dept.department}</h3>
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="h-[140px] w-full">
+                                                <ChartContainer config={riskChartConfig} className="w-full h-full">
+                                                    <BarChart 
+                                                        data={dept.breakdown} 
+                                                        margin={{ top: 20, right: 10, bottom: 0, left: 10 }}
+                                                        accessibilityLayer
+                                                    >
+                                                        <CartesianGrid vertical={false} />
+                                                        <XAxis 
+                                                            dataKey="name" 
+                                                            tickLine={false} 
+                                                            axisLine={false}
+                                                            tickMargin={8}
+                                                            tick={({ x, y, payload }) => (
+                                                              <g transform={`translate(${x},${y})`}>
+                                                                <text x={0} y={0} dy={16} textAnchor="middle" fill="hsl(var(--foreground))" fontSize={12}>
+                                                                  {payload.value}
+                                                                </text>
+                                                              </g>
+                                                            )}
+                                                        />
+                                                        <YAxis />
+                                                        <Tooltip cursor={{ fill: 'hsl(var(--muted))' }} content={<ChartTooltipContent indicator="line" />} />
+                                                        <Bar dataKey="value" radius={4}>
+                                                            <LabelList dataKey="value" position="top" fill="hsl(var(--foreground))" fontSize={12} />
+                                                            {dept.breakdown.map((entry) => (
+                                                                <Cell key={entry.name} fill={entry.fill} />
+                                                            ))}
+                                                        </Bar>
+                                                    </BarChart>
+                                                </ChartContainer>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg">
+                                <Building className="h-12 w-12 text-muted-foreground mb-4" />
+                                <h3 className="text-lg font-semibold">No Departments Found</h3>
+                                <p className="text-muted-foreground">Add a department in the Admin Panel to see risk distribution.</p>
+                                <Button asChild className="mt-4">
+                                     <Link href="/admin">Go to Admin Panel</Link>
+                                </Button>
+                            </div>
+                        )}
                         </>
                      )}
                 </CardContent>
@@ -258,3 +312,4 @@ export default function DashboardPage() {
     </AppLayout>
   );
 }
+
