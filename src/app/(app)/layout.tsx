@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -39,23 +40,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     // Only run this check once per session on the client
-    // if (!sessionStorage.getItem('db_checked')) {
-    //     checkDbConnection().then(result => {
-    //         if (result.ok) {
-    //             toast({
-    //                 title: "Database Connected",
-    //                 description: "Successfully connected to the database.",
-    //             });
-    //         } else {
-    //              toast({
-    //                 variant: 'destructive',
-    //                 title: "Database Connection Failed",
-    //                 description: result.error,
-    //             });
-    //         }
-    //         sessionStorage.setItem('db_checked', 'true');
-    //     });
-    // }
+    if (!sessionStorage.getItem('db_checked')) {
+        checkDbConnection().then(result => {
+            if (result.ok) {
+                toast({
+                    title: "Database Connected",
+                    description: "Successfully connected to the database.",
+                });
+            } else {
+                 toast({
+                    variant: 'destructive',
+                    title: "Database Connection Failed",
+                    description: result.error,
+                });
+            }
+            sessionStorage.setItem('db_checked', 'true');
+        });
+    }
   }, [toast]);
 
 
