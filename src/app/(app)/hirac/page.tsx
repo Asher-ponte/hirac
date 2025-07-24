@@ -8,6 +8,7 @@ import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format, formatDistanceToNow } from "date-fns"
+import { v4 as uuidv4 } from 'uuid';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -34,12 +35,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry, updateResidualRisk, getDepartments, uploadHazardPhoto } from './actions';
+import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry, updateResidualRisk, getDepartments } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 
 const likelihoodOptions = [
@@ -429,21 +432,19 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            const formData = new FormData();
-            formData.append('file', file);
+            if (!file) return;
 
             setIsUploading(true);
+            const storageRef = ref(storage, `uploads/${uuidv4()}-${file.name}`);
+
             try {
-                const result = await uploadHazardPhoto(formData);
-                if (result.url) {
-                    form.setValue('hazardPhotoUrl', result.url, { shouldValidate: true });
-                    toast({ title: "Upload Successful", description: "Image uploaded and linked." });
-                } else {
-                    toast({ variant: 'destructive', title: "Upload Failed", description: result.error || "Could not get the public URL." });
-                    handleRemoveImage();
-                }
+                const snapshot = await uploadBytes(storageRef, file);
+                const url = await getDownloadURL(snapshot.ref);
+                form.setValue('hazardPhotoUrl', url, { shouldValidate: true });
+                toast({ title: "Upload Successful", description: "Image uploaded and linked." });
             } catch (error) {
-                toast({ variant: 'destructive', title: "Upload Error", description: (error as Error).message });
+                console.error('Error uploading file:', error);
+                toast({ variant: 'destructive', title: "Upload Failed", description: (error as Error).message });
                 handleRemoveImage();
             } finally {
                 setIsUploading(false);

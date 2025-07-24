@@ -8,24 +8,6 @@ import { revalidatePath } from 'next/cache';
 import { eq, inArray } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
 import { addYears, formatISO } from 'date-fns';
-import { uploadFile } from '@/lib/gcs';
-
-export async function uploadHazardPhoto(formData: FormData): Promise<{ url?: string; error?: string }> {
-    const file = formData.get('file') as File | null;
-
-    if (!file) {
-        return { error: 'No file provided.' };
-    }
-
-    try {
-        const url = await uploadFile(file);
-        return { url };
-    } catch (error) {
-        console.error('Upload failed:', error);
-        return { error: 'Failed to upload file to Google Cloud Storage.' };
-    }
-}
-
 
 export async function getHiracEntries(departmentId?: number): Promise<HiracEntry[]> {
   try {
