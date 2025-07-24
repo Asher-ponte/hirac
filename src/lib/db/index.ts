@@ -24,12 +24,44 @@ const connectionConfig = {
 
 // Mock db object to prevent application crash.
 // Features requiring a database will not work.
-export const db = {
-    query: {},
+const mockDb = {
+    query: {
+        users: {
+            findMany: async () => [],
+            findFirst: async () => undefined,
+        },
+        departments: {
+            findMany: async () => [],
+            findFirst: async () => undefined,
+        },
+        hiracEntries: {
+            findMany: async () => [],
+            findFirst: async () => undefined,
+        },
+        controlMeasures: {
+            findMany: async () => [],
+            findFirst: async () => undefined,
+        },
+    },
     select: () => ({ from: () => Promise.resolve([]) }),
-    insert: () => ({ values: () => Promise.resolve() }),
+    insert: () => ({ values: () => Promise.resolve({ insertId: 1 }) }),
     update: () => ({ set: () => ({ where: () => Promise.resolve() }) }),
     delete: () => ({ where: () => Promise.resolve() }),
-    transaction: () => Promise.resolve(),
+    transaction: async (callback: (tx: any) => Promise<any>) => {
+        // A simplified transaction mock that just executes the callback
+        const mockTx = {
+            ...mockDb,
+            // In a real scenario, you might want to mock transaction-specific logic
+            // For now, it just uses the same mock db methods.
+            insert: (table: any) => ({
+                values: (values: any) => {
+                    return Promise.resolve([{ insertId: Math.floor(Math.random() * 1000) }]);
+                }
+            }),
+        };
+        return callback(mockTx);
+    },
     execute: () => Promise.resolve(),
-} as any;
+};
+
+export const db = mockDb as any;
