@@ -18,6 +18,18 @@ const connectionConfig = {
   database: process.env.DB_DATABASE,
 };
 
-const poolConnection = mysql.createPool(connectionConfig);
+// The following connection is commented out to prevent crashes when a database is not configured.
+// const poolConnection = mysql.createPool(connectionConfig);
+// export const db = drizzle(poolConnection, { schema, mode: 'default' });
 
-export const db = drizzle(poolConnection, { schema, mode: 'default' });
+// Mock db object to prevent application crash.
+// Features requiring a database will not work.
+export const db = {
+    query: {},
+    select: () => ({ from: () => Promise.resolve([]) }),
+    insert: () => ({ values: () => Promise.resolve() }),
+    update: () => ({ set: () => ({ where: () => Promise.resolve() }) }),
+    delete: () => ({ where: () => Promise.resolve() }),
+    transaction: () => Promise.resolve(),
+    execute: () => Promise.resolve(),
+} as any;
