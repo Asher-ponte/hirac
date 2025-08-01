@@ -83,6 +83,7 @@ const hiracFormSchema = z.object({
     hazardPhotoUrl: z.string().url().nullable().optional(),
     hazardClass: z.enum(hazardClassOptions, { required_error: 'Hazard class is required' }),
     hazardousEvent: z.string().min(1, "Hazardous event is required."),
+    personsHarmed: z.string().optional().nullable(),
     impact: z.string().min(1, "Impact is required."),
     initialLikelihood: z.coerce.number().min(1).max(5),
     initialSeverity: z.coerce.number().min(1).max(5),
@@ -345,6 +346,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
         hazardPhotoUrl: entry?.hazardPhotoUrl ?? null,
         hazardClass: entry?.hazardClass ?? 'Physical',
         hazardousEvent: entry?.hazardousEvent ?? '',
+        personsHarmed: entry?.personsHarmed ?? '',
         impact: entry?.impact ?? '',
         initialLikelihood: entry?.initialLikelihood ?? 1,
         initialSeverity: entry?.initialSeverity ?? 1,
@@ -697,6 +699,9 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                                 <FormControl><Textarea placeholder="e.g., forklift bump triggers collapse" rows={2} {...field} /></FormControl>
                                 <FormMessage />
                             </FormItem>
+                        )} />
+                        <FormField control={form.control} name="personsHarmed" render={({ field }) => (
+                            <FormItem><FormLabel>Persons who might be harmed</FormLabel><FormControl><Textarea placeholder="e.g., Forklift operator, nearby workers" rows={2} {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
                         )} />
                         <FormField control={form.control} name="impact" render={({ field }) => (
                             <FormItem><FormLabel>Impact</FormLabel><FormControl><Textarea placeholder="e.g., Physical Injury > shoulder and Head Injury" rows={2} {...field} /></FormControl><FormMessage /></FormItem>
@@ -1056,6 +1061,7 @@ function HiracCard({ item, onEdit, onReassess, onDelete, highlight }: { item: Hi
                     <IdentificationDetail label="Hazard" value={item.hazard} highlight={highlight} />
                     <IdentificationDetail label="Hazard Class" value={item.hazardClass} highlight={highlight} />
                     <IdentificationDetail label="Hazardous Event" value={item.hazardousEvent} highlight={highlight} />
+                    <IdentificationDetail label="Persons Harmed" value={item.personsHarmed} highlight={highlight} />
                     <IdentificationDetail label="Impact" value={item.impact} highlight={highlight} />
                 </div>
 
@@ -1179,6 +1185,7 @@ const HiracEntryRow = ({
                                 <Highlight text={item.hazard} highlight={highlight} />
                             </td>
                             <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-2 px-3 w-[300px]"><Highlight text={item.hazardousEvent} highlight={highlight} /></td>
+                            <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-2 px-3 w-[300px]"><Highlight text={item.personsHarmed} highlight={highlight} /></td>
                             <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-2 px-3 w-[300px]"><Highlight text={item.impact} highlight={highlight} /></td>
                             
                             {/* Initial Risk Cells */}
@@ -1337,6 +1344,7 @@ export default function HiracPage() {
             item.hazardClass,
             item.hazard,
             item.hazardousEvent,
+            item.personsHarmed,
             item.impact,
             item.status,
             ...item.controlMeasures.flatMap(cm => [
@@ -1445,6 +1453,7 @@ export default function HiracPage() {
                                 <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Hazard Class</th>
                                 <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Hazard</th>
                                 <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Hazardous Event</th>
+                                <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Persons Harmed</th>
                                 <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Impact</th>
                                 <th colSpan={3} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2 px-3">Initial Risk</th>
                                 <th colSpan={4} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2 px-3">Engineering Controls</th>

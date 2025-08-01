@@ -45,6 +45,7 @@ export const hiracEntries = mysqlTable('hirac_entries', {
   hazardPhotoUrl: varchar('hazard_photo_url', { length: 1024 }),
   hazardClass: mysqlEnum('hazard_class', hazardClassEnum).notNull(),
   hazardousEvent: text('hazardous_event').notNull(),
+  personsHarmed: text('persons_harmed'),
   impact: text('impact').notNull(),
   initialLikelihood: int('initial_likelihood').notNull(),
   initialSeverity: int('initial_severity').notNull(),

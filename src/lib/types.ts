@@ -51,6 +51,7 @@ export type HiracEntry = {
   hazardPhotoUrl?: string | null;
   hazardClass: 'Physical' | 'Chemical' | 'Biological' | 'Mechanical' | 'Electrical';
   hazardousEvent: string;
+  personsHarmed?: string | null;
   impact: string;
   initialLikelihood: number;
   initialSeverity: number;
