@@ -4,12 +4,20 @@
 import { db } from '@/lib/db';
 import { getHiracEntries } from '@/app/(app)/hirac/actions';
 import { getDepartments as getAllDepartments } from '@/app/(app)/admin/actions';
+import type { ControlStatus } from '@/lib/types';
 
 const getRiskLevelDetails = (level: number) => {
   if (level <= 6) return { label: 'Low', color: 'var(--color-low)' };
   if (level <= 12) return { label: 'Medium', color: 'var(--color-medium)' };
   return { label: 'High', color: 'var(--color-high)' };
 };
+
+const statusConfig: { [key in ControlStatus]: { fill: string } } = {
+  'For Implementation': { fill: 'hsl(43 74% 66%)' },
+  'Implemented': { fill: 'hsl(120 76% 61%)' },
+};
+const allStatuses = Object.keys(statusConfig) as ControlStatus[];
+
 
 export async function getDashboardData() {
   const [hiracEntries, departments] = await Promise.all([
@@ -28,6 +36,12 @@ export async function getDashboardData() {
   departments.forEach(dept => {
     riskByDepartmentMap.set(dept.name, { Low: 0, Medium: 0, High: 0 });
   });
+
+  const statusMap = hiracEntries.reduce((acc, entry) => {
+    const status = entry.status ?? 'For Implementation';
+    acc[status] = (acc[status] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
   hiracEntries.forEach(entry => {
     const hasResidual = entry.residualLikelihood != null && entry.residualSeverity != null;
@@ -56,16 +70,11 @@ export async function getDashboardData() {
     { title: 'High Risk', value: highRiskCount.toString(), description: 'Currently high-risk hazards' },
   ];
 
-  const statusMap = hiracEntries.reduce((acc, entry) => {
-    const status = entry.status ?? 'For Implementation';
-    acc[status] = (acc[status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const statusChartData = [
-    { status: 'For Implementation', count: statusMap['For Implementation'] || 0, fill: 'hsl(43 74% 66%)' },
-    { status: 'Implemented', count: statusMap['Implemented'] || 0, fill: 'hsl(120 76% 61%)' },
-  ];
+  const statusChartData = allStatuses.map(status => ({
+    status,
+    count: statusMap[status] || 0,
+    fill: statusConfig[status].fill,
+  }));
   
   const riskMap = { 'Low': lowRiskCount, 'Medium': mediumRiskCount, 'High': highRiskCount };
 
