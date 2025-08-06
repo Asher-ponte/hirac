@@ -4,7 +4,7 @@
 import { db } from '@/lib/db';
 import { getHiracEntries } from '@/app/(app)/hirac/actions';
 import { getDepartments as getAllDepartments } from '@/app/(app)/admin/actions';
-import type { ControlStatus } from '@/lib/types';
+import type { ControlStatus, HiracEntry } from '@/lib/types';
 
 const getRiskLevelDetails = (level: number) => {
   if (level <= 6) return { label: 'Low', color: 'var(--color-low)' };
@@ -17,6 +17,14 @@ const statusConfig: { [key in ControlStatus]: { fill: string } } = {
   'Implemented': { fill: 'hsl(120 76% 61%)' },
 };
 const allStatuses = Object.keys(statusConfig) as ControlStatus[];
+
+const getDynamicStatus = (entry: HiracEntry): ControlStatus => {
+    if (entry.controlMeasures.length === 0) {
+        return 'For Implementation';
+    }
+    const allImplemented = entry.controlMeasures.every(cm => cm.status === 'Implemented');
+    return allImplemented ? 'Implemented' : 'For Implementation';
+};
 
 
 export async function getDashboardData() {
@@ -38,7 +46,7 @@ export async function getDashboardData() {
   });
 
   const statusMap = hiracEntries.reduce((acc, entry) => {
-    const status = entry.status ?? 'For Implementation';
+    const status = getDynamicStatus(entry);
     acc[status] = (acc[status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
