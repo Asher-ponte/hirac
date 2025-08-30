@@ -45,7 +45,7 @@ type RiskByDepartmentData = {
 
 const statusChartConfig = {
     count: { label: 'Count' },
-    "For Implementation": { label: 'For Implementation', color: 'hsl(var(--chart-1))' },
+    "For Implementation": { label: 'For Implementation', color: 'hsl(var(--chart-4))' },
     Implemented: { label: 'Implemented', color: 'hsl(var(--chart-2))' },
 }
 
@@ -177,8 +177,8 @@ export default function DashboardPage() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
                 <Card className="md:col-span-3">
                 <CardHeader>
-                    <CardTitle>Status Distribution</CardTitle>
-                    <CardDescription>Breakdown of HIRAC entry statuses.</CardDescription>
+                    <CardTitle>Control Measure Status</CardTitle>
+                    <CardDescription>Breakdown of all control measures by status.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {loading ? <Skeleton className="h-[250px] w-full" /> : (
@@ -312,4 +312,3 @@ export default function DashboardPage() {
     </AppLayout>
   );
 }
-

@@ -18,15 +18,6 @@ const statusConfig: { [key in ControlStatus]: { fill: string } } = {
 };
 const allStatuses = Object.keys(statusConfig) as ControlStatus[];
 
-const getDynamicStatus = (entry: HiracEntry): ControlStatus => {
-    if (entry.controlMeasures.length === 0) {
-        return 'For Implementation';
-    }
-    const allImplemented = entry.controlMeasures.every(cm => cm.status === 'Implemented');
-    return allImplemented ? 'Implemented' : 'For Implementation';
-};
-
-
 export async function getDashboardData() {
   const [hiracEntries, departments] = await Promise.all([
     getHiracEntries(),
@@ -45,11 +36,20 @@ export async function getDashboardData() {
     riskByDepartmentMap.set(dept.name, { Low: 0, Medium: 0, High: 0 });
   });
 
+  // Correctly count statuses from individual control measures
   const statusMap = hiracEntries.reduce((acc, entry) => {
-    const status = getDynamicStatus(entry);
-    acc[status] = (acc[status] || 0) + 1;
+    if (entry.controlMeasures.length === 0) {
+      // If there are no controls, consider the entry as needing implementation
+      acc['For Implementation'] = (acc['For Implementation'] || 0) + 1;
+    } else {
+      entry.controlMeasures.forEach(cm => {
+        const status = cm.status ?? 'For Implementation'; // Default to 'For Implementation' if status is null
+        acc[status] = (acc[status] || 0) + 1;
+      });
+    }
     return acc;
-  }, {} as Record<string, number>);
+  }, {} as Record<ControlStatus, number>);
+
 
   hiracEntries.forEach(entry => {
     const hasResidual = entry.residualLikelihood != null && entry.residualSeverity != null;
