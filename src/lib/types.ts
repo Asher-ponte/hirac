@@ -62,4 +62,5 @@ export type HiracEntry = {
   createdAt: string;
   reviewedAt?: string | null;
   nextReviewDate?: string | null;
+  displayOrder: number;
 };

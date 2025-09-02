@@ -5,9 +5,8 @@ import { db } from '@/lib/db';
 import { hiracEntries, controlMeasures, departments } from '@/lib/db/schema';
 import type { HiracEntry, ControlMeasure, TaskType } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
-import { eq, inArray } from 'drizzle-orm';
-import { sql } from 'drizzle-orm';
-import { addYears, formatISO } from 'date-fns';
+import { eq, inArray, sql, desc, asc } from 'drizzle-orm';
+import { addYears } from 'date-fns';
 
 export async function getHiracEntries(departmentId?: number): Promise<HiracEntry[]> {
   try {
@@ -16,7 +15,7 @@ export async function getHiracEntries(departmentId?: number): Promise<HiracEntry
         controlMeasures: true,
         department: true,
       },
-      orderBy: (hiracEntries: any, { desc }: any) => [desc(hiracEntries.id)],
+      orderBy: [asc(hiracEntries.displayOrder), desc(hiracEntries.id)],
       where: departmentId ? eq(hiracEntries.departmentId, departmentId) : undefined,
     };
 
@@ -39,7 +38,7 @@ export async function getHiracEntries(departmentId?: number): Promise<HiracEntry
   }
 }
 
-type HiracEntryPayload = Omit<HiracEntry, 'id' | 'controlMeasures' | 'status' | 'department' | 'createdAt' | 'reviewedAt'> & {
+type HiracEntryPayload = Omit<HiracEntry, 'id' | 'controlMeasures' | 'status' | 'department' | 'createdAt' | 'reviewedAt' | 'displayOrder'> & {
   controlMeasures: (Omit<ControlMeasure, 'id'> & { id?: number })[];
 };
 
@@ -53,6 +52,10 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
     const nextReviewDate = formData.nextReviewDate 
         ? new Date(formData.nextReviewDate)
         : addYears(new Date(), 1);
+    
+    const [maxOrderResult] = await tx.select({ maxValue: sql<number>`max(${hiracEntries.displayOrder})` }).from(hiracEntries);
+    const newDisplayOrder = (maxOrderResult.maxValue || 0) + 1;
+
 
     const [insertResult] = await tx.insert(hiracEntries).values({
       departmentId: formData.departmentId,
@@ -69,7 +72,8 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
       residualLikelihood: null,
       residualSeverity: null,
       nextReviewDate: nextReviewDate,
-      status: 'For Implementation'
+      status: 'For Implementation',
+      displayOrder: newDisplayOrder,
     });
     
     const newHiracEntryId = insertResult.insertId;
@@ -170,6 +174,17 @@ export async function updateResidualRisk(id: number, data: { residualLikelihood:
 
   revalidatePath('/hirac');
   revalidatePath('/dashboard');
+}
+
+export async function updateHiracOrder(orderedIds: number[]) {
+    await db.transaction(async (tx) => {
+        for (let i = 0; i < orderedIds.length; i++) {
+            await tx.update(hiracEntries)
+                .set({ displayOrder: i + 1 })
+                .where(eq(hiracEntries.id, orderedIds[i]));
+        }
+    });
+    revalidatePath('/hirac');
 }
 
 export async function getDepartments() {

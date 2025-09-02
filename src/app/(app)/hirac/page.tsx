@@ -7,14 +7,18 @@ import Image from 'next/image';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format, formatDistanceToNow } from "date-fns"
+import { format, formatDistanceToNow, parseISO } from "date-fns"
 import { v4 as uuidv4 } from 'uuid';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { HiracEntry, ControlStatus, ControlType, Department, TaskType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle, BarChart, Camera, Search, ChevronDown, HelpCircle } from 'lucide-react';
+import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle, BarChart, Camera, Search, ChevronDown, HelpCircle, GripVertical, ArrowDownUp } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -26,7 +30,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -35,7 +39,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry, updateResidualRisk, getDepartments } from './actions';
+import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry, updateResidualRisk, getDepartments, updateHiracOrder } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -985,7 +989,20 @@ const IdentificationDetail = ({ label, value, highlight }: { label: string, valu
     );
 };
 
-function HiracCard({ item, onEdit, onReassess, onDelete, highlight }: { item: HiracEntry, onEdit: (item: HiracEntry) => void, onReassess: (item: HiracEntry) => void, onDelete: (id: string) => void, highlight: string }) {
+function SortableHiracCard({ item, onEdit, onReassess, onDelete, highlight }: { item: HiracEntry, onEdit: (item: HiracEntry) => void, onReassess: (item: HiracEntry) => void, onDelete: (id: string) => void, highlight: string }) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+    } = useSortable({id: item.id});
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+
     const initialRiskLevel = item.initialLikelihood * item.initialSeverity;
     const initialRiskDetails = getRiskLevelDetails(initialRiskLevel);
     const isReassessed = item.residualLikelihood != null && item.residualSeverity != null;
@@ -993,12 +1010,15 @@ function HiracCard({ item, onEdit, onReassess, onDelete, highlight }: { item: Hi
     const residualRiskDetails = (isReassessed && residualRiskLevel !== null) ? getRiskLevelDetails(residualRiskLevel) : null;
     
     return (
-        <Card className="w-full">
+        <Card ref={setNodeRef} style={style} className="w-full touch-none">
             <CardHeader>
                 <div className="flex justify-between items-start">
-                    <div>
-                        <CardTitle className="text-base font-semibold"><Highlight text={item.task} highlight={highlight} /></CardTitle>
-                        <CardDescription><Highlight text={item.department?.name} highlight={highlight} /> (<Highlight text={item.taskType} highlight={highlight} />)</CardDescription>
+                    <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" {...attributes} {...listeners} className="cursor-grab p-1 h-8 w-8"><GripVertical className="h-5 w-5 text-muted-foreground" /></Button>
+                        <div>
+                            <CardTitle className="text-base font-semibold"><Highlight text={item.task} highlight={highlight} /></CardTitle>
+                            <CardDescription><Highlight text={item.department?.name} highlight={highlight} /> (<Highlight text={item.taskType} highlight={highlight} />)</CardDescription>
+                        </div>
                     </div>
                     <AlertDialog>
                         <DropdownMenu>
@@ -1126,7 +1146,7 @@ const statusColorMap: { [key in ControlStatus]: string } = {
     'For Implementation': 'bg-yellow-500/80 text-black',
 };
 
-const HiracEntryRow = ({
+function SortableHiracEntryRow({
     item,
     index,
     onEdit,
@@ -1140,7 +1160,20 @@ const HiracEntryRow = ({
     onReassess: (item: HiracEntry) => void;
     onDelete: (id: string) => void;
     highlight: string;
-}) => {
+}) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+    } = useSortable({id: item.id});
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+    
     const initialRiskLevel = item.initialLikelihood * item.initialSeverity;
     const initialRiskDetails = getRiskLevelDetails(initialRiskLevel);
     const isReassessed = item.residualLikelihood != null && item.residualSeverity != null;
@@ -1154,9 +1187,14 @@ const HiracEntryRow = ({
     const maxRows = Math.max(1, engControls.length, admControls.length, ppeControls.length);
 
     return (
-        <>
+        <tbody ref={setNodeRef} style={style} className="group">
             {[...Array(maxRows)].map((_, rowIndex) => (
-                <tr key={`${item.id}-${rowIndex}`} className={cn("border-b-2 border-border/50", index % 2 === 0 ? "bg-muted/30" : "")}>
+                <tr key={`${item.id}-${rowIndex}`} className={cn("border-b-2 border-border/50 group-active:bg-muted", index % 2 === 0 ? "bg-muted/30" : "")}>
+                    {rowIndex === 0 && (
+                        <td rowSpan={maxRows} className="align-middle border-r-2 border-border/50 p-0 text-center">
+                            <Button variant="ghost" size="icon" {...attributes} {...listeners} className="cursor-grab p-2 w-full h-full rounded-none"><GripVertical className="h-5 w-5 text-muted-foreground" /></Button>
+                        </td>
+                    )}
                     {rowIndex === 0 && (
                         <>
                             <td rowSpan={maxRows} className="font-medium align-top border-r-2 border-border/50 p-2 px-3"><Highlight text={item.department?.name} highlight={highlight} /></td>
@@ -1277,7 +1315,7 @@ const HiracEntryRow = ({
                     )}
                 </tr>
             ))}
-        </>
+        </tbody>
     );
 };
 
@@ -1306,13 +1344,37 @@ export default function HiracPage() {
   const [entryToEdit, setEntryToEdit] = React.useState<HiracEntry | null>(null);
   const [entryToReassess, setEntryToReassess] = React.useState<HiracEntry | null>(null);
   const [hiracData, setHiracData] = React.useState<HiracEntry[]>([]);
-  const [filteredHiracData, setFilteredHiracData] = React.useState<HiracEntry[]>([]);
   const [departments, setDepartments] = React.useState<Department[]>([]);
   const [loading, setLoading] = React.useState(true);
   const { toast } = useToast();
   const [departmentFilter, setDepartmentFilter] = React.useState<string>('all');
   const [searchFilter, setSearchFilter] = React.useState('');
   const dialogContentRef = React.useRef<HTMLDivElement>(null);
+  const [isSavingOrder, setIsSavingOrder] = React.useState(false);
+
+  const filteredHiracData = React.useMemo(() => {
+    const lowercasedFilter = searchFilter.toLowerCase();
+    return hiracData.filter(item => {
+        const searchableText = [
+            item.department?.name,
+            item.task,
+            item.taskType,
+            item.hazardClass,
+            item.hazard,
+            item.hazardousEvent,
+            item.personsHarmed,
+            item.impact,
+            item.status,
+            ...item.controlMeasures.flatMap(cm => [
+                cm.description,
+                cm.pic,
+                cm.status
+            ])
+        ].filter(Boolean).join(' ').toLowerCase();
+        
+        return searchableText.includes(lowercasedFilter);
+    });
+  }, [searchFilter, hiracData]);
 
   const loadData = React.useCallback(async () => {
     setLoading(true);
@@ -1333,31 +1395,6 @@ export default function HiracPage() {
   React.useEffect(() => {
     loadData();
   }, [loadData]);
-
-  React.useEffect(() => {
-    const lowercasedFilter = searchFilter.toLowerCase();
-    const filtered = hiracData.filter(item => {
-        const searchableText = [
-            item.department?.name,
-            item.task,
-            item.taskType,
-            item.hazardClass,
-            item.hazard,
-            item.hazardousEvent,
-            item.personsHarmed,
-            item.impact,
-            item.status,
-            ...item.controlMeasures.flatMap(cm => [
-                cm.description,
-                cm.pic,
-                cm.status
-            ])
-        ].filter(Boolean).join(' ').toLowerCase();
-        
-        return searchableText.includes(lowercasedFilter);
-    });
-    setFilteredHiracData(filtered);
-  }, [searchFilter, hiracData]);
   
   const handleFormSubmit = () => {
     loadData();
@@ -1388,6 +1425,38 @@ export default function HiracPage() {
         toast({ variant: 'destructive', title: "Error", description: "Failed to delete entry." });
     }
   }
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+        const oldIndex = hiracData.findIndex((item) => item.id === active.id);
+        const newIndex = hiracData.findIndex((item) => item.id === over.id);
+        const newOrder = arrayMove(hiracData, oldIndex, newIndex);
+        setHiracData(newOrder);
+
+        const orderedIds = newOrder.map(item => parseInt(item.id.replace('HIRAC-', '')));
+        setIsSavingOrder(true);
+        try {
+            await updateHiracOrder(orderedIds);
+            toast({ title: 'Order Saved', description: 'The new HIRAC order has been saved.' });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to save the new order.' });
+            // Optionally revert UI on error
+            loadData();
+        } finally {
+            setIsSavingOrder(false);
+        }
+    }
+  }
+
 
   return (
     <div className="space-y-4">
@@ -1427,11 +1496,12 @@ export default function HiracPage() {
          {loading && <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>}
          {!loading && filteredHiracData.length === 0 && <div className="flex justify-center items-center h-48"><p className="text-muted-foreground">No HIRAC entries found.</p></div>}
          {!loading && filteredHiracData.length > 0 && (
-            <>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               {/* Mobile View */}
               <div className="md:hidden space-y-4">
+                <SortableContext items={filteredHiracData} strategy={verticalListSortingStrategy}>
                   {filteredHiracData.map((item) => (
-                      <HiracCard 
+                      <SortableHiracCard 
                         key={item.id} 
                         item={item} 
                         onEdit={handleEditEntry} 
@@ -1440,6 +1510,7 @@ export default function HiracPage() {
                         highlight={searchFilter} 
                       />
                   ))}
+                </SortableContext>
               </div>
 
               {/* Desktop View */}
@@ -1447,6 +1518,7 @@ export default function HiracPage() {
                     <table className="w-full caption-bottom text-xs relative border-collapse">
                         <thead className="sticky top-0 z-10 bg-primary/90 backdrop-blur-sm">
                             <tr className="border-b-2 border-border/50 hover:bg-primary/95">
+                                <th className="w-12 text-primary-foreground p-2 px-3 border-r-2 border-border/50"><span className="sr-only">Drag Handle</span></th>
                                 <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Department</th>
                                 <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Task/Job</th>
                                 <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Task Type</th>
@@ -1486,9 +1558,9 @@ export default function HiracPage() {
                                 <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">RL</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <SortableContext items={filteredHiracData} strategy={verticalListSortingStrategy}>
                             {filteredHiracData.map((item, index) => (
-                                <HiracEntryRow 
+                                <SortableHiracEntryRow 
                                     key={item.id} 
                                     item={item}
                                     index={index}
@@ -1498,10 +1570,10 @@ export default function HiracPage() {
                                     highlight={searchFilter}
                                 />
                             ))}
-                        </tbody>
+                        </SortableContext>
                     </table>
                 </div>
-            </>
+            </DndContext>
          )}
       </div>
 
@@ -1544,5 +1616,3 @@ export default function HiracPage() {
     </div>
   );
 }
-
-    

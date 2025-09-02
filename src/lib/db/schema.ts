@@ -55,6 +55,7 @@ export const hiracEntries = mysqlTable('hirac_entries', {
   createdAt: timestamp('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
   reviewedAt: timestamp('reviewed_at'),
   nextReviewDate: timestamp('next_review_date'),
+  displayOrder: int('display_order').notNull().default(0),
 });
 
 export const hiracEntriesRelations = relations(hiracEntries, ({ many, one }) => ({
