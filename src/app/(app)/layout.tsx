@@ -52,6 +52,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     variant: 'destructive',
                     title: "Database Connection Failed",
                     description: result.error,
+                    duration: 20000,
                 });
             }
             sessionStorage.setItem('db_checked', 'true');
