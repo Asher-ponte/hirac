@@ -1016,7 +1016,7 @@ function SortableHiracCard({ item, onEdit, onReassess, onDelete, highlight }: { 
                     <div className="flex items-center gap-2">
                         <Button variant="ghost" size="icon" {...attributes} {...listeners} className="cursor-grab p-1 h-8 w-8"><GripVertical className="h-5 w-5 text-muted-foreground" /></Button>
                         <div>
-                            <CardTitle className="text-base font-semibold"><Highlight text={item.task} highlight={highlight} /></CardTitle>
+                            <CardTitle className="text-base font-semibold">{item.id}: <Highlight text={item.task} highlight={highlight} /></CardTitle>
                             <CardDescription><Highlight text={item.department?.name} highlight={highlight} /> (<Highlight text={item.taskType} highlight={highlight} />)</CardDescription>
                         </div>
                     </div>
@@ -1197,6 +1197,7 @@ function SortableHiracEntryRow({
                     )}
                     {rowIndex === 0 && (
                         <>
+                            <td rowSpan={maxRows} className="font-medium align-top border-r-2 border-border/50 p-2 px-3"><Highlight text={item.id} highlight={highlight} /></td>
                             <td rowSpan={maxRows} className="font-medium align-top border-r-2 border-border/50 p-2 px-3"><Highlight text={item.department?.name} highlight={highlight} /></td>
                             <td rowSpan={maxRows} className="font-medium align-top border-r-2 border-border/50 p-2 px-3"><Highlight text={item.task} highlight={highlight} /></td>
                             <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 p-2 px-3"><Highlight text={item.taskType} highlight={highlight} /></td>
@@ -1356,6 +1357,7 @@ export default function HiracPage() {
     const lowercasedFilter = searchFilter.toLowerCase();
     return hiracData.filter(item => {
         const searchableText = [
+            item.id,
             item.department?.name,
             item.task,
             item.taskType,
@@ -1519,6 +1521,7 @@ export default function HiracPage() {
                         <thead className="sticky top-0 z-10 bg-primary/90 backdrop-blur-sm">
                             <tr className="border-b-2 border-border/50 hover:bg-primary/95">
                                 <th className="w-12 text-primary-foreground p-2 px-3 border-r-2 border-border/50"><span className="sr-only">Drag Handle</span></th>
+                                <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>ID</th>
                                 <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Department</th>
                                 <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Task/Job</th>
                                 <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Task Type</th>
@@ -1616,3 +1619,4 @@ export default function HiracPage() {
     </div>
   );
 }
+
