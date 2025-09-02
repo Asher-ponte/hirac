@@ -1,56 +1,64 @@
--- This script provides the SQL statements to create the necessary tables for the SafetySight application.
--- You can execute this script in your Google Cloud SQL instance to set up the database schema.
+-- This script is generated based on the Drizzle ORM schema.
+-- You can use this to set up your database tables in a MySQL environment.
 
--- Creates the 'users' table to store user information.
+-- Drop tables in reverse order of dependency to avoid foreign key constraints errors
+DROP TABLE IF EXISTS `control_measures`;
+DROP TABLE IF EXISTS `hirac_entries`;
+DROP TABLE IF EXISTS `departments`;
+DROP TABLE IF EXISTS `users`;
+
+
+-- Create `users` table
 CREATE TABLE `users` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `name` VARCHAR(255) NOT NULL,
-  `email` VARCHAR(255) NOT NULL UNIQUE,
-  `role` ENUM('Admin', 'Safety Officer', 'Viewer') NOT NULL
+    `id` serial AUTO_INCREMENT NOT NULL,
+    `name` varchar(255) NOT NULL,
+    `email` varchar(255) NOT NULL,
+    `role` enum('Admin','Safety Officer','Viewer') NOT NULL,
+    CONSTRAINT `users_id` PRIMARY KEY(`id`),
+    CONSTRAINT `users_email_unique` UNIQUE(`email`)
 );
 
--- Creates the 'departments' table to store organizational departments.
--- It includes a foreign key to link a supervisor from the 'users' table.
+-- Create `departments` table
 CREATE TABLE `departments` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `name` VARCHAR(255) NOT NULL UNIQUE,
-  `supervisor_id` INT,
-  FOREIGN KEY (`supervisor_id`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
+    `id` serial AUTO_INCREMENT NOT NULL,
+    `name` varchar(255) NOT NULL,
+    `supervisor_id` int unsigned,
+    CONSTRAINT `departments_id` PRIMARY KEY(`id`),
+    CONSTRAINT `departments_name_unique` UNIQUE(`name`)
 );
 
--- Creates the main 'hirac_entries' table for Hazard Identification, Risk Assessment, and Control records.
--- This table is linked to a department.
+-- Create `hirac_entries` table
 CREATE TABLE `hirac_entries` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `department_id` INT NOT NULL,
-  `task` VARCHAR(255) NOT NULL,
-  `task_type` ENUM('Routine', 'Non-Routine') NOT NULL DEFAULT 'Routine',
-  `hazard` TEXT NOT NULL,
-  `hazard_photo_url` VARCHAR(1024),
-  `hazard_class` ENUM('Physical', 'Chemical', 'Biological', 'Mechanical', 'Electrical') NOT NULL,
-  `hazardous_event` TEXT NOT NULL,
-  `persons_harmed` TEXT,
-  `impact` TEXT NOT NULL,
-  `initial_likelihood` INT NOT NULL,
-  `initial_severity` INT NOT NULL,
-  `residual_likelihood` INT,
-  `residual_severity` INT,
-  `status` ENUM('Implemented', 'For Implementation'),
-  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `reviewed_at` TIMESTAMP,
-  `next_review_date` TIMESTAMP,
-  FOREIGN KEY (`department_id`) REFERENCES `departments`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+    `id` serial AUTO_INCREMENT NOT NULL,
+    `department_id` int NOT NULL,
+    `task` varchar(255) NOT NULL,
+    `task_type` enum('Routine','Non-Routine') NOT NULL DEFAULT 'Routine',
+    `hazard` text NOT NULL,
+    `hazard_photo_url` varchar(1024),
+    `hazard_class` enum('Physical','Chemical','Biological','Mechanical','Electrical') NOT NULL,
+    `hazardous_event` text NOT NULL,
+    `persons_harmed` text,
+    `impact` text NOT NULL,
+    `initial_likelihood` int NOT NULL,
+    `initial_severity` int NOT NULL,
+    `residual_likelihood` int,
+    `residual_severity` int,
+    `status` enum('Implemented','For Implementation'),
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `reviewed_at` timestamp,
+    `next_review_date` timestamp,
+    `display_order` int NOT NULL DEFAULT 0,
+    CONSTRAINT `hirac_entries_id` PRIMARY KEY(`id`)
 );
 
--- Creates the 'control_measures' table to store control measures for each HIRAC entry.
--- This table has a many-to-one relationship with 'hirac_entries'.
+-- Create `control_measures` table
 CREATE TABLE `control_measures` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `hirac_entry_id` INT NOT NULL,
-  `type` ENUM('Engineering', 'Administrative', 'PPE') NOT NULL,
-  `description` TEXT NOT NULL,
-  `pic` VARCHAR(255),
-  `status` ENUM('Implemented', 'For Implementation'),
-  `completion_date` TIMESTAMP,
-  FOREIGN KEY (`hirac_entry_id`) REFERENCES `hirac_entries`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+    `id` serial AUTO_INCREMENT NOT NULL,
+    `hirac_entry_id` int NOT NULL,
+    `type` enum('Engineering','Administrative','PPE') NOT NULL,
+    `description` text NOT NULL,
+    `pic` varchar(255),
+    `status` enum('Implemented','For Implementation'),
+    `completion_date` timestamp,
+    CONSTRAINT `control_measures_id` PRIMARY KEY(`id`)
 );
