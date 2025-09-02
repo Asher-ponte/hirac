@@ -36,11 +36,10 @@ export async function getDashboardData() {
     riskByDepartmentMap.set(dept.name, { Low: 0, Medium: 0, High: 0 });
   });
 
-  // Correctly count statuses from individual control measures
   const statusMap = hiracEntries.reduce((acc, entry) => {
     if (entry.controlMeasures.length === 0) {
-      // If there are no controls, consider the entry as needing implementation
-      acc['For Implementation'] = (acc['For Implementation'] || 0) + 1;
+      // If there are no controls, consider the entry itself as 'For Implementation'
+      // This is a business logic choice, can be adjusted if needed.
     } else {
       entry.controlMeasures.forEach(cm => {
         const status = cm.status ?? 'For Implementation'; // Default to 'For Implementation' if status is null
