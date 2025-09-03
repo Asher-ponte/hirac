@@ -1228,11 +1228,11 @@ function SortableHiracEntryRow({
                             <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-2 px-3 w-[300px]"><Highlight text={item.impact} highlight={highlight} /></td>
                             
                             {/* Initial Risk Cells */}
-                            <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(item.initialLikelihood))}>
-                                {item.initialLikelihood}
-                            </td>
                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(item.initialSeverity))}>
                                 {item.initialSeverity}
+                            </td>
+                            <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(item.initialLikelihood))}>
+                                {item.initialLikelihood}
                             </td>
                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", initialRiskDetails.color)}>
                                 <TooltipProvider><Tooltip><TooltipTrigger className="w-full h-full flex items-center justify-center p-2 px-3">{initialRiskLevel}</TooltipTrigger><TooltipContent><p className="font-bold">Risk Level: {initialRiskLevel} ({initialRiskDetails.label})</p></TooltipContent></Tooltip></TooltipProvider>
@@ -1275,11 +1275,11 @@ function SortableHiracEntryRow({
 
                     {rowIndex === 0 && (
                          <>
-                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(isReassessed ? item.residualLikelihood : null))}>
-                                {isReassessed ? item.residualLikelihood : 'N/A'}
-                            </td>
-                            <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(isReassessed ? item.residualSeverity : null))}>
+                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(isReassessed ? item.residualSeverity : null))}>
                                 {isReassessed ? item.residualSeverity : 'N/A'}
+                            </td>
+                            <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(isReassessed ? item.residualLikelihood : null))}>
+                                {isReassessed ? item.residualLikelihood : 'NA'}
                             </td>
                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", isReassessed && residualRiskDetails ? residualRiskDetails.color : 'bg-muted/30')}>
                                 {isReassessed && residualRiskDetails && residualRiskLevel !== null ? (
@@ -1541,8 +1541,8 @@ export default function HiracPage() {
                                 <th className="align-bottom text-primary-foreground p-2 px-3" rowSpan={2}><span className="sr-only">Actions</span></th>
                             </tr>
                             <tr className="border-b-2 border-border/50 hover:bg-primary/95">
-                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">P</th>
                                 <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">S</th>
+                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">P</th>
                                 <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">RL</th>
                                 <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Description</th>
                                 <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">PIC</th>
@@ -1556,8 +1556,8 @@ export default function HiracPage() {
                                 <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">PIC</th>
                                 <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Status</th>
                                 <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Completion</th>
-                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">P</th>
                                 <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">S</th>
+                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">P</th>
                                 <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">RL</th>
                             </tr>
                         </thead>
@@ -1619,4 +1619,5 @@ export default function HiracPage() {
     </div>
   );
 }
+
 
