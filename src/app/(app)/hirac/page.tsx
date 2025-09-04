@@ -1298,7 +1298,7 @@ function SortableHiracEntryRow({
                                 {isReassessed ? item.residualSeverity : 'N/A'}
                             </td>
                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(isReassessed ? item.residualLikelihood : null))}>
-                                {isReassessed ? item.residualLikelihood : 'NA'}
+                                {isReassessed ? item.residualLikelihood : 'N/A'}
                             </td>
                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", isReassessed && residualRiskDetails ? residualRiskDetails.color : 'bg-muted/30')}>
                                 {isReassessed && residualRiskDetails && residualRiskLevel !== null ? (
