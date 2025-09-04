@@ -13,8 +13,8 @@ export function useGrabToPan<T extends HTMLElement>() {
         if (e.button !== 0) return;
         
         const target = e.target as HTMLElement;
-        // Prevent pan from firing on interactive elements, including the dnd-kit drag handle
-        if (target.closest('button, a, input, [role="button"]')) {
+        // Prevent pan from firing on interactive elements or the dnd-kit drag handle
+        if (target.closest('button, a, input, [data-dnd-handle="true"]')) {
             return;
         }
 
@@ -24,6 +24,8 @@ export function useGrabToPan<T extends HTMLElement>() {
 
         const onMouseMove = (moveEvent: MouseEvent) => {
             if (!ref.current) return;
+            // prevent text selection while dragging
+            moveEvent.preventDefault();
             const x = moveEvent.pageX - ref.current.offsetLeft;
             const walk = (x - startX) * 2; // The multiplier increases scroll speed
             ref.current.scrollLeft = scrollLeft - walk;
