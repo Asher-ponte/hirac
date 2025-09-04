@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { useForm, useFieldArray, useWatch, type ControllerRenderProps, type FieldValues } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format, formatDistanceToNow, parseISO } from "date-fns"
+import { format, formatDistanceToNow } from "date-fns"
 import { v4 as uuidv4 } from 'uuid';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -18,7 +18,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Badge } from '@/components/ui/badge';
 import type { HiracEntry, ControlStatus, ControlType, Department, TaskType, ControlMeasure } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle, BarChart, Camera, Search, ChevronDown, HelpCircle, GripVertical, ArrowDownUp } from 'lucide-react';
+import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle, BarChart, Camera, Search, ChevronDown, HelpCircle, GripVertical } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -30,7 +30,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -41,7 +41,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { createHiracEntry, getHiracEntries, updateHiracEntry, deleteHiracEntry, updateResidualRisk, getDepartments, updateHiracOrder } from './actions';
 import { useToast } from '@/hooks/use-toast';
-import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -197,7 +196,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
         name: "controlMeasures"
     });
 
-    const filteredFields = fields.map((field, index) => ({...field, originalIndex: index})).filter(field => (field as any).type === controlType);
+    const filteredFields: ControlMeasureField[] = fields.map((field, index) => ({...field, originalIndex: index}) as ControlMeasureField).filter(field => field.type === controlType);
     
     const controlMeasuresValues: ControlMeasure[] = useWatch({
         name: "controlMeasures",
@@ -224,7 +223,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                     <p className="text-sm text-muted-foreground text-center py-4">No {title.toLowerCase()} added.</p>
                 )}
                 {filteredFields.map((field) => {
-                     const currentStatus = controlMeasuresValues[(field as ControlMeasureField).originalIndex]?.status;
+                     const currentStatus = controlMeasuresValues[field.originalIndex]?.status;
                      return (
                      <div key={field.id} className="p-2 border rounded-lg space-y-2 relative">
                         <Button 
@@ -232,13 +231,13 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                             variant="ghost" 
                             size="icon" 
                             className="absolute top-2 right-2 h-6 w-6" 
-                            onClick={() => remove((field as ControlMeasureField).originalIndex)}
+                            onClick={() => remove(field.originalIndex)}
                         >
                             <XCircle className="h-4 w-4 text-muted-foreground" />
                         </Button>
                         <FormField
                             control={form.control}
-                            name={`controlMeasures.${(field as ControlMeasureField).originalIndex}.description`}
+                            name={`controlMeasures.${field.originalIndex}.description`}
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Description</FormLabel>
@@ -252,7 +251,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField
                                 control={form.control}
-                                name={`controlMeasures.${(field as ControlMeasureField).originalIndex}.pic`}
+                                name={`controlMeasures.${field.originalIndex}.pic`}
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Person-in-Charge</FormLabel>
@@ -265,7 +264,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                             />
                             <FormField
                                 control={form.control}
-                                name={`controlMeasures.${(field as ControlMeasureField).originalIndex}.status`}
+                                name={`controlMeasures.${field.originalIndex}.status`}
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Status</FormLabel>
@@ -273,7 +272,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                                             onValueChange={(value) => {
                                                 field.onChange(value);
                                                 if (value === 'Implemented') {
-                                                    form.setValue(`controlMeasures.${(field as ControlMeasureField).originalIndex}.completionDate`, null);
+                                                    form.setValue(`controlMeasures.${field.originalIndex}.completionDate`, null);
                                                 }
                                             }} 
                                             value={field.value ?? undefined}
@@ -293,7 +292,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                         {currentStatus === 'For Implementation' && (
                              <FormField
                                 control={form.control}
-                                name={`controlMeasures.${(field as ControlMeasureField).originalIndex}.completionDate`}
+                                name={`controlMeasures.${field.originalIndex}.completionDate`}
                                 render={({ field }) => (
                                     <FormItem className="flex flex-col">
                                         <FormLabel>Completion Date</FormLabel>
@@ -424,15 +423,14 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
     }
     
     const handleStepNavigation = async (targetStep: number) => {
-        let fieldsToValidate: (keyof HiracFormValues)[] = [];
+        const fieldsToValidate: (keyof HiracFormValues)[] = [
+            'departmentId', 'task', 'taskType', 'hazard', 'hazardClass', 
+            'hazardousEvent', 'impact', 'personsHarmed', 'initialLikelihood', 'initialSeverity'
+        ];
+        
         let isValid = true;
         
         if (targetStep > step) {
-            if (step === 1) {
-                fieldsToValidate = ['departmentId', 'task', 'taskType', 'hazard', 'hazardClass', 'hazardousEvent', 'impact', 'personsHarmed'];
-            } else if (step === 2) {
-                 fieldsToValidate = ['initialLikelihood', 'initialSeverity'];
-            }
             isValid = await form.trigger(fieldsToValidate);
         }
 
@@ -858,7 +856,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
 
             <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between pt-4 gap-2">
                 <div>
-                    {step > 1 && <Button variant="outline" type="button" onClick={() => handleStepNavigation(step - 1)} className="w-full sm:w-auto"><ArrowLeft className="mr-2 h-4 w-4" /> Previous</Button>}
+                    {step > 1 && <Button variant="outline" type="button" onClick={() => setStep(step - 1)} className="w-full sm:w-auto"><ArrowLeft className="mr-2 h-4 w-4" /> Previous</Button>}
                 </div>
                 <div className="flex flex-col-reverse sm:flex-row gap-2">
                     <DialogClose asChild><Button type="button" variant="secondary" className="w-full sm:w-auto">Cancel</Button></DialogClose>
@@ -1269,7 +1267,7 @@ function SortableHiracEntryRow({
                     ].map(({controls, type}) => {
                         const control = controls[rowIndex];
                         const renderCell = (content: React.ReactNode, widthClass: string, otherClasses?: string) => (
-                           <td className={cn("p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3", widthClass, otherClasses)}>
+                           <td key={`${type}-${rowIndex}`} className={cn("p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3", widthClass, otherClasses)}>
                                 {content}
                            </td>
                         );
