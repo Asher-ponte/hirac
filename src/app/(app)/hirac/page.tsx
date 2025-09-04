@@ -1511,9 +1511,9 @@ export default function HiracPage() {
                         <th className="align-bottom text-primary-foreground p-2 px-3" rowSpan={2}><span className="sr-only">Actions</span></th>
                     </tr>
                     <tr className="border-b-2 border-border/50 hover:bg-primary/95">
-                        <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">S</th>
-                        <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">P</th>
-                        <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">RL</th>
+                        <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Severity</th>
+                        <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Probability</th>
+                        <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Risk Level</th>
                         <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Description</th>
                         <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">PIC</th>
                         <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Status</th>
@@ -1526,9 +1526,9 @@ export default function HiracPage() {
                         <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">PIC</th>
                         <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Status</th>
                         <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Completion</th>
-                        <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">S</th>
-                        <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">P</th>
-                        <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">RL</th>
+                        <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Severity</th>
+                        <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Probability</th>
+                        <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Risk Level</th>
                     </tr>
                 </thead>
                 <SortableContext items={filteredHiracData} strategy={verticalListSortingStrategy}>
@@ -1649,4 +1649,3 @@ export default function HiracPage() {
     </div>
   );
 }
-
