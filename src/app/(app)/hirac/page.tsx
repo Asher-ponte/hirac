@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -1128,6 +1129,11 @@ function HiracCard({ item, onEdit, onReassess, onDelete, highlight }: { item: Hi
     );
 }
 
+const statusColorMap: { [key in ControlStatus]: string } = {
+    'Implemented': 'bg-green-600/80 text-white',
+    'For Implementation': 'bg-yellow-500/80 text-black',
+};
+
 function SortableHiracEntryRow({
     item,
     index,
@@ -1615,5 +1621,7 @@ export default function HiracPage() {
     </div>
   );
 }
+
+    
 
     
