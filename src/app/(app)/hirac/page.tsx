@@ -1266,7 +1266,7 @@ function SortableHiracEntryRow({
                         {controls: ppeControls, type: 'PPE'}
                     ].map(({controls, type}, typeIndex) => {
                         const control = controls[rowIndex];
-                        const renderCell = (content: React.ReactNode, widthClass: string, otherClasses?: string, cellKey: string) => (
+                        const renderCell = (content: React.ReactNode, widthClass: string, otherClasses?: string, cellKey?: string) => (
                            <td key={cellKey} className={cn("p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3", widthClass, otherClasses)}>
                                 {content}
                            </td>
@@ -1274,20 +1274,20 @@ function SortableHiracEntryRow({
                         if(control) {
                             return (
                                 <React.Fragment key={`${type}-${control.id || rowIndex}`}>
-                                    {renderCell(<Highlight text={control.description} highlight={highlight} />, "w-[300px]", undefined, `${type}-desc-${rowIndex}`)}
-                                    {renderCell(<Highlight text={control.pic} highlight={highlight} />, "text-center w-[100px]", undefined, `${type}-pic-${rowIndex}`)}
-                                    {renderCell(<div className={cn("text-center p-1 h-full", control.status && statusColorMap[control.status])}><Highlight text={control.status} highlight={highlight} /></div>, "p-0 w-[100px]", undefined, `${type}-status-${rowIndex}`)}
-                                    {renderCell(control.completionDate ? format(new Date(control.completionDate), "P") : '', "text-center w-[120px]", undefined, `${type}-date-${rowIndex}`)}
+                                    {renderCell(<Highlight text={control.description} highlight={highlight} />, "w-[300px]", undefined, `desc-${type}-${rowIndex}`)}
+                                    {renderCell(<Highlight text={control.pic} highlight={highlight} />, "text-center w-[100px]", undefined, `pic-${type}-${rowIndex}`)}
+                                    {renderCell(<div className={cn("text-center p-1 h-full", control.status && statusColorMap[control.status])}><Highlight text={control.status} highlight={highlight} /></div>, "p-0 w-[100px]", undefined, `status-${type}-${rowIndex}`)}
+                                    {renderCell(control.completionDate ? format(new Date(control.completionDate), "P") : '', "text-center w-[120px]", undefined, `date-${type}-${rowIndex}`)}
                                 </React.Fragment>
                             );
                         }
                         // Render empty cells to maintain table structure
                         return (
                             <React.Fragment key={`${type}-${rowIndex}-empty`}>
-                                <td className="p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3 w-[300px]"></td>
-                                <td className="p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3 text-center w-[100px]"></td>
-                                <td className="p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3 p-0 w-[100px]"></td>
-                                <td className="p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3 text-center w-[120px]"></td>
+                                <td className="p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3 w-[300px]" key={`desc-empty-${type}-${rowIndex}`}></td>
+                                <td className="p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3 text-center w-[100px]" key={`pic-empty-${type}-${rowIndex}`}></td>
+                                <td className="p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3 p-0 w-[100px]" key={`status-empty-${type}-${rowIndex}`}></td>
+                                <td className="p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3 text-center w-[120px]" key={`date-empty-${type}-${rowIndex}`}></td>
                             </React.Fragment>
                         )
                     })}
@@ -1649,3 +1649,4 @@ export default function HiracPage() {
     </div>
   );
 }
+
