@@ -48,6 +48,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useGrabToPan } from '@/hooks/use-grab-to-pan';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 
 const likelihoodOptions = [
@@ -990,20 +991,7 @@ const IdentificationDetail = ({ label, value, highlight }: { label: string, valu
     );
 };
 
-function SortableHiracCard({ item, onEdit, onReassess, onDelete, highlight }: { item: HiracEntry, onEdit: (item: HiracEntry) => void, onReassess: (item: HiracEntry) => void, onDelete: (id: string) => void, highlight: string }) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-    } = useSortable({id: item.id});
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-    };
-
+function HiracCard({ item, onEdit, onReassess, onDelete, highlight }: { item: HiracEntry, onEdit: (item: HiracEntry) => void, onReassess: (item: HiracEntry) => void, onDelete: (id: string) => void, highlight: string }) {
     const initialRiskLevel = item.initialLikelihood * item.initialSeverity;
     const initialRiskDetails = getRiskLevelDetails(initialRiskLevel);
     const isReassessed = item.residualLikelihood != null && item.residualSeverity != null;
@@ -1011,15 +999,12 @@ function SortableHiracCard({ item, onEdit, onReassess, onDelete, highlight }: { 
     const residualRiskDetails = (isReassessed && residualRiskLevel !== null) ? getRiskLevelDetails(residualRiskLevel) : null;
     
     return (
-        <Card ref={setNodeRef} style={style} className="w-full touch-none">
+        <Card className="w-full">
             <CardHeader>
                 <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" {...attributes} {...listeners} className="cursor-grab p-1 h-8 w-8"><GripVertical className="h-5 w-5 text-muted-foreground" /></Button>
-                        <div>
-                            <CardTitle className="text-base font-semibold">{item.id}: <Highlight text={item.task} highlight={highlight} /></CardTitle>
-                            <CardDescription><Highlight text={item.department?.name} highlight={highlight} /> (<Highlight text={item.taskType} highlight={highlight} />)</CardDescription>
-                        </div>
+                    <div>
+                        <CardTitle className="text-base font-semibold">{item.id}: <Highlight text={item.task} highlight={highlight} /></CardTitle>
+                        <CardDescription><Highlight text={item.department?.name} highlight={highlight} /> (<Highlight text={item.taskType} highlight={highlight} />)</CardDescription>
                     </div>
                     <AlertDialog>
                         <DropdownMenu>
@@ -1139,6 +1124,34 @@ function SortableHiracCard({ item, onEdit, onReassess, onDelete, highlight }: { 
                 </span>
             </CardFooter>
         </Card>
+    );
+}
+
+function SortableHiracCard({ item, onEdit, onReassess, onDelete, highlight }: { item: HiracEntry, onEdit: (item: HiracEntry) => void, onReassess: (item: HiracEntry) => void, onDelete: (id: string) => void, highlight: string }) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+    } = useSortable({id: item.id});
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} className="touch-none">
+            <HiracCard
+                item={item}
+                onEdit={onEdit}
+                onReassess={onReassess}
+                onDelete={onDelete}
+                highlight={highlight}
+            />
+            {/* The drag handle is now part of the card header in HiracCard */}
+        </div>
     );
 }
 
@@ -1354,6 +1367,7 @@ export default function HiracPage() {
   const dialogContentRef = React.useRef<HTMLDivElement>(null);
   const [isSavingOrder, setIsSavingOrder] = React.useState(false);
   const tableContainerRef = useGrabToPan<HTMLDivElement>();
+  const isMobile = useIsMobile();
 
 
   const filteredHiracData = React.useMemo(() => {
@@ -1461,6 +1475,72 @@ export default function HiracPage() {
         }
     }
   }
+  
+  const dndContext = !isMobile ? (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        {/* Desktop View */}
+        <div ref={tableContainerRef} className="hidden md:block border-2 border-border/50 rounded-lg overflow-auto max-h-[calc(130vh-10rem)] grab-to-pan">
+            <table className="w-full caption-bottom text-xs relative border-collapse">
+                <thead className="sticky top-0 z-10 bg-primary/90 backdrop-blur-sm">
+                    <tr className="border-b-2 border-border/50 hover:bg-primary/95">
+                        <th className="w-12 text-primary-foreground p-2 px-3 border-r-2 border-border/50"><span className="sr-only">Drag Handle</span></th>
+                        <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>ID</th>
+                        <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Department</th>
+                        <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Task/Job</th>
+                        <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Task Type</th>
+                        <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Hazard Class</th>
+                        <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Hazard</th>
+                        <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Hazardous Event</th>
+                        <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Persons Harmed</th>
+                        <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Impact</th>
+                        <th colSpan={3} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2 px-3">Initial Risk</th>
+                        <th colSpan={4} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2 px-3">Engineering Controls</th>
+                        <th colSpan={4} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2 px-3">Administrative Controls</th>
+                        <th colSpan={4} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2 px-3">PPE Controls</th>
+                        <th colSpan={3} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2 px-3">Risk Re-assessment</th>
+                        <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Created</th>
+                        <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Last Reviewed</th>
+                        <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Next Review</th>
+                        <th className="align-bottom text-primary-foreground p-2 px-3" rowSpan={2}><span className="sr-only">Actions</span></th>
+                    </tr>
+                    <tr className="border-b-2 border-border/50 hover:bg-primary/95">
+                        <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">S</th>
+                        <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">P</th>
+                        <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">RL</th>
+                        <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Description</th>
+                        <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">PIC</th>
+                        <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Status</th>
+                        <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Completion</th>
+                        <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Description</th>
+                        <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">PIC</th>
+                        <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Status</th>
+                        <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Completion</th>
+                        <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Description</th>
+                        <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">PIC</th>
+                        <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Status</th>
+                        <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Completion</th>
+                        <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">S</th>
+                        <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">P</th>
+                        <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">RL</th>
+                    </tr>
+                </thead>
+                <SortableContext items={filteredHiracData} strategy={verticalListSortingStrategy}>
+                    {filteredHiracData.map((item, index) => (
+                        <SortableHiracEntryRow 
+                            key={item.id} 
+                            item={item}
+                            index={index}
+                            onEdit={handleEditEntry}
+                            onReassess={handleReassessEntry}
+                            onDelete={handleDeleteEntry}
+                            highlight={searchFilter}
+                        />
+                    ))}
+                </SortableContext>
+            </table>
+        </div>
+    </DndContext>
+  ) : null;
 
 
   return (
@@ -1501,85 +1581,22 @@ export default function HiracPage() {
          {loading && <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>}
          {!loading && filteredHiracData.length === 0 && <div className="flex justify-center items-center h-48"><p className="text-muted-foreground">No HIRAC entries found.</p></div>}
          {!loading && filteredHiracData.length > 0 && (
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <>
               {/* Mobile View */}
               <div className="md:hidden space-y-4">
-                <SortableContext items={filteredHiracData} strategy={verticalListSortingStrategy}>
-                  {filteredHiracData.map((item) => (
-                      <SortableHiracCard 
+                {filteredHiracData.map((item) => (
+                    <HiracCard 
                         key={item.id} 
                         item={item} 
                         onEdit={handleEditEntry} 
                         onReassess={handleReassessEntry}
                         onDelete={handleDeleteEntry}
                         highlight={searchFilter} 
-                      />
-                  ))}
-                </SortableContext>
+                    />
+                ))}
               </div>
-
-              {/* Desktop View */}
-                <div ref={tableContainerRef} className="hidden md:block border-2 border-border/50 rounded-lg overflow-auto max-h-[calc(130vh-10rem)] grab-to-pan">
-                    <table className="w-full caption-bottom text-xs relative border-collapse">
-                        <thead className="sticky top-0 z-10 bg-primary/90 backdrop-blur-sm">
-                            <tr className="border-b-2 border-border/50 hover:bg-primary/95">
-                                <th className="w-12 text-primary-foreground p-2 px-3 border-r-2 border-border/50"><span className="sr-only">Drag Handle</span></th>
-                                <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>ID</th>
-                                <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Department</th>
-                                <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Task/Job</th>
-                                <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Task Type</th>
-                                <th className="w-[120px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Hazard Class</th>
-                                <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Hazard</th>
-                                <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Hazardous Event</th>
-                                <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Persons Harmed</th>
-                                <th className="w-[300px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Impact</th>
-                                <th colSpan={3} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2 px-3">Initial Risk</th>
-                                <th colSpan={4} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2 px-3">Engineering Controls</th>
-                                <th colSpan={4} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2 px-3">Administrative Controls</th>
-                                <th colSpan={4} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2 px-3">PPE Controls</th>
-                                <th colSpan={3} className="text-center border-b-2 border-r-2 border-border/50 text-primary-foreground p-2 px-3">Risk Re-assessment</th>
-                                <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Created</th>
-                                <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Last Reviewed</th>
-                                <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Next Review</th>
-                                <th className="align-bottom text-primary-foreground p-2 px-3" rowSpan={2}><span className="sr-only">Actions</span></th>
-                            </tr>
-                            <tr className="border-b-2 border-border/50 hover:bg-primary/95">
-                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">S</th>
-                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">P</th>
-                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">RL</th>
-                                <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Description</th>
-                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">PIC</th>
-                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Status</th>
-                                <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Completion</th>
-                                <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Description</th>
-                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">PIC</th>
-                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Status</th>
-                                <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Completion</th>
-                                <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Description</th>
-                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">PIC</th>
-                                <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Status</th>
-                                <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Completion</th>
-                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">S</th>
-                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">P</th>
-                                <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">RL</th>
-                            </tr>
-                        </thead>
-                        <SortableContext items={filteredHiracData} strategy={verticalListSortingStrategy}>
-                            {filteredHiracData.map((item, index) => (
-                                <SortableHiracEntryRow 
-                                    key={item.id} 
-                                    item={item}
-                                    index={index}
-                                    onEdit={handleEditEntry}
-                                    onReassess={handleReassessEntry}
-                                    onDelete={handleDeleteEntry}
-                                    highlight={searchFilter}
-                                />
-                            ))}
-                        </SortableContext>
-                    </table>
-                </div>
-            </DndContext>
+              {dndContext}
+            </>
          )}
       </div>
 
@@ -1622,8 +1639,3 @@ export default function HiracPage() {
     </div>
   );
 }
-
-
-
-
-
