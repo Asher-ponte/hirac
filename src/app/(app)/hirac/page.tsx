@@ -702,8 +702,8 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
                                 </div>
                                 <FormControl><Textarea placeholder="e.g., forklift bump triggers collapse" rows={2} {...field} /></FormControl>
                                 <FormMessage />
-                            </FormItem>
-                        )} />
+                                </FormItem>
+                            )} />
                         <FormField control={form.control} name="personsHarmed" render={({ field }) => (
                             <FormItem><FormLabel>Persons who might be harmed</FormLabel><FormControl><Textarea placeholder="e.g., Forklift operator, nearby workers" rows={2} {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
                         )} />
@@ -1619,6 +1619,7 @@ export default function HiracPage() {
     </div>
   );
 }
+
 
 
 
