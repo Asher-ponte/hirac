@@ -13,8 +13,8 @@ export function useGrabToPan<T extends HTMLElement>() {
         if (e.button !== 0) return;
         
         const target = e.target as HTMLElement;
-        // Prevent pan from firing on interactive elements
-        if (target.closest('button, a, input, [role="button"], [data-dnd-handle]')) {
+        // Prevent pan from firing on interactive elements, including the dnd-kit drag handle
+        if (target.closest('button, a, input, [role="button"]')) {
             return;
         }
 
@@ -59,4 +59,3 @@ export function useGrabToPan<T extends HTMLElement>() {
 
     return ref;
 }
-

@@ -1142,15 +1142,19 @@ function SortableHiracCard({ item, onEdit, onReassess, onDelete, highlight }: { 
     };
 
     return (
-        <div ref={setNodeRef} style={style} className="touch-none">
-            <HiracCard
-                item={item}
-                onEdit={onEdit}
-                onReassess={onReassess}
-                onDelete={onDelete}
-                highlight={highlight}
-            />
-            {/* The drag handle is now part of the card header in HiracCard */}
+        <div ref={setNodeRef} style={style} className="relative group">
+            <Button variant="ghost" size="icon" {...attributes} {...listeners} className="absolute top-2 left-2 z-10 cursor-grab opacity-50 group-hover:opacity-100 touch-none">
+                <GripVertical className="h-5 w-5" />
+            </Button>
+            <div className="pl-8">
+                 <HiracCard
+                    item={item}
+                    onEdit={onEdit}
+                    onReassess={onReassess}
+                    onDelete={onDelete}
+                    highlight={highlight}
+                />
+            </div>
         </div>
     );
 }
@@ -1206,7 +1210,7 @@ function SortableHiracEntryRow({
                 <tr key={`${item.id}-${rowIndex}`} className={cn("border-b-2 border-border/50 group-active:bg-muted", index % 2 === 0 ? "bg-muted/30" : "")}>
                     {rowIndex === 0 && (
                         <td rowSpan={maxRows} className="align-middle border-r-2 border-border/50 p-0 text-center">
-                            <Button variant="ghost" size="icon" {...attributes} {...listeners} className="cursor-grab p-2 w-full h-full rounded-none"><GripVertical className="h-5 w-5 text-muted-foreground" /></Button>
+                            <Button variant="ghost" size="icon" {...attributes} {...listeners} role="button" className="cursor-grab p-2 w-full h-full rounded-none"><GripVertical className="h-5 w-5 text-muted-foreground" /></Button>
                         </td>
                     )}
                     {rowIndex === 0 && (
@@ -1241,7 +1245,7 @@ function SortableHiracEntryRow({
                             <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-2 px-3 w-[300px]"><Highlight text={item.personsHarmed} highlight={highlight} /></td>
                             <td rowSpan={maxRows} className="align-top border-r-2 border-border/50 whitespace-pre-wrap p-2 px-3 w-[300px]"><Highlight text={item.impact} highlight={highlight} /></td>
                             
-                            {/* Initial Risk Cells */}
+                            {/* Initial Risk Cells - S / P / RL */}
                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(item.initialSeverity))}>
                                 {item.initialSeverity}
                             </td>
@@ -1289,7 +1293,8 @@ function SortableHiracEntryRow({
 
                     {rowIndex === 0 && (
                          <>
-                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(isReassessed ? item.residualSeverity : null))}>
+                            {/* Reassessment Risk Cells - S / P / RL */}
+                            <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(isReassessed ? item.residualSeverity : null))}>
                                 {isReassessed ? item.residualSeverity : 'N/A'}
                             </td>
                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(isReassessed ? item.residualLikelihood : null))}>
@@ -1541,6 +1546,21 @@ export default function HiracPage() {
         </div>
     </DndContext>
   ) : null;
+  
+  const mobileContent = isMobile ? (
+      <div className="md:hidden space-y-4">
+        {filteredHiracData.map((item) => (
+            <HiracCard 
+                key={item.id} 
+                item={item} 
+                onEdit={handleEditEntry} 
+                onReassess={handleReassessEntry}
+                onDelete={handleDeleteEntry}
+                highlight={searchFilter} 
+            />
+        ))}
+      </div>
+  ) : null;
 
 
   return (
@@ -1582,19 +1602,7 @@ export default function HiracPage() {
          {!loading && filteredHiracData.length === 0 && <div className="flex justify-center items-center h-48"><p className="text-muted-foreground">No HIRAC entries found.</p></div>}
          {!loading && filteredHiracData.length > 0 && (
             <>
-              {/* Mobile View */}
-              <div className="md:hidden space-y-4">
-                {filteredHiracData.map((item) => (
-                    <HiracCard 
-                        key={item.id} 
-                        item={item} 
-                        onEdit={handleEditEntry} 
-                        onReassess={handleReassessEntry}
-                        onDelete={handleDeleteEntry}
-                        highlight={searchFilter} 
-                    />
-                ))}
-              </div>
+              {mobileContent}
               {dndContext}
             </>
          )}
