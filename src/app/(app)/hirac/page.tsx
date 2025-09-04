@@ -1210,7 +1210,7 @@ function SortableHiracEntryRow({
                 <tr key={`${item.id}-${rowIndex}`} className={cn("border-b-2 border-border/50 group-active:bg-muted", index % 2 === 0 ? "bg-muted/30" : "")}>
                     {rowIndex === 0 && (
                         <td rowSpan={maxRows} className="align-middle border-r-2 border-border/50 p-0 text-center">
-                            <Button variant="ghost" size="icon" {...attributes} {...listeners} data-dnd-handle="true" className="cursor-grab p-2 w-full h-full rounded-none"><GripVertical className="h-5 w-5 text-muted-foreground" /></Button>
+                            <Button role="button" variant="ghost" size="icon" {...attributes} {...listeners} data-dnd-handle="true" className="cursor-grab p-2 w-full h-full rounded-none"><GripVertical className="h-5 w-5 text-muted-foreground" /></Button>
                         </td>
                     )}
                     {rowIndex === 0 && (
