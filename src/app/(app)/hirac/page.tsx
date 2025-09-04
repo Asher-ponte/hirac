@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import { useForm, useFieldArray, useWatch } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch, type ControllerRenderProps, type FieldValues } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format, formatDistanceToNow, parseISO } from "date-fns"
@@ -16,7 +16,7 @@ import { CSS } from '@dnd-kit/utilities';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import type { HiracEntry, ControlStatus, ControlType, Department, TaskType } from '@/lib/types';
+import type { HiracEntry, ControlStatus, ControlType, Department, TaskType, ControlMeasure } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { FilePlus2, AlertTriangle, ArrowLeft, ArrowRight, Loader2, MoreHorizontal, FilePenLine, Trash2, Upload, CalendarIcon, PlusCircle, XCircle, BarChart, Camera, Search, ChevronDown, HelpCircle, GripVertical, ArrowDownUp } from 'lucide-react';
 import {
@@ -90,7 +90,7 @@ const hiracFormSchema = z.object({
     hazardClass: z.enum(hazardClassOptions, { required_error: 'Hazard class is required' }),
     hazardousEvent: z.string().min(1, "Hazardous event is required."),
     personsHarmed: z.string().optional().nullable(),
-    impact: z-string().min(1, "Impact is required."),
+    impact: z.string().min(1, "Impact is required."),
     initialLikelihood: z.coerce.number().min(1).max(5),
     initialSeverity: z.coerce.number().min(1).max(5),
     nextReviewDate: z.string().datetime().optional().nullable(),
@@ -100,7 +100,7 @@ const hiracFormSchema = z.object({
     residualLikelihood: z.coerce.number().min(1).max(5).optional().nullable(),
     residualSeverity: z.coerce.number().min(1).max(5).optional().nullable(),
 }).superRefine((data, ctx) => {
-    data.controlMeasures.forEach((control, index) => {
+    data.controlMeasures.forEach((control: z.infer<typeof controlMeasureSchema>, index: number) => {
         if (control.status === 'For Implementation' && !control.completionDate) {
             ctx.addIssue({
                 path: [`controlMeasures.${index}.completionDate`],
@@ -162,7 +162,7 @@ const RiskRadioGroup = ({
   field,
   options,
 }: {
-  field: any;
+  field: ControllerRenderProps<FieldValues, any>;
   options: { value: number; label: string; description: string }[];
 }) => (
   <RadioGroup
@@ -187,6 +187,10 @@ const RiskRadioGroup = ({
   </RadioGroup>
 );
 
+interface ControlMeasureField extends ControlMeasure {
+    originalIndex: number;
+}
+
 const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, controlType: ControlType, title: string }) => {
     const { fields, append, remove } = useFieldArray({
         control: form.control,
@@ -195,7 +199,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
 
     const filteredFields = fields.map((field, index) => ({...field, originalIndex: index})).filter(field => (field as any).type === controlType);
     
-    const controlMeasuresValues = useWatch({
+    const controlMeasuresValues: ControlMeasure[] = useWatch({
         name: "controlMeasures",
         control: form.control
     });
@@ -220,7 +224,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                     <p className="text-sm text-muted-foreground text-center py-4">No {title.toLowerCase()} added.</p>
                 )}
                 {filteredFields.map((field) => {
-                     const currentStatus = controlMeasuresValues[field.originalIndex]?.status;
+                     const currentStatus = controlMeasuresValues[(field as ControlMeasureField).originalIndex]?.status;
                      return (
                      <div key={field.id} className="p-2 border rounded-lg space-y-2 relative">
                         <Button 
@@ -228,13 +232,13 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                             variant="ghost" 
                             size="icon" 
                             className="absolute top-2 right-2 h-6 w-6" 
-                            onClick={() => remove(field.originalIndex)}
+                            onClick={() => remove((field as ControlMeasureField).originalIndex)}
                         >
                             <XCircle className="h-4 w-4 text-muted-foreground" />
                         </Button>
                         <FormField
                             control={form.control}
-                            name={`controlMeasures.${field.originalIndex}.description`}
+                            name={`controlMeasures.${(field as ControlMeasureField).originalIndex}.description`}
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Description</FormLabel>
@@ -248,7 +252,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField
                                 control={form.control}
-                                name={`controlMeasures.${field.originalIndex}.pic`}
+                                name={`controlMeasures.${(field as ControlMeasureField).originalIndex}.pic`}
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Person-in-Charge</FormLabel>
@@ -261,7 +265,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                             />
                             <FormField
                                 control={form.control}
-                                name={`controlMeasures.${field.originalIndex}.status`}
+                                name={`controlMeasures.${(field as ControlMeasureField).originalIndex}.status`}
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Status</FormLabel>
@@ -269,7 +273,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                                             onValueChange={(value) => {
                                                 field.onChange(value);
                                                 if (value === 'Implemented') {
-                                                    form.setValue(`controlMeasures.${field.originalIndex}.completionDate`, null);
+                                                    form.setValue(`controlMeasures.${(field as ControlMeasureField).originalIndex}.completionDate`, null);
                                                 }
                                             }} 
                                             value={field.value ?? undefined}
@@ -289,7 +293,7 @@ const ControlMeasuresFieldArray = ({ form, controlType, title }: { form: any, co
                         {currentStatus === 'For Implementation' && (
                              <FormField
                                 control={form.control}
-                                name={`controlMeasures.${field.originalIndex}.completionDate`}
+                                name={`controlMeasures.${(field as ControlMeasureField).originalIndex}.completionDate`}
                                 render={({ field }) => (
                                     <FormItem className="flex flex-col">
                                         <FormLabel>Completion Date</FormLabel>
@@ -425,7 +429,7 @@ function HiracForm({ setOpen, entryToEdit, onFormSubmit, departments, dialogCont
         
         if (targetStep > step) {
             if (step === 1) {
-                fieldsToValidate = ['departmentId', 'task', 'taskType', 'hazard', 'hazardClass', 'hazardousEvent', 'impact'];
+                fieldsToValidate = ['departmentId', 'task', 'taskType', 'hazard', 'hazardClass', 'hazardousEvent', 'impact', 'personsHarmed'];
             } else if (step === 2) {
                  fieldsToValidate = ['initialLikelihood', 'initialSeverity'];
             }
@@ -1143,7 +1147,7 @@ function SortableHiracCard({ item, onEdit, onReassess, onDelete, highlight }: { 
 
     return (
         <div ref={setNodeRef} style={style} className="relative group">
-            <Button variant="ghost" size="icon" {...attributes} {...listeners} className="absolute top-2 left-2 z-10 cursor-grab opacity-50 group-hover:opacity-100 touch-none">
+            <Button variant="ghost" size="icon" {...attributes} {...listeners} className="absolute top-2 left-2 z-10 cursor-grab opacity-50 group-hover:opacity-100 touch-none" data-dnd-handle="true">
                 <GripVertical className="h-5 w-5" />
             </Button>
             <div className="pl-8">
