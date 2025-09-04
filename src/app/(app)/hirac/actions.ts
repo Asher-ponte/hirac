@@ -25,12 +25,15 @@ export async function getHiracEntries(departmentId?: number): Promise<HiracEntry
     return data.map(entry => ({
       ...entry,
       id: `HIRAC-${entry.id.toString().padStart(3, '0')}`,
-      controlMeasures: entry.controlMeasures.map(cm => ({
+      controlMeasures: (entry.controlMeasures || []).map((cm: ControlMeasure) => ({
         ...cm,
         id: cm.id,
       })),
-      status: entry.status ?? 'For Implementation', // Ensure status is not null
+      status: entry.status ?? 'For Implementation',
       taskType: entry.taskType ?? 'Routine',
+      createdAt: entry.createdAt ? new Date(entry.createdAt).toISOString() : '',
+      reviewedAt: entry.reviewedAt ? new Date(entry.reviewedAt).toISOString() : null,
+      nextReviewDate: entry.nextReviewDate ? new Date(entry.nextReviewDate).toISOString() : null,
     }));
   } catch (error) {
     console.error("Failed to fetch HIRAC entries:", error);
@@ -38,8 +41,9 @@ export async function getHiracEntries(departmentId?: number): Promise<HiracEntry
   }
 }
 
-type HiracEntryPayload = Omit<HiracEntry, 'id' | 'controlMeasures' | 'status' | 'department' | 'createdAt' | 'reviewedAt' | 'displayOrder'> & {
+type HiracEntryPayload = Omit<HiracEntry, 'id' | 'controlMeasures' | 'status' | 'department' | 'createdAt' | 'reviewedAt' | 'nextReviewDate' | 'displayOrder'> & {
   controlMeasures: (Omit<ControlMeasure, 'id'> & { id?: number })[];
+  nextReviewDate?: string | null;
 };
 
 export async function createHiracEntry(formData: HiracEntryPayload) {
@@ -79,7 +83,7 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
     const newHiracEntryId = insertResult.insertId;
 
     if (formData.controlMeasures.length > 0) {
-      const controlsToInsert = formData.controlMeasures.map(cm => ({
+      const controlsToInsert = formData.controlMeasures.map((cm: any) => ({
         ...cm,
         hiracEntryId: newHiracEntryId,
         description: cm.description || "N/A",
@@ -142,7 +146,7 @@ export async function updateHiracEntry(id: number, formData: HiracEntryPayload) 
         }
         
         if (controlsToInsert.length > 0) {
-            await tx.insert(controlMeasures).values(controlsToInsert.map(cm => ({
+            await tx.insert(controlMeasures).values(controlsToInsert.map((cm: any) => ({
                 ...cm,
                 hiracEntryId: id,
                 description: cm.description || "N/A",
