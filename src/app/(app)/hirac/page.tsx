@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from 'react';
@@ -1273,7 +1272,7 @@ function SortableHiracEntryRow({
                         );
                         if(control) {
                             return (
-                                <React.Fragment key={`${type}-${control.id || rowIndex}`}>
+                                <React.Fragment key={`${type}-${control.id || rowIndex}-${rowIndex}`}>
                                     {renderCell(<Highlight text={control.description} highlight={highlight} />, "w-[300px]", undefined, `desc-${type}-${rowIndex}`)}
                                     {renderCell(<Highlight text={control.pic} highlight={highlight} />, "text-center w-[100px]", undefined, `pic-${type}-${rowIndex}`)}
                                     {renderCell(<div className={cn("text-center p-1 h-full", control.status && statusColorMap[control.status])}><Highlight text={control.status} highlight={highlight} /></div>, "p-0 w-[100px]", undefined, `status-${type}-${rowIndex}`)}
@@ -1320,7 +1319,7 @@ function SortableHiracEntryRow({
                                             <DropdownMenuSeparator />
                                             <AlertDialogTrigger asChild><DropdownMenuItem className="text-destructive focus:text-destructive-foreground focus:bg-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem></AlertDialogTrigger>
                                         </DropdownMenuContent>
-                                    </DropdownMenu>
+                                    </AlertDialogMenu>
                                     <AlertDialogContent>
                                         <AlertDialogHeader>
                                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -1514,18 +1513,22 @@ export default function HiracPage() {
                         <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Severity</th>
                         <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Probability</th>
                         <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Risk Level</th>
+                        
                         <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Description</th>
                         <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">PIC</th>
                         <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Status</th>
                         <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Completion</th>
+
                         <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Description</th>
                         <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">PIC</th>
                         <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Status</th>
                         <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Completion</th>
+                        
                         <th className="w-[300px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Description</th>
                         <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">PIC</th>
                         <th className="w-[100px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Status</th>
                         <th className="w-[120px] text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Completion</th>
+
                         <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Severity</th>
                         <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Probability</th>
                         <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">Risk Level</th>
