@@ -1128,43 +1128,6 @@ function HiracCard({ item, onEdit, onReassess, onDelete, highlight }: { item: Hi
     );
 }
 
-function SortableHiracCard({ item, onEdit, onReassess, onDelete, highlight }: { item: HiracEntry, onEdit: (item: HiracEntry) => void, onReassess: (item: HiracEntry) => void, onDelete: (id: string) => void, highlight: string }) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-    } = useSortable({id: item.id});
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-    };
-
-    return (
-        <div ref={setNodeRef} style={style} className="relative group">
-            <Button variant="ghost" size="icon" {...attributes} {...listeners} className="absolute top-2 left-2 z-10 cursor-grab opacity-50 group-hover:opacity-100 touch-none" data-dnd-handle="true">
-                <GripVertical className="h-5 w-5" />
-            </Button>
-            <div className="pl-8">
-                 <HiracCard
-                    item={item}
-                    onEdit={onEdit}
-                    onReassess={onReassess}
-                    onDelete={onDelete}
-                    highlight={highlight}
-                />
-            </div>
-        </div>
-    );
-}
-
-const statusColorMap: { [key in ControlStatus]: string } = {
-    'Implemented': 'bg-green-600/80 text-white',
-    'For Implementation': 'bg-yellow-500/80 text-black',
-};
-
 function SortableHiracEntryRow({
     item,
     index,
@@ -1652,3 +1615,5 @@ export default function HiracPage() {
     </div>
   );
 }
+
+    
