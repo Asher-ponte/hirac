@@ -47,6 +47,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { useGrabToPan } from '@/hooks/use-grab-to-pan';
 
 
 const likelihoodOptions = [
@@ -1352,6 +1353,8 @@ export default function HiracPage() {
   const [searchFilter, setSearchFilter] = React.useState('');
   const dialogContentRef = React.useRef<HTMLDivElement>(null);
   const [isSavingOrder, setIsSavingOrder] = React.useState(false);
+  const tableContainerRef = useGrabToPan<HTMLDivElement>();
+
 
   const filteredHiracData = React.useMemo(() => {
     const lowercasedFilter = searchFilter.toLowerCase();
@@ -1516,7 +1519,7 @@ export default function HiracPage() {
               </div>
 
               {/* Desktop View */}
-                <div className="hidden md:block border-2 border-border/50 rounded-lg overflow-y-auto max-h-[calc(130vh-10rem)]">
+                <div ref={tableContainerRef} className="hidden md:block border-2 border-border/50 rounded-lg overflow-auto max-h-[calc(130vh-10rem)] grab-to-pan">
                     <table className="w-full caption-bottom text-xs relative border-collapse">
                         <thead className="sticky top-0 z-10 bg-primary/90 backdrop-blur-sm">
                             <tr className="border-b-2 border-border/50 hover:bg-primary/95">
@@ -1619,6 +1622,7 @@ export default function HiracPage() {
     </div>
   );
 }
+
 
 
 

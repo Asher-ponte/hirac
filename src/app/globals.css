@@ -99,3 +99,12 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .grab-to-pan {
+    cursor: grab;
+  }
+  .grab-to-pan.grabbing {
+    cursor: grabbing;
+  }
+}
