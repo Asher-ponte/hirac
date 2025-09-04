@@ -1264,26 +1264,26 @@ function SortableHiracEntryRow({
                         {controls: engControls, type: 'Engineering'}, 
                         {controls: admControls, type: 'Administrative'}, 
                         {controls: ppeControls, type: 'PPE'}
-                    ].map(({controls, type}) => {
+                    ].map(({controls, type}, typeIndex) => {
                         const control = controls[rowIndex];
-                        const renderCell = (content: React.ReactNode, widthClass: string, otherClasses?: string) => (
-                           <td key={`${type}-${rowIndex}`} className={cn("p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3", widthClass, otherClasses)}>
+                        const renderCell = (content: React.ReactNode, widthClass: string, otherClasses?: string, cellKey: string) => (
+                           <td key={cellKey} className={cn("p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3", widthClass, otherClasses)}>
                                 {content}
                            </td>
                         );
                         if(control) {
                             return (
                                 <React.Fragment key={`${type}-${control.id || rowIndex}`}>
-                                    {renderCell(<Highlight text={control.description} highlight={highlight} />, "w-[300px]")}
-                                    {renderCell(<Highlight text={control.pic} highlight={highlight} />, "text-center w-[100px]")}
-                                    {renderCell(<div className={cn("text-center p-1 h-full", control.status && statusColorMap[control.status])}><Highlight text={control.status} highlight={highlight} /></div>, "p-0 w-[100px]")}
-                                    {renderCell(control.completionDate ? format(new Date(control.completionDate), "P") : '', "text-center w-[120px]")}
+                                    {renderCell(<Highlight text={control.description} highlight={highlight} />, "w-[300px]", undefined, `${type}-desc-${rowIndex}`)}
+                                    {renderCell(<Highlight text={control.pic} highlight={highlight} />, "text-center w-[100px]", undefined, `${type}-pic-${rowIndex}`)}
+                                    {renderCell(<div className={cn("text-center p-1 h-full", control.status && statusColorMap[control.status])}><Highlight text={control.status} highlight={highlight} /></div>, "p-0 w-[100px]", undefined, `${type}-status-${rowIndex}`)}
+                                    {renderCell(control.completionDate ? format(new Date(control.completionDate), "P") : '', "text-center w-[120px]", undefined, `${type}-date-${rowIndex}`)}
                                 </React.Fragment>
                             );
                         }
                         // Render empty cells to maintain table structure
                         return (
-                            <React.Fragment key={`${type}-${rowIndex}`}>
+                            <React.Fragment key={`${type}-${rowIndex}-empty`}>
                                 <td className="p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3 w-[300px]"></td>
                                 <td className="p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3 text-center w-[100px]"></td>
                                 <td className="p-2 whitespace-pre-wrap border-r-2 border-border/50 px-3 p-0 w-[100px]"></td>
@@ -1299,7 +1299,7 @@ function SortableHiracEntryRow({
                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(isReassessed ? item.residualSeverity : null))}>
                                 {isReassessed ? item.residualSeverity : 'N/A'}
                             </td>
-                            <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(isReassessed ? item.residualLikelihood : null))}>
+                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", getScoreBgColor(isReassessed ? item.residualLikelihood : null))}>
                                 {isReassessed ? item.residualLikelihood : 'N/A'}
                             </td>
                             <td rowSpan={maxRows} className={cn("text-center align-middle p-0 border-r-2 border-border/50 font-bold", isReassessed && residualRiskDetails ? residualRiskDetails.color : 'bg-muted/30')}>
