@@ -1540,7 +1540,9 @@ export default function HiracPage() {
                                 <th className="w-[100px] align-bottom border-r-2 border-border/50 text-primary-foreground p-2 px-3" rowSpan={2}>Next Review</th>
                                 <th className="align-bottom text-primary-foreground p-2 px-3" rowSpan={2}><span className="sr-only">Actions</span></th>
                             </tr>
-                            <tr className="border-b-2 border-border/50 hover:bg-primary/95">
+                            
+                        <tr className="border-b-2 border-border/50 hover:bg-primary/95">
+                                <th></th>
                                 <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">P</th>
                                 <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">S</th>
                                 <th className="text-center border-r-2 border-border/50 text-primary-foreground p-2 px-3">RL</th>
