@@ -1,45 +1,14 @@
-
 import 'dotenv/config';
-import { defineConfig } from 'drizzle-kit';
+import {defineConfig} from 'drizzle-kit';
 
-// =================================================================
-// IMPORTANT: Environment Variable Configuration
-// =================================================================
-// This configuration file, along with your application, relies on
-// environment variables to connect to your Google Cloud SQL database.
-//
-// 1. Create a `.env` file in the root of your project.
-//
-// 2. Add the following database credentials to your `.env` file,
-//    replacing the placeholder values with your actual credentials:
-//
-//    DB_HOST=your_database_host
-//    DB_USER=your_database_user
-//    DB_PASSWORD=your_database_password
-//    DB_DATABASE=your_database_name
-//
-// 3. For Google Cloud Storage, also add:
-//    GCS_BUCKET_NAME=your-gcs-bucket-name
-//    GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/service-account-key.json
-//
-// 4. Ensure the `.env` file is listed in your `.gitignore` file
-//    to prevent committing sensitive credentials to version control.
-// =================================================================
-
-const dbCredentials = {
-  host: process.env.DB_HOST,
-  port: 3306,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
-};
-
+// Runtime connections use @google-cloud/cloud-sql-connector (AuthTypes.PASSWORD
+// + mysql2 stream). This file is drizzle-kit only and must not use DB_HOST:3306
+// or a 127.0.0.1 Prisma/Auth Proxy.
 
 export default defineConfig({
   schema: './src/lib/db/schema.ts',
   out: './drizzle',
   dialect: 'mysql',
-  dbCredentials,
   verbose: true,
   strict: true,
 });
