@@ -44,6 +44,7 @@ const nextConfig: NextConfig = {
         },
     ],
   },
+  serverExternalPackages: ['@google-cloud/cloud-sql-connector', 'google-auth-library'],
   experimental: {
     allowedDevOrigins: [
       "https://*.cloudworkstations.dev",

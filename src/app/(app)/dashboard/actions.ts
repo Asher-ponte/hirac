@@ -1,7 +1,6 @@
 
 'use server';
 
-import { db } from '@/lib/db';
 import { getHiracEntries } from '@/app/(app)/hirac/actions';
 import { getDepartments as getAllDepartments } from '@/app/(app)/admin/actions';
 import type { ControlStatus, HiracEntry } from '@/lib/types';

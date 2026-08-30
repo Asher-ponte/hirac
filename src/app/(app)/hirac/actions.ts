@@ -1,7 +1,7 @@
 
 'use server';
 
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { hiracEntries, controlMeasures, departments } from '@/lib/db/schema';
 import type { HiracEntry, ControlMeasure, TaskType } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
@@ -10,6 +10,7 @@ import { addYears } from 'date-fns';
 
 export async function getHiracEntries(departmentId?: number): Promise<HiracEntry[]> {
   try {
+    const db = await getDb();
     const queryOptions = {
       with: {
         controlMeasures: true,
@@ -51,6 +52,7 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
     throw new Error("A valid department must be selected.");
   }
   
+  const db = await getDb();
   await db.transaction(async (tx) => {
     
     const nextReviewDate = formData.nextReviewDate 
@@ -98,6 +100,7 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
 }
 
 export async function updateHiracEntry(id: number, formData: HiracEntryPayload) {
+    const db = await getDb();
     await db.transaction(async (tx) => {
         const allImplemented = formData.controlMeasures.length > 0 && formData.controlMeasures.every(cm => cm.status === 'Implemented');
         
@@ -164,12 +167,14 @@ export async function updateHiracEntry(id: number, formData: HiracEntryPayload) 
 }
 
 export async function deleteHiracEntry(id: number) {
+    const db = await getDb();
     await db.delete(hiracEntries).where(eq(hiracEntries.id, id));
     revalidatePath('/hirac');
     revalidatePath('/dashboard');
 }
 
 export async function updateResidualRisk(id: number, data: { residualLikelihood: number; residualSeverity: number }) {
+  const db = await getDb();
   await db.update(hiracEntries).set({
     residualLikelihood: data.residualLikelihood,
     residualSeverity: data.residualSeverity,
@@ -181,6 +186,7 @@ export async function updateResidualRisk(id: number, data: { residualLikelihood:
 }
 
 export async function updateHiracOrder(orderedIds: number[]) {
+    const db = await getDb();
     await db.transaction(async (tx) => {
         for (let i = 0; i < orderedIds.length; i++) {
             await tx.update(hiracEntries)
@@ -192,5 +198,6 @@ export async function updateHiracOrder(orderedIds: number[]) {
 }
 
 export async function getDepartments() {
+    const db = await getDb();
     return await db.query.departments.findMany();
 }

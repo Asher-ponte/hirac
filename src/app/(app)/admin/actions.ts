@@ -1,7 +1,7 @@
 
 'use server';
 
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { users, departments } from '@/lib/db/schema';
 import type { User, UserRole, Department } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
@@ -9,10 +9,12 @@ import { eq, desc } from 'drizzle-orm';
 
 // User Actions
 export async function getUsers(): Promise<User[]> {
+    const db = await getDb();
     return await db.query.users.findMany({ orderBy: desc(users.id) });
 }
 
 export async function upsertUser(userData: { id?: number, name: string, email: string, role: UserRole }) {
+    const db = await getDb();
     if (userData.id) {
         await db.update(users).set(userData).where(eq(users.id, userData.id));
     } else {
@@ -22,7 +24,7 @@ export async function upsertUser(userData: { id?: number, name: string, email: s
 }
 
 export async function deleteUser(id: number) {
-    // Check if user is a supervisor
+    const db = await getDb();
     const supervising = await db.query.departments.findFirst({ where: eq(departments.supervisorId, id) });
     if (supervising) {
         throw new Error("Cannot delete user. They are assigned as a supervisor to a department.");
@@ -33,6 +35,7 @@ export async function deleteUser(id: number) {
 
 // Department Actions
 export async function getDepartments(options?: { withSupervisor: boolean }): Promise<Department[]> {
+    const db = await getDb();
     if (options?.withSupervisor) {
         return await db.query.departments.findMany({
             with: { supervisor: true },
@@ -43,6 +46,7 @@ export async function getDepartments(options?: { withSupervisor: boolean }): Pro
 }
 
 export async function upsertDepartment(deptData: { id?: number, name: string, supervisorId?: number | null }) {
+    const db = await getDb();
     const dataToInsert = {
         name: deptData.name,
         supervisorId: deptData.supervisorId === null ? null : deptData.supervisorId,
@@ -58,6 +62,7 @@ export async function upsertDepartment(deptData: { id?: number, name: string, su
 }
 
 export async function deleteDepartment(id: number) {
+    const db = await getDb();
     await db.delete(departments).where(eq(departments.id, id));
     revalidatePath('/admin');
     revalidatePath('/hirac');

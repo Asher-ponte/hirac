@@ -131,7 +131,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <DropdownMenuItem>Support</DropdownMenuItem>
               <DropdownMenuSeparator />
                <DropdownMenuItem asChild>
-                  <Link href="/">Log Out</Link>
+                  <Link href="/api/auth/logout">Log Out</Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
