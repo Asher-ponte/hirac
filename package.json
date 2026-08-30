@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "node --experimental-strip-types --test src/lib/sso-helpers.test.ts",
     "typecheck": "tsc --noEmit",
     "db:push": "drizzle-kit push --force",
     "db:studio": "drizzle-kit studio"
