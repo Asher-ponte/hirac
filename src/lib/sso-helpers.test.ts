@@ -7,7 +7,7 @@ import {
   parseSessionValue,
   portalSsoErrorMessage,
   sanitizeSsoRedirect,
-} from './sso-helpers';
+} from './sso-helpers.ts';
 
 describe('sanitizeSsoRedirect', () => {
   it('defaults empty to /', () => {
