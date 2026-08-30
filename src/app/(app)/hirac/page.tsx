@@ -1287,7 +1287,7 @@ function SortableHiracEntryRow({
                                             <DropdownMenuSeparator />
                                             <AlertDialogTrigger asChild><DropdownMenuItem className="text-destructive focus:text-destructive-foreground focus:bg-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem></AlertDialogTrigger>
                                         </DropdownMenuContent>
-                                    </AlertDialogMenu>
+                                    </DropdownMenu>
                                     <AlertDialogContent>
                                         <AlertDialogHeader>
                                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
