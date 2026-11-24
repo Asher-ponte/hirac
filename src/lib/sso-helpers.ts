@@ -76,6 +76,9 @@ export function portalSsoErrorMessage(code: string | null): string | null {
     iscout_connection_failed: 'Could not reach iScout to verify sign-in. Check your connection.',
     no_user: 'No user data returned during sign-in.',
     sso_failed: 'Sign-in from portal failed. Try again from the iScout portal.',
+    replayed_token: 'This sign-in link was already used. Open HIRAC again from the iScout portal.',
+    sso_not_configured: 'Portal sign-in is not available on this deployment.',
+    sso_unavailable: 'Portal sign-in is temporarily unavailable. Try again shortly.',
   };
   return byCode[code] || `Sign-in from portal failed (${code}). Try again from the iScout portal.`;
 }

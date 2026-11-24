@@ -9,6 +9,7 @@ import {
   mysqlPoolOptionsFromConnectorStream,
   readCloudSqlEnv,
 } from './cloud-sql-config';
+import {lazyAsyncSingleton} from './lazy-singleton';
 
 type AppDb = ReturnType<typeof drizzle<typeof schema>>;
 
@@ -64,12 +65,9 @@ async function createCloudSqlDb(): Promise<AppDb> {
   return drizzle(pool, {schema, mode: 'default'});
 }
 
-let dbPromise: Promise<AppDb> | null = null;
+const getDbOnce = lazyAsyncSingleton(createCloudSqlDb);
 
-/** Lazy Cloud SQL pool via connector stream. Not a 127.0.0.1 / Prisma proxy. */
+/** Lazy Cloud SQL pool via connector stream. Not a 127.0.0.1 / Prisma proxy. Retries after a failed connect. */
 export async function getDb(): Promise<AppDb> {
-  if (!dbPromise) {
-    dbPromise = createCloudSqlDb();
-  }
-  return dbPromise;
+  return getDbOnce();
 }
