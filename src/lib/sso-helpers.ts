@@ -24,18 +24,46 @@ export type HiracSession = IscoutSsoUserClaims & {
 
 const REDIRECT_CHECK_ORIGIN = 'https://hirac.invalid';
 const MAX_REDIRECT_LENGTH = 2048;
+const MAX_REDIRECT_DECODE_PASSES = 4;
+const RAW_UNSAFE = /[\x00-\x20\x7f\\]/;
+const ENCODED_UNSAFE = /%(?:[01][0-9a-f]|20|2f|5c|7f)/i;
+
+/**
+ * True if `value`, or any of up to MAX_REDIRECT_DECODE_PASSES percent-decodings
+ * of it, contains a control character, whitespace, backslash, slash escape or
+ * `//`. Anything still encoded after the last pass, or undecodable, is unsafe.
+ */
+function hasUnsafeRedirectChars(value: string): boolean {
+  let current = value;
+  for (let pass = 0; pass <= MAX_REDIRECT_DECODE_PASSES; pass++) {
+    if (RAW_UNSAFE.test(current) || current.includes('//') || ENCODED_UNSAFE.test(current)) {
+      return true;
+    }
+    if (!current.includes('%')) return false;
+    if (pass === MAX_REDIRECT_DECODE_PASSES) return true;
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(current);
+    } catch {
+      return true;
+    }
+    if (decoded === current) return false;
+    current = decoded;
+  }
+  return true;
+}
 
 /**
  * Same-origin relative paths only. Portal default redirect is `/`.
  * Browsers silently drop tabs/newlines and treat `\` like `/` in URLs, so any
  * control character, whitespace, backslash or `//` is rejected outright rather
- * than stripped. The result is resolved against a fixed origin and must stay on it.
+ * than stripped, including when percent-encoded (at any nesting depth). The
+ * result is resolved against a fixed origin and must stay on it.
  */
 export function sanitizeSsoRedirect(redirect: string | null | undefined): string {
   if (!redirect || typeof redirect !== 'string') return '/';
   if (redirect.length > MAX_REDIRECT_LENGTH) return '/';
-  if (/[\x00-\x20\x7f\\]/.test(redirect)) return '/';
-  if (!redirect.startsWith('/') || redirect.includes('//')) return '/';
+  if (!redirect.startsWith('/') || hasUnsafeRedirectChars(redirect)) return '/';
 
   let url: URL;
   try {
@@ -104,6 +132,11 @@ export function sessionCookieOptions() {
     maxAge: SESSION_MAX_AGE_SECONDS,
     path: '/',
   };
+}
+
+/** Same attributes as the live cookie so browsers accept the overwrite. */
+export function clearedCookieOptions() {
+  return {...sessionCookieOptions(), maxAge: 0};
 }
 
 export function loginErrorPath(code: string): string {

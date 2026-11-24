@@ -3,7 +3,9 @@ import {describe, it} from 'node:test';
 import {
   HIRAC_SSO_APP_ID,
   getIscoutSsoApiBase,
+  clearedCookieOptions,
   loginErrorPath,
+  sessionCookieOptions,
   portalSsoErrorMessage,
   sanitizeSsoRedirect,
 } from './sso-helpers.ts';
@@ -46,6 +48,35 @@ describe('sanitizeSsoRedirect', () => {
     assert.equal(sanitizeSsoRedirect('/x'.repeat(2000)), '/');
   });
 
+  it('rejects percent-encoded control characters, slashes and backslashes at any depth', () => {
+    for (const v of [
+      '/%09/evil.example',
+      '/%2509/evil.example',
+      '/%252509/evil.example',
+      '/%2F%2Fevil.example',
+      '/%252F%252Fevil.example',
+      '/%5Cevil.example',
+      '/%255cevil.example',
+      '/%00',
+      '/%7f',
+      '/hirac%20x',
+      '/%25%32%46%25%32%46evil.example',
+    ]) {
+      assert.equal(sanitizeSsoRedirect(v), '/', v);
+    }
+  });
+
+  it('rejects undecodable or too-deeply-encoded values', () => {
+    assert.equal(sanitizeSsoRedirect('/%E0%A4%A'), '/');
+    assert.equal(sanitizeSsoRedirect('/%zz'), '/');
+    assert.equal(sanitizeSsoRedirect('/%2525252541'), '/');
+  });
+
+  it('still allows benign encodings', () => {
+    assert.equal(sanitizeSsoRedirect('/hirac?q=a%2Cb'), '/hirac?q=a%2Cb');
+    assert.equal(sanitizeSsoRedirect('/hirac?q=%2541'), '/hirac?q=%2541');
+  });
+
   it('normalises dot segments without leaving the origin', () => {
     assert.equal(sanitizeSsoRedirect('/a/../hirac'), '/hirac');
     assert.equal(sanitizeSsoRedirect('/../../hirac'), '/hirac');
@@ -80,5 +111,14 @@ describe('portal SSO contract', () => {
     process.env.NODE_ENV = prev;
     if (prevBase === undefined) delete process.env.ISCOUT_BASE_URL;
     else process.env.ISCOUT_BASE_URL = prevBase;
+  });
+});
+
+describe('clearedCookieOptions', () => {
+  it('matches the live cookie attributes with maxAge 0', () => {
+    assert.deepEqual(clearedCookieOptions(), {...sessionCookieOptions(), maxAge: 0});
+    assert.equal(clearedCookieOptions().secure, true);
+    assert.equal(clearedCookieOptions().httpOnly, true);
+    assert.equal(clearedCookieOptions().sameSite, 'lax');
   });
 });

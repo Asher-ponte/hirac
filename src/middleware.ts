@@ -1,6 +1,6 @@
 import {NextResponse} from 'next/server';
 import type {NextRequest} from 'next/server';
-import {SESSION_COOKIE} from '@/lib/sso-helpers';
+import {SESSION_COOKIE, clearedCookieOptions} from '@/lib/sso-helpers';
 import {isAdmin, readSessionToken} from '@/lib/session';
 
 function isPublicPath(pathname: string): boolean {
@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
       ? NextResponse.next()
       : NextResponse.redirect(new URL('/login', request.url));
     if (raw !== undefined) {
-      response.cookies.set(SESSION_COOKIE, '', {path: '/', maxAge: 0});
+      response.cookies.set(SESSION_COOKIE, '', clearedCookieOptions());
     }
     return response;
   }

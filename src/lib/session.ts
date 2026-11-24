@@ -4,6 +4,11 @@ import {SESSION_MAX_AGE_SECONDS, type HiracSession, type IscoutSsoUserClaims} fr
 /**
  * Signed `hirac-session` cookie. Runs in both the Edge middleware and Node
  * (route handlers, server actions), so it must only use Web Crypto via jose.
+ *
+ * The cookie is stateless: identity and role are fixed when it is issued. A
+ * role change or account disable in iScout takes effect only on the user's next
+ * SSO or when the cookie expires (SESSION_MAX_AGE_SECONDS, 8h). Rotating
+ * HIRAC_SESSION_SECRET invalidates every session immediately.
  */
 
 export const SESSION_SECRET_ENV = 'HIRAC_SESSION_SECRET';

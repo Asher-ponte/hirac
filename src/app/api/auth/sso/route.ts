@@ -6,6 +6,7 @@ import {
   SESSION_COOKIE,
   SESSION_ID_COOKIE,
   SITE_ID_COOKIE,
+  clearedCookieOptions,
   loginErrorPath,
   sanitizeSsoRedirect,
   sessionCookieOptions,
@@ -46,8 +47,8 @@ export async function GET(request: NextRequest) {
 
     response.cookies.set(SESSION_COOKIE, sessionToken, sessionCookieOptions());
     // Legacy unsigned cookies; nothing may trust them, so clear any left over.
-    response.cookies.set(SESSION_ID_COOKIE, '', {path: '/', maxAge: 0});
-    response.cookies.set(SITE_ID_COOKIE, '', {path: '/', maxAge: 0});
+    response.cookies.set(SESSION_ID_COOKIE, '', clearedCookieOptions());
+    response.cookies.set(SITE_ID_COOKIE, '', clearedCookieOptions());
 
     return response;
   } catch {

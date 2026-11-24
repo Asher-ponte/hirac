@@ -3,6 +3,7 @@ import {randomBytes} from 'node:crypto';
 import {before, describe, it} from 'node:test';
 import {NextRequest} from 'next/server';
 import {middleware} from './middleware.ts';
+import {GET as logout, POST as logoutPost} from './app/api/auth/logout/route.ts';
 import {createSessionToken} from './lib/session.ts';
 import {SESSION_COOKIE} from './lib/sso-helpers.ts';
 
@@ -22,6 +23,14 @@ function token(role: string) {
   );
 }
 
+function assertCleared(setCookie: string, name: string) {
+  const entry = setCookie.split(/,(?=\s*[\w-]+=)/).find(c => c.trim().startsWith(`${name}=`)) || '';
+  assert.match(entry, new RegExp(`^\\s*${name}=;`), `${name} should be cleared`);
+  for (const attr of [/Path=\//, /Max-Age=0/, /Secure/, /HttpOnly/, /SameSite=lax/i]) {
+    assert.match(entry, attr, `${name} clear is missing ${attr}`);
+  }
+}
+
 function redirectTarget(res: Response): string | null {
   const location = res.headers.get('location');
   return location ? new URL(location).pathname : null;
@@ -38,10 +47,10 @@ describe('middleware session verification', () => {
     assert.equal(redirectTarget(await middleware(request('/hirac'))), '/login');
   });
 
-  it('rejects a forged unsigned cookie and clears it', async () => {
+  it('rejects a forged unsigned cookie and clears it with the live cookie attributes', async () => {
     const res = await middleware(request('/admin', JSON.stringify({id: '1', username: 'x', role: 'Admin'})));
     assert.equal(redirectTarget(res), '/login');
-    assert.match(res.headers.get('set-cookie') || '', new RegExp(`${SESSION_COOKIE}=;`));
+    assertCleared(res.headers.get('set-cookie') || '', SESSION_COOKIE);
   });
 
   it('hands server action calls with a legacy cookie to the action guard instead of a 307', async () => {
@@ -77,6 +86,17 @@ describe('middleware session verification', () => {
       assert.equal(redirectTarget(await middleware(request('/hirac', valid))), '/login');
     } finally {
       process.env.HIRAC_SESSION_SECRET = saved;
+    }
+  });
+});
+
+describe('logout', () => {
+  it('clears every session cookie with the live cookie attributes', async () => {
+    for (const handler of [logout, logoutPost]) {
+      const res = await handler(request('/api/auth/logout', 'x'));
+      assert.equal(redirectTarget(res), '/login');
+      const setCookie = res.headers.get('set-cookie') || '';
+      for (const name of [SESSION_COOKIE, 'session_id', 'site_id']) assertCleared(setCookie, name);
     }
   });
 });
