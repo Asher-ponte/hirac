@@ -4,7 +4,6 @@ import {
   HIRAC_SSO_APP_ID,
   getIscoutSsoApiBase,
   loginErrorPath,
-  parseSessionValue,
   portalSsoErrorMessage,
   sanitizeSsoRedirect,
 } from './sso-helpers.ts';
@@ -81,28 +80,5 @@ describe('portal SSO contract', () => {
     process.env.NODE_ENV = prev;
     if (prevBase === undefined) delete process.env.ISCOUT_BASE_URL;
     else process.env.ISCOUT_BASE_URL = prevBase;
-  });
-});
-
-describe('parseSessionValue', () => {
-  it('rejects missing or expired sessions', () => {
-    assert.equal(parseSessionValue(undefined), null);
-    assert.equal(parseSessionValue('not-json'), null);
-    assert.equal(
-      parseSessionValue(
-        JSON.stringify({
-          id: '1',
-          username: 'a',
-          email: null,
-          fullname: 'A',
-          role: 'User',
-          siteId: 'main',
-          createdAt: 1,
-          lastActivity: 1,
-          expiresAt: Date.now() - 1000,
-        })
-      ),
-      null
-    );
   });
 });

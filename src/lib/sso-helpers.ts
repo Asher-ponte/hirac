@@ -5,7 +5,7 @@ export const SESSION_COOKIE = 'hirac-session';
 export const SESSION_ID_COOKIE = 'session_id';
 export const SITE_ID_COOKIE = 'site_id';
 
-const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8; // 8 hours
+export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8; // 8 hours
 
 export type IscoutSsoUserClaims = {
   id: string;
@@ -82,6 +82,7 @@ export function getIscoutSsoApiBase(): string {
 export function portalSsoErrorMessage(code: string | null): string | null {
   if (!code) return null;
   const byCode: Record<string, string> = {
+    session_not_configured: 'Sign-in is not available on this deployment. Contact support.',
     no_token: 'Single sign-on link is missing a token.',
     token_expired: 'Portal sign-in expired. Open HIRAC again from the iScout portal.',
     invalid_token: 'Portal sign-in was rejected. Try again from the iScout portal.',
@@ -94,37 +95,15 @@ export function portalSsoErrorMessage(code: string | null): string | null {
   return byCode[code] || `Sign-in from portal failed (${code}). Try again from the iScout portal.`;
 }
 
+/** Lax (not Strict) so the cookie survives the redirect that follows the portal handoff. */
 export function sessionCookieOptions() {
-  const secure = process.env.NODE_ENV === 'production';
   return {
     httpOnly: true,
-    secure,
+    secure: true,
     sameSite: 'lax' as const,
     maxAge: SESSION_MAX_AGE_SECONDS,
     path: '/',
   };
-}
-
-export function buildSession(user: IscoutSsoUserClaims): HiracSession {
-  const now = Date.now();
-  return {
-    ...user,
-    createdAt: now,
-    lastActivity: now,
-    expiresAt: now + SESSION_MAX_AGE_SECONDS * 1000,
-  };
-}
-
-export function parseSessionValue(raw: string | undefined | null): HiracSession | null {
-  if (!raw) return null;
-  try {
-    const data = JSON.parse(raw) as HiracSession;
-    if (!data?.username || !data?.id) return null;
-    if (typeof data.expiresAt === 'number' && Date.now() > data.expiresAt) return null;
-    return data;
-  } catch {
-    return null;
-  }
 }
 
 export function loginErrorPath(code: string): string {
