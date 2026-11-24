@@ -5,7 +5,7 @@ export const SESSION_COOKIE = 'hirac-session';
 export const SESSION_ID_COOKIE = 'session_id';
 export const SITE_ID_COOKIE = 'site_id';
 
-const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8; // 8 hours
+export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8; // 8 hours
 
 export type IscoutSsoUserClaims = {
   id: string;
@@ -22,18 +22,60 @@ export type HiracSession = IscoutSsoUserClaims & {
   expiresAt: number;
 };
 
+const REDIRECT_CHECK_ORIGIN = 'https://hirac.invalid';
+const MAX_REDIRECT_LENGTH = 2048;
+const MAX_REDIRECT_DECODE_PASSES = 4;
+const RAW_UNSAFE = /[\x00-\x20\x7f\\]/;
+const ENCODED_UNSAFE = /%(?:[01][0-9a-f]|20|2f|5c|7f)/i;
+
+/**
+ * True if `value`, or any of up to MAX_REDIRECT_DECODE_PASSES percent-decodings
+ * of it, contains a control character, whitespace, backslash, slash escape or
+ * `//`. Anything still encoded after the last pass, or undecodable, is unsafe.
+ */
+function hasUnsafeRedirectChars(value: string): boolean {
+  let current = value;
+  for (let pass = 0; pass <= MAX_REDIRECT_DECODE_PASSES; pass++) {
+    if (RAW_UNSAFE.test(current) || current.includes('//') || ENCODED_UNSAFE.test(current)) {
+      return true;
+    }
+    if (!current.includes('%')) return false;
+    if (pass === MAX_REDIRECT_DECODE_PASSES) return true;
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(current);
+    } catch {
+      return true;
+    }
+    if (decoded === current) return false;
+    current = decoded;
+  }
+  return true;
+}
+
 /**
  * Same-origin relative paths only. Portal default redirect is `/`.
- * Rejects protocol-relative and absolute URLs (open redirect).
+ * Browsers silently drop tabs/newlines and treat `\` like `/` in URLs, so any
+ * control character, whitespace, backslash or `//` is rejected outright rather
+ * than stripped, including when percent-encoded (at any nesting depth). The
+ * result is resolved against a fixed origin and must stay on it.
  */
 export function sanitizeSsoRedirect(redirect: string | null | undefined): string {
   if (!redirect || typeof redirect !== 'string') return '/';
-  const value = redirect.trim();
-  if (!value.startsWith('/')) return '/';
-  if (value.startsWith('//') || value.startsWith('/\\')) return '/';
-  if (value.includes('://') || value.includes('\\')) return '/';
-  if (value.includes('\0') || value.includes('\n') || value.includes('\r')) return '/';
-  return value;
+  if (redirect.length > MAX_REDIRECT_LENGTH) return '/';
+  if (!redirect.startsWith('/') || hasUnsafeRedirectChars(redirect)) return '/';
+
+  let url: URL;
+  try {
+    url = new URL(redirect, REDIRECT_CHECK_ORIGIN);
+  } catch {
+    return '/';
+  }
+  if (url.origin !== REDIRECT_CHECK_ORIGIN) return '/';
+
+  const path = `${url.pathname}${url.search}${url.hash}`;
+  if (!path.startsWith('/') || path.startsWith('//')) return '/';
+  return path;
 }
 
 /**
@@ -68,6 +110,7 @@ export function getIscoutSsoApiBase(): string {
 export function portalSsoErrorMessage(code: string | null): string | null {
   if (!code) return null;
   const byCode: Record<string, string> = {
+    session_not_configured: 'Sign-in is not available on this deployment. Contact support.',
     no_token: 'Single sign-on link is missing a token.',
     token_expired: 'Portal sign-in expired. Open HIRAC again from the iScout portal.',
     invalid_token: 'Portal sign-in was rejected. Try again from the iScout portal.',
@@ -80,37 +123,20 @@ export function portalSsoErrorMessage(code: string | null): string | null {
   return byCode[code] || `Sign-in from portal failed (${code}). Try again from the iScout portal.`;
 }
 
+/** Lax (not Strict) so the cookie survives the redirect that follows the portal handoff. */
 export function sessionCookieOptions() {
-  const secure = process.env.NODE_ENV === 'production';
   return {
     httpOnly: true,
-    secure,
+    secure: true,
     sameSite: 'lax' as const,
     maxAge: SESSION_MAX_AGE_SECONDS,
     path: '/',
   };
 }
 
-export function buildSession(user: IscoutSsoUserClaims): HiracSession {
-  const now = Date.now();
-  return {
-    ...user,
-    createdAt: now,
-    lastActivity: now,
-    expiresAt: now + SESSION_MAX_AGE_SECONDS * 1000,
-  };
-}
-
-export function parseSessionValue(raw: string | undefined | null): HiracSession | null {
-  if (!raw) return null;
-  try {
-    const data = JSON.parse(raw) as HiracSession;
-    if (!data?.username || !data?.id) return null;
-    if (typeof data.expiresAt === 'number' && Date.now() > data.expiresAt) return null;
-    return data;
-  } catch {
-    return null;
-  }
+/** Same attributes as the live cookie so browsers accept the overwrite. */
+export function clearedCookieOptions() {
+  return {...sessionCookieOptions(), maxAge: 0};
 }
 
 export function loginErrorPath(code: string): string {

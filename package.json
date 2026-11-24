@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node --experimental-strip-types --test src/lib/sso-helpers.test.ts src/lib/db/cloud-sql-config.test.ts",
+    "test": "node --experimental-strip-types --import ./src/test-support/register.mjs --test src/lib/sso-helpers.test.ts src/lib/session.test.ts src/lib/auth-guards.test.ts src/middleware.test.ts src/lib/db/cloud-sql-config.test.ts",
     "typecheck": "tsc --noEmit",
     "db:push": "drizzle-kit push --force",
     "db:studio": "drizzle-kit studio"
@@ -47,6 +47,7 @@
     "embla-carousel-react": "^8.6.0",
     "firebase": "^10.12.2",
     "google-auth-library": "^11.0.2",
+    "jose": "^5.10.0",
     "lucide-react": "^0.475.0",
     "mysql2": "^3.10.2",
     "next": "15.3.9",

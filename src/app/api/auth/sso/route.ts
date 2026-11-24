@@ -1,11 +1,12 @@
 import {NextRequest, NextResponse} from 'next/server';
 import {verifyIscoutSsoToken} from '@/lib/iscout-sso-verify';
+import {createSessionToken, getSessionKey} from '@/lib/session';
 import {
   HIRAC_SSO_APP_ID,
   SESSION_COOKIE,
   SESSION_ID_COOKIE,
   SITE_ID_COOKIE,
-  buildSession,
+  clearedCookieOptions,
   loginErrorPath,
   sanitizeSsoRedirect,
   sessionCookieOptions,
@@ -24,6 +25,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL(loginErrorPath('no_token'), request.url));
   }
 
+  let sessionKey: Uint8Array;
+  try {
+    sessionKey = getSessionKey();
+  } catch {
+    return NextResponse.redirect(new URL(loginErrorPath('session_not_configured'), request.url));
+  }
+
   const appId = (process.env.ISCOUT_SSO_APP_ID || HIRAC_SSO_APP_ID).trim() || HIRAC_SSO_APP_ID;
 
   try {
@@ -34,13 +42,13 @@ export async function GET(request: NextRequest) {
 
     const user = result.user;
     const siteId = user.siteId || 'main';
-    const session = buildSession({...user, siteId});
+    const sessionToken = await createSessionToken({...user, siteId}, sessionKey);
     const response = NextResponse.redirect(new URL(redirectTo, request.url));
-    const cookie = sessionCookieOptions();
 
-    response.cookies.set(SESSION_COOKIE, JSON.stringify(session), cookie);
-    response.cookies.set(SESSION_ID_COOKIE, String(user.id), cookie);
-    response.cookies.set(SITE_ID_COOKIE, siteId, cookie);
+    response.cookies.set(SESSION_COOKIE, sessionToken, sessionCookieOptions());
+    // Legacy unsigned cookies; nothing may trust them, so clear any left over.
+    response.cookies.set(SESSION_ID_COOKIE, '', clearedCookieOptions());
+    response.cookies.set(SITE_ID_COOKIE, '', clearedCookieOptions());
 
     return response;
   } catch {

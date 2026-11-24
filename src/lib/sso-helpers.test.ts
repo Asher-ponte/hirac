@@ -3,8 +3,9 @@ import {describe, it} from 'node:test';
 import {
   HIRAC_SSO_APP_ID,
   getIscoutSsoApiBase,
+  clearedCookieOptions,
   loginErrorPath,
-  parseSessionValue,
+  sessionCookieOptions,
   portalSsoErrorMessage,
   sanitizeSsoRedirect,
 } from './sso-helpers.ts';
@@ -27,6 +28,60 @@ describe('sanitizeSsoRedirect', () => {
     assert.equal(sanitizeSsoRedirect('//evil.example'), '/');
     assert.equal(sanitizeSsoRedirect('/\\evil.example'), '/');
     assert.equal(sanitizeSsoRedirect('/foo\\bar'), '/');
+  });
+
+  it('rejects control-character and whitespace bypasses that browsers strip', () => {
+    // URLSearchParams has already percent-decoded these, e.g. `/%09/evil.com` arrives as `/\t/evil.com`.
+    for (const ch of ['\t', '\n', '\r', '\0', ' ', '\x0b', '\x0c', '\x1f', '\x7f']) {
+      assert.equal(sanitizeSsoRedirect(`/${ch}/evil.example`), '/', JSON.stringify(ch));
+      assert.equal(sanitizeSsoRedirect(`${ch}//evil.example`), '/', JSON.stringify(ch));
+      assert.equal(sanitizeSsoRedirect(`/hirac${ch}`), '/', JSON.stringify(ch));
+    }
+    assert.equal(sanitizeSsoRedirect(decodeURIComponent('/%09/evil.example')), '/');
+  });
+
+  it('rejects any // and other off-origin forms', () => {
+    assert.equal(sanitizeSsoRedirect('/hirac//evil'), '/');
+    assert.equal(sanitizeSsoRedirect('///evil.example'), '/');
+    assert.equal(sanitizeSsoRedirect('/\\/evil.example'), '/');
+    assert.equal(sanitizeSsoRedirect('javascript:alert(1)'), '/');
+    assert.equal(sanitizeSsoRedirect('/x'.repeat(2000)), '/');
+  });
+
+  it('rejects percent-encoded control characters, slashes and backslashes at any depth', () => {
+    for (const v of [
+      '/%09/evil.example',
+      '/%2509/evil.example',
+      '/%252509/evil.example',
+      '/%2F%2Fevil.example',
+      '/%252F%252Fevil.example',
+      '/%5Cevil.example',
+      '/%255cevil.example',
+      '/%00',
+      '/%7f',
+      '/hirac%20x',
+      '/%25%32%46%25%32%46evil.example',
+    ]) {
+      assert.equal(sanitizeSsoRedirect(v), '/', v);
+    }
+  });
+
+  it('rejects undecodable or too-deeply-encoded values', () => {
+    assert.equal(sanitizeSsoRedirect('/%E0%A4%A'), '/');
+    assert.equal(sanitizeSsoRedirect('/%zz'), '/');
+    assert.equal(sanitizeSsoRedirect('/%2525252541'), '/');
+  });
+
+  it('still allows benign encodings', () => {
+    assert.equal(sanitizeSsoRedirect('/hirac?q=a%2Cb'), '/hirac?q=a%2Cb');
+    assert.equal(sanitizeSsoRedirect('/hirac?q=%2541'), '/hirac?q=%2541');
+  });
+
+  it('normalises dot segments without leaving the origin', () => {
+    assert.equal(sanitizeSsoRedirect('/a/../hirac'), '/hirac');
+    assert.equal(sanitizeSsoRedirect('/../../hirac'), '/hirac');
+    assert.equal(sanitizeSsoRedirect('/%2e%2e/admin'), '/admin');
+    assert.equal(sanitizeSsoRedirect('/hirac#top'), '/hirac#top');
   });
 });
 
@@ -59,25 +114,11 @@ describe('portal SSO contract', () => {
   });
 });
 
-describe('parseSessionValue', () => {
-  it('rejects missing or expired sessions', () => {
-    assert.equal(parseSessionValue(undefined), null);
-    assert.equal(parseSessionValue('not-json'), null);
-    assert.equal(
-      parseSessionValue(
-        JSON.stringify({
-          id: '1',
-          username: 'a',
-          email: null,
-          fullname: 'A',
-          role: 'User',
-          siteId: 'main',
-          createdAt: 1,
-          lastActivity: 1,
-          expiresAt: Date.now() - 1000,
-        })
-      ),
-      null
-    );
+describe('clearedCookieOptions', () => {
+  it('matches the live cookie attributes with maxAge 0', () => {
+    assert.deepEqual(clearedCookieOptions(), {...sessionCookieOptions(), maxAge: 0});
+    assert.equal(clearedCookieOptions().secure, true);
+    assert.equal(clearedCookieOptions().httpOnly, true);
+    assert.equal(clearedCookieOptions().sameSite, 'lax');
   });
 });

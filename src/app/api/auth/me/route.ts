@@ -1,8 +1,9 @@
 import {NextRequest, NextResponse} from 'next/server';
-import {SESSION_COOKIE, parseSessionValue} from '@/lib/sso-helpers';
+import {SESSION_COOKIE} from '@/lib/sso-helpers';
+import {readSessionToken} from '@/lib/session';
 
 export async function GET(request: NextRequest) {
-  const session = parseSessionValue(request.cookies.get(SESSION_COOKIE)?.value);
+  const session = await readSessionToken(request.cookies.get(SESSION_COOKIE)?.value);
   if (!session) {
     return NextResponse.json({error: 'Unauthorized'}, {status: 401});
   }

@@ -7,8 +7,10 @@ import type { HiracEntry, ControlMeasure, TaskType } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { eq, inArray, sql, desc, asc } from 'drizzle-orm';
 import { addYears } from 'date-fns';
+import { requireSession } from '@/lib/auth';
 
 export async function getHiracEntries(departmentId?: number): Promise<HiracEntry[]> {
+  await requireSession();
   try {
     const db = await getDb();
     const queryOptions = {
@@ -48,6 +50,7 @@ type HiracEntryPayload = Omit<HiracEntry, 'id' | 'controlMeasures' | 'status' | 
 };
 
 export async function createHiracEntry(formData: HiracEntryPayload) {
+  await requireSession();
   if (!formData.departmentId || formData.departmentId === 0) {
     throw new Error("A valid department must be selected.");
   }
@@ -100,6 +103,7 @@ export async function createHiracEntry(formData: HiracEntryPayload) {
 }
 
 export async function updateHiracEntry(id: number, formData: HiracEntryPayload) {
+    await requireSession();
     const db = await getDb();
     await db.transaction(async (tx) => {
         const allImplemented = formData.controlMeasures.length > 0 && formData.controlMeasures.every(cm => cm.status === 'Implemented');
@@ -167,6 +171,7 @@ export async function updateHiracEntry(id: number, formData: HiracEntryPayload) 
 }
 
 export async function deleteHiracEntry(id: number) {
+    await requireSession();
     const db = await getDb();
     await db.delete(hiracEntries).where(eq(hiracEntries.id, id));
     revalidatePath('/hirac');
@@ -174,6 +179,7 @@ export async function deleteHiracEntry(id: number) {
 }
 
 export async function updateResidualRisk(id: number, data: { residualLikelihood: number; residualSeverity: number }) {
+  await requireSession();
   const db = await getDb();
   await db.update(hiracEntries).set({
     residualLikelihood: data.residualLikelihood,
@@ -186,6 +192,7 @@ export async function updateResidualRisk(id: number, data: { residualLikelihood:
 }
 
 export async function updateHiracOrder(orderedIds: number[]) {
+    await requireSession();
     const db = await getDb();
     await db.transaction(async (tx) => {
         for (let i = 0; i < orderedIds.length; i++) {
@@ -198,6 +205,7 @@ export async function updateHiracOrder(orderedIds: number[]) {
 }
 
 export async function getDepartments() {
+    await requireSession();
     const db = await getDb();
     return await db.query.departments.findMany();
 }

@@ -3,8 +3,10 @@
 
 import { getDb } from '@/lib/db';
 import { sql } from 'drizzle-orm';
+import { requireSession } from '@/lib/auth';
 
 export async function checkDbConnection(): Promise<{ ok: boolean; error?: string }> {
+  await requireSession();
   try {
     const db = await getDb();
     await db.execute(sql`SELECT 1`);
