@@ -317,7 +317,10 @@ describe('createPortalHttpVerify', () => {
         signal?.addEventListener('abort', () => reject(signal?.reason));
       })) as typeof fetch;
     const started = Date.now();
+    // AbortSignal.timeout's timer is unref'd; keep the loop alive so node:test doesn't cancel.
+    const keepAlive = setTimeout(() => {}, 2000);
     const r = await createPortalHttpVerify({getBase: base, fetchImpl: hang, timeoutMs: 50})('t', 'hirac');
+    clearTimeout(keepAlive);
     assert.deepEqual(r, {ok: false, error: 'iscout_connection_failed'});
     assert.ok(signal?.aborted);
     assert.ok(Date.now() - started < 2000);
