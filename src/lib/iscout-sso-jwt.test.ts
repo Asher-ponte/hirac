@@ -3,6 +3,8 @@ import {createHmac} from 'node:crypto';
 import {describe, it} from 'node:test';
 import {
   SSO_MAX_TOKEN_TTL_SECONDS,
+  SSO_PORTAL_VERIFY_TIMEOUT_MS,
+  createPortalHttpVerify,
   normalizeOrigin,
   readSsoPolicyFromEnv,
   verifySsoTokenWith,
@@ -301,6 +303,51 @@ describe('portal HTTP path (no local secret)', () => {
   it('passes portal errors through', async () => {
     const portal: PortalHttpVerify = async () => ({ok: false, error: 'invalid_token'});
     assert.deepEqual(await verify(sign(claims()), {secret: null}, {portal}), {ok: false, error: 'invalid_token'});
+  });
+});
+
+describe('createPortalHttpVerify', () => {
+  const base = () => 'http://portal.invalid';
+
+  it('aborts a hung portal request and reports a connection failure', async () => {
+    let signal: AbortSignal | undefined;
+    const hang = ((_url: string, init?: RequestInit) =>
+      new Promise((_resolve, reject) => {
+        signal = init?.signal ?? undefined;
+        signal?.addEventListener('abort', () => reject(signal?.reason));
+      })) as typeof fetch;
+    const started = Date.now();
+    const r = await createPortalHttpVerify({getBase: base, fetchImpl: hang, timeoutMs: 50})('t', 'hirac');
+    assert.deepEqual(r, {ok: false, error: 'iscout_connection_failed'});
+    assert.ok(signal?.aborted);
+    assert.ok(Date.now() - started < 2000);
+  });
+
+  it('defaults to a 5s timeout signal on every request', async () => {
+    assert.equal(SSO_PORTAL_VERIFY_TIMEOUT_MS, 5000);
+    let signal: AbortSignal | null | undefined;
+    const fake = (async (_url: string, init?: RequestInit) => {
+      signal = init?.signal;
+      return new Response(JSON.stringify({user: {username: 'jdoe', id: 42}}), {status: 200});
+    }) as typeof fetch;
+    const r = await createPortalHttpVerify({getBase: base, fetchImpl: fake})('t', 'hirac');
+    assert.ok(r.ok);
+    assert.ok(signal instanceof AbortSignal);
+    assert.equal(signal.aborted, false);
+  });
+
+  it('maps portal status codes', async () => {
+    const cases: Array<[number, string]> = [
+      [401, 'token_expired'],
+      [403, 'invalid_token'],
+      [429, 'rate_limited'],
+      [500, 'verification_failed'],
+    ];
+    for (const [status, error] of cases) {
+      const fake = (async () => new Response('{}', {status})) as typeof fetch;
+      const r = await createPortalHttpVerify({getBase: base, fetchImpl: fake})('t', 'hirac');
+      assert.deepEqual(r, {ok: false, error}, String(status));
+    }
   });
 });
 

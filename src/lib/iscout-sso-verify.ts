@@ -1,8 +1,8 @@
 import {getIscoutSsoApiBase, type IscoutSsoUserClaims} from './sso-helpers';
 import {
+  createPortalHttpVerify,
   readSsoPolicyFromEnv,
   verifySsoTokenWith,
-  type PortalHttpVerify,
   type SsoErrorCode,
 } from './iscout-sso-jwt';
 import {selectSsoJtiStore} from './sso-jti-store';
@@ -11,32 +11,7 @@ export type VerifySsoResult =
   | {ok: true; user: IscoutSsoUserClaims}
   | {ok: false; error: SsoErrorCode};
 
-const portalHttpVerify: PortalHttpVerify = async (token, appId) => {
-  let verifyResponse: Response;
-  try {
-    verifyResponse = await fetch(`${getIscoutSsoApiBase()}/api/auth/sso/verify`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({token, appId}),
-      cache: 'no-store',
-    });
-  } catch {
-    return {ok: false, error: 'iscout_connection_failed'};
-  }
-
-  if (!verifyResponse.ok) {
-    if (verifyResponse.status === 401) return {ok: false, error: 'token_expired'};
-    if (verifyResponse.status === 403) return {ok: false, error: 'invalid_token'};
-    if (verifyResponse.status === 429) return {ok: false, error: 'rate_limited'};
-    return {ok: false, error: 'verification_failed'};
-  }
-
-  const body = (await verifyResponse.json().catch(() => ({}))) as {
-    user?: {username?: string; id?: string | number};
-  };
-  if (!body.user?.username) return {ok: false, error: 'no_user'};
-  return {ok: true, value: body.user};
-};
+const portalHttpVerify = createPortalHttpVerify({getBase: getIscoutSsoApiBase});
 
 /**
  * Verify a portal SSO token. Requires SSO_EXPECTED_AUD (fails closed when unset),

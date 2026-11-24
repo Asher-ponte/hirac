@@ -225,6 +225,45 @@ export type PortalHttpVerify = (
   appId: string
 ) => Promise<SsoResult<{username?: string; id?: string | number}>>;
 
+export const SSO_PORTAL_VERIFY_TIMEOUT_MS = 5000;
+
+export function createPortalHttpVerify(opts: {
+  getBase: () => string;
+  fetchImpl?: typeof fetch;
+  timeoutMs?: number;
+}): PortalHttpVerify {
+  const fetchImpl = opts.fetchImpl ?? fetch;
+  const timeoutMs = opts.timeoutMs ?? SSO_PORTAL_VERIFY_TIMEOUT_MS;
+  return async (token, appId) => {
+    let verifyResponse: Response;
+    try {
+      verifyResponse = await fetchImpl(`${opts.getBase()}/api/auth/sso/verify`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({token, appId}),
+        cache: 'no-store',
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+    } catch {
+      return {ok: false, error: 'iscout_connection_failed'};
+    }
+
+    if (!verifyResponse.ok) {
+      if (verifyResponse.status === 401) return {ok: false, error: 'token_expired'};
+      if (verifyResponse.status === 403) return {ok: false, error: 'invalid_token'};
+      if (verifyResponse.status === 429) return {ok: false, error: 'rate_limited'};
+      return {ok: false, error: 'verification_failed'};
+    }
+
+    // The timeout signal also covers reading the body.
+    const body = (await verifyResponse.json().catch(() => ({}))) as {
+      user?: {username?: string; id?: string | number};
+    };
+    if (!body.user?.username) return {ok: false, error: 'no_user'};
+    return {ok: true, value: body.user};
+  };
+}
+
 export type SsoVerifyDeps = {
   policy: SsoPolicy;
   /** null = interim mode: jti is validated but not recorded (see docs/sso.md). */
