@@ -25,7 +25,11 @@ export async function middleware(request: NextRequest) {
   const raw = request.cookies.get(SESSION_COOKIE)?.value;
   const session = await readSessionToken(raw);
   if (!session) {
-    const response = NextResponse.redirect(new URL('/login', request.url));
+    // Server action clients can't follow a 307; let the action's own
+    // requireSession() issue a Next redirect to /login instead.
+    const response = request.headers.has('next-action')
+      ? NextResponse.next()
+      : NextResponse.redirect(new URL('/login', request.url));
     if (raw !== undefined) {
       response.cookies.set(SESSION_COOKIE, '', {path: '/', maxAge: 0});
     }

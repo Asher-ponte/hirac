@@ -26,8 +26,8 @@ export async function resolve(specifier, context, nextResolve) {
   if (STUBS[specifier]) {
     return {url: pathToFileURL(STUBS[specifier]).href, shortCircuit: true};
   }
-  if (specifier === 'next/server') {
-    return nextResolve('next/server.js', context);
+  if (specifier === 'next/server' || specifier === 'next/navigation') {
+    return nextResolve(`${specifier}.js`, context);
   }
   if (specifier.startsWith('@/')) {
     const file = withExtension(path.join(srcDir, specifier.slice(2)));

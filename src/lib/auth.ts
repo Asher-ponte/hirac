@@ -1,16 +1,14 @@
 import {cookies} from 'next/headers';
+import {redirect} from 'next/navigation';
 import {SESSION_COOKIE, type HiracSession} from './sso-helpers';
 import {ADMIN_ROLE, hasRole, readSessionToken} from './session';
 
-export type AuthErrorCode = 'unauthenticated' | 'forbidden';
-
 export class AuthError extends Error {
-  readonly code: AuthErrorCode;
+  readonly code = 'forbidden';
 
-  constructor(code: AuthErrorCode) {
-    super(code === 'unauthenticated' ? 'Not signed in.' : 'Not permitted.');
+  constructor() {
+    super('Not permitted.');
     this.name = 'AuthError';
-    this.code = code;
   }
 }
 
@@ -20,16 +18,20 @@ export async function getSession(): Promise<HiracSession | null> {
   return readSessionToken(store.get(SESSION_COOKIE)?.value);
 }
 
-/** Call first in every server action / data route. Throws AuthError when unauthenticated. */
+/**
+ * Call first in every server action / data route. A missing, legacy or invalid
+ * cookie redirects to /login (Next turns this into a client navigation for
+ * server actions), so stale sessions re-authenticate instead of erroring.
+ */
 export async function requireSession(): Promise<HiracSession> {
   const session = await getSession();
-  if (!session) throw new AuthError('unauthenticated');
+  if (!session) redirect('/login');
   return session;
 }
 
 export async function requireRole(...roles: string[]): Promise<HiracSession> {
   const session = await requireSession();
-  if (!hasRole(session, ...roles)) throw new AuthError('forbidden');
+  if (!hasRole(session, ...roles)) throw new AuthError();
   return session;
 }
 

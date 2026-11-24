@@ -9,8 +9,8 @@ import {SESSION_COOKIE} from './lib/sso-helpers.ts';
 const ORIGIN = 'http://localhost:3000';
 let key: Uint8Array;
 
-function request(path: string, cookie?: string) {
-  const headers = new Headers();
+function request(path: string, cookie?: string, extraHeaders: Record<string, string> = {}) {
+  const headers = new Headers(extraHeaders);
   if (cookie !== undefined) headers.set('cookie', `${SESSION_COOKIE}=${encodeURIComponent(cookie)}`);
   return new NextRequest(new URL(path, ORIGIN), {headers});
 }
@@ -41,6 +41,14 @@ describe('middleware session verification', () => {
   it('rejects a forged unsigned cookie and clears it', async () => {
     const res = await middleware(request('/admin', JSON.stringify({id: '1', username: 'x', role: 'Admin'})));
     assert.equal(redirectTarget(res), '/login');
+    assert.match(res.headers.get('set-cookie') || '', new RegExp(`${SESSION_COOKIE}=;`));
+  });
+
+  it('hands server action calls with a legacy cookie to the action guard instead of a 307', async () => {
+    const legacy = JSON.stringify({id: '1', username: 'x', role: 'Admin', expiresAt: Date.now() + 1e6});
+    const res = await middleware(request('/hirac', legacy, {'next-action': 'abc123'}));
+    assert.equal(res.headers.get('location'), null);
+    assert.notEqual(res.status, 307);
     assert.match(res.headers.get('set-cookie') || '', new RegExp(`${SESSION_COOKIE}=;`));
   });
 

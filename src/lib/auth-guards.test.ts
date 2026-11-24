@@ -44,12 +44,21 @@ function setCookie(value: string | undefined) {
   g.__testCookies = value === undefined ? {} : {[SESSION_COOKIE]: value};
 }
 
+function isLoginRedirect(err: unknown): boolean {
+  const digest = (err as {digest?: unknown})?.digest;
+  return typeof digest === 'string' && digest.startsWith('NEXT_REDIRECT;') && digest.split(';')[2] === '/login';
+}
+
+function isForbidden(err: unknown): boolean {
+  return err instanceof Error && err.name === 'AuthError' && (err as {code?: string}).code === 'forbidden';
+}
+
 async function expectDenied(name: string, fn: ActionFn, code: 'unauthenticated' | 'forbidden') {
   const before = g.__dbCalls ?? 0;
   await assert.rejects(
     fn(...(SAMPLE_ARGS[name] ?? [])),
-    (err: unknown) => err instanceof Error && err.name === 'AuthError' && (err as {code?: string}).code === code,
-    `${name} should be rejected with ${code}`
+    code === 'unauthenticated' ? isLoginRedirect : isForbidden,
+    `${name} should be ${code === 'unauthenticated' ? 'redirected to /login' : 'rejected as forbidden'}`
   );
   assert.equal(g.__dbCalls ?? 0, before, `${name} must not reach the database`);
 }
@@ -59,7 +68,7 @@ async function expectAllowed(name: string, fn: ActionFn) {
   try {
     await fn(...(SAMPLE_ARGS[name] ?? []));
   } catch (err) {
-    assert.notEqual((err as Error)?.name, 'AuthError', `${name} should pass the auth guard`);
+    assert.ok(!isForbidden(err) && !isLoginRedirect(err), `${name} should pass the auth guard`);
   }
   assert.ok((g.__dbCalls ?? 0) > before, `${name} should reach the database once authorized`);
 }
@@ -91,12 +100,12 @@ describe('server action guards', () => {
     g.__dbCalls = 0;
   });
 
-  it('blocks every action when there is no session cookie', async () => {
+  it('redirects every action to /login when there is no session cookie', async () => {
     setCookie(undefined);
     for (const {name, fn} of actions) await expectDenied(name, fn, 'unauthenticated');
   });
 
-  it('blocks every action with a forged unsigned cookie', async () => {
+  it('redirects every action to /login with a forged or legacy unsigned cookie', async () => {
     setCookie(JSON.stringify({id: '1', username: 'x', role: 'Admin'}));
     for (const {name, fn} of actions) await expectDenied(name, fn, 'unauthenticated');
   });
