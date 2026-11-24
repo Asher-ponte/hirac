@@ -4,6 +4,7 @@
 import { getHiracEntries } from '@/app/(app)/hirac/actions';
 import { getDepartments as getAllDepartments } from '@/app/(app)/admin/actions';
 import type { ControlStatus, HiracEntry } from '@/lib/types';
+import { requireSession } from '@/lib/auth';
 
 const getRiskLevelDetails = (level: number) => {
   if (level <= 6) return { label: 'Low', color: 'var(--color-low)' };
@@ -18,6 +19,7 @@ const statusConfig: { [key in ControlStatus]: { fill: string } } = {
 const allStatuses = Object.keys(statusConfig) as ControlStatus[];
 
 export async function getDashboardData() {
+  await requireSession();
   const [hiracEntries, departments] = await Promise.all([
     getHiracEntries(),
     getAllDepartments({ withSupervisor: false }),
