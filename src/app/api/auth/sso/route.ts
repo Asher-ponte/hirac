@@ -13,8 +13,9 @@ import {
 
 /**
  * Portal tile handler. iScout opens /api/auth/sso?token=…&redirect=/
- * Verifies the token (local JWT or POST to iScout /api/auth/sso/verify) and
- * sets session cookies. Does not write to Cloud SQL. Does not log the token.
+ * Verifies the token (local HS256 or POST to iScout /api/auth/sso/verify), which
+ * must be bound to SSO_EXPECTED_AUD, and sets session cookies. Writes to Cloud
+ * SQL only when SSO_JTI_STORE=cloudsql (see docs/sso.md). Does not log the token.
  */
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get('token');
