@@ -28,6 +28,31 @@ describe('sanitizeSsoRedirect', () => {
     assert.equal(sanitizeSsoRedirect('/\\evil.example'), '/');
     assert.equal(sanitizeSsoRedirect('/foo\\bar'), '/');
   });
+
+  it('rejects control-character and whitespace bypasses that browsers strip', () => {
+    // URLSearchParams has already percent-decoded these, e.g. `/%09/evil.com` arrives as `/\t/evil.com`.
+    for (const ch of ['\t', '\n', '\r', '\0', ' ', '\x0b', '\x0c', '\x1f', '\x7f']) {
+      assert.equal(sanitizeSsoRedirect(`/${ch}/evil.example`), '/', JSON.stringify(ch));
+      assert.equal(sanitizeSsoRedirect(`${ch}//evil.example`), '/', JSON.stringify(ch));
+      assert.equal(sanitizeSsoRedirect(`/hirac${ch}`), '/', JSON.stringify(ch));
+    }
+    assert.equal(sanitizeSsoRedirect(decodeURIComponent('/%09/evil.example')), '/');
+  });
+
+  it('rejects any // and other off-origin forms', () => {
+    assert.equal(sanitizeSsoRedirect('/hirac//evil'), '/');
+    assert.equal(sanitizeSsoRedirect('///evil.example'), '/');
+    assert.equal(sanitizeSsoRedirect('/\\/evil.example'), '/');
+    assert.equal(sanitizeSsoRedirect('javascript:alert(1)'), '/');
+    assert.equal(sanitizeSsoRedirect('/x'.repeat(2000)), '/');
+  });
+
+  it('normalises dot segments without leaving the origin', () => {
+    assert.equal(sanitizeSsoRedirect('/a/../hirac'), '/hirac');
+    assert.equal(sanitizeSsoRedirect('/../../hirac'), '/hirac');
+    assert.equal(sanitizeSsoRedirect('/%2e%2e/admin'), '/admin');
+    assert.equal(sanitizeSsoRedirect('/hirac#top'), '/hirac#top');
+  });
 });
 
 describe('portal SSO contract', () => {

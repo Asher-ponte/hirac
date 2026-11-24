@@ -22,18 +22,32 @@ export type HiracSession = IscoutSsoUserClaims & {
   expiresAt: number;
 };
 
+const REDIRECT_CHECK_ORIGIN = 'https://hirac.invalid';
+const MAX_REDIRECT_LENGTH = 2048;
+
 /**
  * Same-origin relative paths only. Portal default redirect is `/`.
- * Rejects protocol-relative and absolute URLs (open redirect).
+ * Browsers silently drop tabs/newlines and treat `\` like `/` in URLs, so any
+ * control character, whitespace, backslash or `//` is rejected outright rather
+ * than stripped. The result is resolved against a fixed origin and must stay on it.
  */
 export function sanitizeSsoRedirect(redirect: string | null | undefined): string {
   if (!redirect || typeof redirect !== 'string') return '/';
-  const value = redirect.trim();
-  if (!value.startsWith('/')) return '/';
-  if (value.startsWith('//') || value.startsWith('/\\')) return '/';
-  if (value.includes('://') || value.includes('\\')) return '/';
-  if (value.includes('\0') || value.includes('\n') || value.includes('\r')) return '/';
-  return value;
+  if (redirect.length > MAX_REDIRECT_LENGTH) return '/';
+  if (/[\x00-\x20\x7f\\]/.test(redirect)) return '/';
+  if (!redirect.startsWith('/') || redirect.includes('//')) return '/';
+
+  let url: URL;
+  try {
+    url = new URL(redirect, REDIRECT_CHECK_ORIGIN);
+  } catch {
+    return '/';
+  }
+  if (url.origin !== REDIRECT_CHECK_ORIGIN) return '/';
+
+  const path = `${url.pathname}${url.search}${url.hash}`;
+  if (!path.startsWith('/') || path.startsWith('//')) return '/';
+  return path;
 }
 
 /**
