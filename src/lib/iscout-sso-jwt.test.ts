@@ -321,9 +321,36 @@ describe('env parsing', () => {
     assert.equal(readSsoPolicyFromEnv({SSO_ALLOW_LEGACY_AUD: '1'}, 'hirac').allowLegacyAud, true);
   });
 
-  it('treats unset or short secrets as absent', () => {
-    assert.equal(readSsoPolicyFromEnv({}, 'hirac').secret, null);
-    assert.equal(readSsoPolicyFromEnv({ISCOUT_JWT_SECRET: 'short'}, 'hirac').secret, null);
+  it('treats an unset or blank secret as absent (portal verify path)', () => {
+    for (const env of [{}, {ISCOUT_JWT_SECRET: ''}, {ISCOUT_JWT_SECRET: '   '}]) {
+      const p = readSsoPolicyFromEnv(env, 'hirac');
+      assert.equal(p.secret, null);
+      assert.equal(p.secretInvalid, false);
+    }
     assert.equal(readSsoPolicyFromEnv({}, 'hirac').expectedOrigin, null);
+  });
+
+  it('flags a set-but-short secret as invalid', () => {
+    const p = readSsoPolicyFromEnv({ISCOUT_JWT_SECRET: 'short'}, 'hirac');
+    assert.equal(p.secret, null);
+    assert.equal(p.secretInvalid, true);
+    assert.equal(readSsoPolicyFromEnv({ISCOUT_JWT_SECRET: SECRET}, 'hirac').secretInvalid, false);
+  });
+
+  it('fails closed on a short secret instead of falling back to portal verify', async () => {
+    let called = false;
+    const portal: PortalHttpVerify = async () => {
+      called = true;
+      return {ok: true, value: {username: 'jdoe', id: '42'}};
+    };
+    const p = readSsoPolicyFromEnv({ISCOUT_JWT_SECRET: 'short', SSO_EXPECTED_AUD: ORIGIN}, 'hirac');
+    const r = await verifySsoTokenWith(sign(claims(), {secret: 'short'}), {
+      policy: p,
+      jtiStore: null,
+      portalVerify: portal,
+      nowSec: NOW,
+    });
+    assert.deepEqual(r, {ok: false, error: 'sso_not_configured'});
+    assert.equal(called, false);
   });
 });

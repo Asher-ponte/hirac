@@ -34,7 +34,11 @@ export type SsoPolicy = {
   allowLegacyAud: boolean;
   /** ISCOUT_JWT_SECRET, or null when only portal HTTP verify is available. */
   secret: string | null;
+  /** ISCOUT_JWT_SECRET is set but too short; fail closed rather than fall back to portal verify. */
+  secretInvalid?: boolean;
 };
+
+export const SSO_MIN_SECRET_LENGTH = 16;
 
 export type SsoTokenClaims = {
   user: IscoutSsoUserClaims;
@@ -77,7 +81,8 @@ export function readSsoPolicyFromEnv(env: Record<string, string | undefined>, ap
     issuer: (env.JWT_ISSUER || '').trim() || 'iscout-sso',
     expectedOrigin: normalizeOrigin(env.SSO_EXPECTED_AUD),
     allowLegacyAud: (env.SSO_ALLOW_LEGACY_AUD || '').trim() === '1',
-    secret: secret.length >= 16 ? secret : null,
+    secret: secret.length >= SSO_MIN_SECRET_LENGTH ? secret : null,
+    secretInvalid: secret.length > 0 && secret.length < SSO_MIN_SECRET_LENGTH,
   };
 }
 
@@ -238,7 +243,7 @@ export async function verifySsoTokenWith(
   deps: SsoVerifyDeps
 ): Promise<SsoResult<IscoutSsoUserClaims>> {
   const {policy} = deps;
-  if (!policy.expectedOrigin) return {ok: false, error: 'sso_not_configured'};
+  if (!policy.expectedOrigin || policy.secretInvalid) return {ok: false, error: 'sso_not_configured'};
 
   const parsed = parseToken(token);
   if (!parsed) return {ok: false, error: 'invalid_token'};

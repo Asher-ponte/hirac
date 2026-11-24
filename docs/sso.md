@@ -24,7 +24,7 @@ JWT minted by iScout. Verification lives in `src/lib/iscout-sso-jwt.ts`
 | `SSO_EXPECTED_AUD` | Production only | Canonical origin, e.g. `https://hirac.iscoutapp.co`. **Unset ⇒ every portal SSO request is rejected** (`sso_not_configured`). This is what stops Vercel previews and other deployments from accepting production tokens. |
 | `SSO_ALLOW_LEGACY_AUD` | optional, default off | `1` also accepts pre-origin tokens (`aud === "hirac"` as a plain string, no `jti`, no TTL cap). Only for the rollout window while the portal is switching; remove it once the portal mints origin-bound tokens. Still requires `SSO_EXPECTED_AUD`, so previews stay closed. Legacy tokens get no replay protection beyond `exp`. |
 | `SSO_JTI_STORE` | optional | `none`/unset (interim, see below) or `cloudsql`. Any other value fails closed. |
-| `ISCOUT_JWT_SECRET` | optional | Same value as the portal `JWT_SECRET`. When set (≥16 chars) the signature is checked locally and is authoritative: a bad signature never falls back to the portal. When unset, the portal `POST /api/auth/sso/verify` checks the signature, but all claim checks above still run locally first. |
+| `ISCOUT_JWT_SECRET` | optional | Same value as the portal `JWT_SECRET`. When set (≥16 chars) the signature is checked locally and is authoritative: a bad signature never falls back to the portal. Set but shorter than 16 chars ⇒ misconfigured, every request is rejected (`sso_not_configured`). When unset, the portal `POST /api/auth/sso/verify` checks the signature, but all claim checks above still run locally first. |
 
 ## One-time use (`jti`)
 
